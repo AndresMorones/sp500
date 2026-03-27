@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Combined News Impact Score Matrix</title>
+<style>
+  :root {
+    --color-background-primary: #fff;
+    --color-background-secondary: #f5f5f4;
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #6b6b6b;
+    --color-text-info: #185FA5;
+    --color-text-success: #3B6D11;
+    --color-text-danger: #A32D2D;
+    --color-border-tertiary: rgba(0,0,0,0.15);
+    --color-border-secondary: rgba(0,0,0,0.3);
+    --color-border-info: #378ADD;
+    --color-background-info: #E6F1FB;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --font-mono: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1a1a1a;
+      --color-background-secondary: #2a2a2a;
+      --color-text-primary: #e8e8e8;
+      --color-text-secondary: #999;
+      --color-text-info: #85B7EB;
+      --color-text-success: #97C459;
+      --color-text-danger: #F09595;
+      --color-border-tertiary: rgba(255,255,255,0.15);
+      --color-border-secondary: rgba(255,255,255,0.3);
+      --color-border-info: #85B7EB;
+      --color-background-info: #0C447C;
+    }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    margin: 0;
+    padding: 24px;
+  }
+</style>
+</head>
+<body>
+<div style="padding: 1rem 0;">
+
+<div style="display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr); gap: 24px;">
+  <div>
+    <p style="font-size: 11px; color: var(--color-text-secondary); letter-spacing: 1px; margin: 0 0 10px;">Stock vs index model</p>
+
+    <label style="font-size: 12px; color: var(--color-text-secondary); display: block; margin-bottom: 2px;">Baseline drift (a)</label>
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+      <input type="range" id="s-alpha" min="-0.01" max="0.01" step="0.0001" value="-0.000244" style="flex:1;">
+      <input type="text" id="t-alpha" value="-0.024%" style="width:68px;text-align:right;font-size:12px;font-family:var(--font-mono);padding:3px 6px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);">
+    </div>
+
+    <label style="font-size: 12px; color: var(--color-text-secondary); display: block; margin-bottom: 2px;">Up-market sensitivity (b+)</label>
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+      <input type="range" id="s-bu" min="0" max="5" step="0.01" value="1.63" style="flex:1;">
+      <input type="text" id="t-bu" value="1.63" style="width:68px;text-align:right;font-size:12px;font-family:var(--font-mono);padding:3px 6px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);">
+    </div>
+
+    <label style="font-size: 12px; color: var(--color-text-secondary); display: block; margin-bottom: 2px;">Down-market sensitivity (b-)</label>
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+      <input type="range" id="s-bd" min="0" max="8" step="0.01" value="3.83" style="flex:1;">
+      <input type="text" id="t-bd" value="3.83" style="width:68px;text-align:right;font-size:12px;font-family:var(--font-mono);padding:3px 6px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);">
+    </div>
+
+    <label style="font-size: 12px; color: var(--color-text-secondary); display: block; margin-bottom: 2px;">Normal noise vs index</label>
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+      <input type="range" id="s-s0" min="0.001" max="0.06" step="0.001" value="0.009" style="flex:1;">
+      <input type="text" id="t-s0" value="0.90%" style="width:68px;text-align:right;font-size:12px;font-family:var(--font-mono);padding:3px 6px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);">
+    </div>
+
+    <div style="border-top: 0.5px solid var(--color-border-tertiary); padding-top: 10px; margin-top: 4px;">
+      <p style="font-size: 11px; color: var(--color-text-secondary); letter-spacing: 1px; margin: 0 0 10px;">Stock vs its own history</p>
+
+      <label style="font-size: 12px; color: var(--color-text-secondary); display: block; margin-bottom: 2px;">Typical daily move</label>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+        <input type="range" id="s-med" min="-0.005" max="0.005" step="0.0001" value="0.0003" style="flex:1;">
+        <input type="text" id="t-med" value="0.030%" style="width:68px;text-align:right;font-size:12px;font-family:var(--font-mono);padding:3px 6px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);">
+      </div>
+
+      <label style="font-size: 12px; color: var(--color-text-secondary); display: block; margin-bottom: 2px;">Normal noise on its own</label>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+        <input type="range" id="s-sown" min="0.002" max="0.08" step="0.001" value="0.018" style="flex:1;">
+        <input type="text" id="t-sown" value="1.80%" style="width:68px;text-align:right;font-size:12px;font-family:var(--font-mono);padding:3px 6px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);">
+      </div>
+    </div>
+
+    <div style="border-top: 0.5px solid var(--color-border-tertiary); padding-top: 10px; margin-top: 4px;">
+      <p style="font-size: 11px; color: var(--color-text-secondary); letter-spacing: 1px; margin: 0 0 8px;">Scoring view</p>
+      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 5px; font-size: 12px; color: var(--color-text-primary);">
+        <input type="radio" name="md" value="combined" checked> Combined
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 5px; font-size: 12px; color: var(--color-text-primary);">
+        <input type="radio" name="md" value="index"> vs Index only
+      </label>
+      <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 5px; font-size: 12px; color: var(--color-text-primary);">
+        <input type="radio" name="md" value="own"> vs Own history only
+      </label>
+    </div>
+
+    <div style="border-top: 0.5px solid var(--color-border-tertiary); padding-top: 10px; margin-top: 8px;">
+      <p style="font-size: 11px; color: var(--color-text-secondary); letter-spacing: 1px; margin: 0 0 6px;">Formulas</p>
+      <div style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.8;">
+        <div><span style="color: #1D9E75;">vs Index</span> = sign(z_i) * z_i^2</div>
+        <div><span style="color: #D85A30;">vs Own</span> = sign(z_o) * z_o^2</div>
+        <div><span style="color: #534AB7;">Combined</span> = sign(z_i) * |z_i| * |z_o|</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p id="mtx-title" style="font-size: 12px; color: var(--color-text-secondary); margin: 0 0 2px;"></p>
+    <p style="font-size: 11px; color: var(--color-text-secondary); margin: 0 0 8px;">Rows = stock move, columns = index move</p>
+    <div style="overflow-x: auto;">
+      <table id="mtx" style="border-collapse: separate; border-spacing: 3px; width: 100%; table-layout: fixed;"></table>
+    </div>
+
+    <div id="detail" style="margin-top: 12px; min-height: 80px; background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 12px 16px; font-size: 13px; color: var(--color-text-secondary);">
+      Hover any cell for breakdown
+    </div>
+
+    <div style="margin-top: 20px;">
+      <p style="font-size: 11px; color: var(--color-text-secondary); letter-spacing: 1px; margin: 0 0 6px;">Expected move by index scenario</p>
+      <div id="exp-row" style="display: flex; gap: 4px;"></div>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
+        <span style="font-size: 11px; color: var(--color-text-secondary); letter-spacing: 1px;">Score profile for stock row</span>
+        <div id="row-btns" style="display: flex; gap: 4px; flex-wrap: wrap;"></div>
+      </div>
+      <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; font-size: 12px; color: var(--color-text-secondary);">
+        <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #534AB7;"></span>Combined</span>
+        <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #1D9E75;"></span>vs Index</span>
+        <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #D85A30;"></span>vs Own history</span>
+      </div>
+      <div style="position: relative; width: 100%; height: 220px;">
+        <canvas id="profChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+var MV = [-0.05, -0.03, -0.01, 0, 0.01, 0.03, 0.05];
+var K = 50, LN2 = Math.log(2);
+var selRow = 0, hovC = null, profChart = null;
+
+var P = {
+  alpha:{s:'s-alpha',t:'t-alpha',toD:function(v){return(v*100).toFixed(3)+'%';},frD:function(v){return parseFloat(v.replace('%',''))/100;}},
+  bu:{s:'s-bu',t:'t-bu',toD:function(v){return v.toFixed(2);},frD:function(v){return parseFloat(v);}},
+  bd:{s:'s-bd',t:'t-bd',toD:function(v){return v.toFixed(2);},frD:function(v){return parseFloat(v);}},
+  s0:{s:'s-s0',t:'t-s0',toD:function(v){return(v*100).toFixed(2)+'%';},frD:function(v){return parseFloat(v.replace('%',''))/100;}},
+  med:{s:'s-med',t:'t-med',toD:function(v){return(v*100).toFixed(3)+'%';},frD:function(v){return parseFloat(v.replace('%',''))/100;}},
+  sown:{s:'s-sown',t:'t-sown',toD:function(v){return(v*100).toFixed(2)+'%';},frD:function(v){return parseFloat(v.replace('%',''))/100;}},
+};
+
+function wire(key){
+  var p=P[key],sl=document.getElementById(p.s),tx=document.getElementById(p.t);
+  sl.addEventListener('input',function(){tx.value=p.toD(Number(this.value));render();});
+  tx.addEventListener('change',function(){
+    var n=p.frD(this.value);
+    if(isNaN(n)){this.value=p.toD(Number(sl.value));return;}
+    n=Math.max(Number(sl.min),Math.min(Number(sl.max),n));
+    sl.value=n;this.value=p.toD(n);render();
+  });
+  tx.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();this.blur();this.dispatchEvent(new Event('change'));}});
+}
+for(var k in P)wire(k);
+
+function gv(key){return Number(document.getElementById(P[key].s).value);}
+function md(){return document.querySelector('input[name="md"]:checked').value;}
+function sp(x){return Math.log1p(Math.exp(-Math.abs(x)))+Math.max(x,0);}
+function splitM(rm){return{p:(sp(K*rm)-LN2)/K,n:-(sp(-K*rm)-LN2)/K};}
+function mu(rm){var s=splitM(rm);return gv('alpha')+gv('bu')*s.p+gv('bd')*s.n;}
+
+function calc(rs,rm){
+  var ex=mu(rm),ar=rs-ex,s0=Math.max(gv('s0'),1e-8),zi=ar/s0;
+  var med=gv('med'),sown=Math.max(gv('sown'),1e-8),zo=(rs-med)/sown;
+  return{rs:rs,rm:rm,ex:ex,ar:ar,arBps:ar*10000,zi:zi,zo:zo,
+    idxScore:Math.sign(zi)*zi*zi,
+    ownScore:Math.sign(zo)*zo*zo,
+    combined:Math.sign(zi)*Math.abs(zi)*Math.abs(zo)};
+}
+
+function cellBg(val,mx){
+  var t=Math.max(-1,Math.min(1,val/(mx||1)));
+  var dk=matchMedia('(prefers-color-scheme:dark)').matches;
+  if(t<0){var i=Math.abs(t);return dk?'rgba('+Math.round(160+90*i)+','+Math.round(60-10*i)+','+Math.round(60-10*i)+','+(0.1+i*0.72)+')':'rgba('+Math.round(225+30*i)+','+Math.round(200-150*i)+','+Math.round(200-150*i)+','+(0.08+i*0.7)+')';}
+  var i=t;return dk?'rgba('+Math.round(40-10*i)+','+Math.round(145+75*i)+','+Math.round(65+25*i)+','+(0.1+i*0.72)+')':'rgba('+Math.round(200-150*i)+','+Math.round(235-15*i)+','+Math.round(200-150*i)+','+(0.08+i*0.7)+')';
+}
+
+function fL(m){return m===0?'0%':(m>0?'+':'')+Math.round(m*100)+'%';}
+function fPct(v){return(v>=0?'+':'')+(v*100).toFixed(2)+'%';}
+function fBps(v){return(v>=0?'+':'')+Math.round(v)+' bps';}
+function scoreVal(c,m){if(m==='index')return c.idxScore;if(m==='own')return c.ownScore;return c.combined;}
+
+function render(){
+  var m=md(),cells=[],mx=0;
+  for(var ri=0;ri<MV.length;ri++){var row=[];for(var ci=0;ci<MV.length;ci++){var c=calc(MV[ri],MV[ci]);var v=scoreVal(c,m);if(Math.abs(v)>mx)mx=Math.abs(v);c.v=v;row.push(c);}cells.push(row);}
+
+  var titles={combined:'Combined \u2014 both dimensions must fire for high scores',index:'vs Index \u2014 how far from what the market implied',own:'vs Own history \u2014 how unusual for this stock\u2019s normal behavior'};
+  document.getElementById('mtx-title').textContent=titles[m];
+
+  var h='<thead><tr><th style="padding:6px 4px;font-size:11px;color:var(--color-text-info);text-align:center;background:var(--color-background-secondary);border-radius:var(--border-radius-md);">Stock \\ Index</th>';
+  for(var ci=0;ci<MV.length;ci++)h+='<th style="padding:6px 2px;font-size:11px;color:var(--color-text-secondary);text-align:center;background:var(--color-background-secondary);border-radius:var(--border-radius-md);">'+fL(MV[ci])+'</th>';
+  h+='</tr></thead><tbody>';
+
+  for(var ri=0;ri<MV.length;ri++){
+    var isSel=ri===selRow;
+    h+='<tr><td style="padding:5px 4px;font-size:11px;color:'+(isSel?'var(--color-text-info)':'var(--color-text-secondary)')+';text-align:center;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-weight:500;">'+fL(MV[ri])+'</td>';
+    for(var ci=0;ci<MV.length;ci++){
+      var c=cells[ri][ci],bg=cellBg(c.v,mx);
+      var isH=hovC&&hovC[0]===ri&&hovC[1]===ci;
+      h+='<td data-r="'+ri+'" data-c="'+ci+'" style="padding:6px 2px;text-align:center;font-size:12px;font-weight:500;background:'+bg+';border-radius:var(--border-radius-md);cursor:default;color:var(--color-text-primary);'+(isH?'outline:2px solid var(--color-border-info);':'')+'">'+Math.round(c.v)+'</td>';
+    }
+    h+='</tr>';
+  }
+  h+='</tbody>';
+  document.getElementById('mtx').innerHTML=h;
+
+  var tds=document.getElementById('mtx').querySelectorAll('td[data-r]');
+  for(var i=0;i<tds.length;i++){
+    (function(td){
+      td.addEventListener('mouseenter',function(){hovC=[Number(td.dataset.r),Number(td.dataset.c)];render();showDetail(cells[hovC[0]][hovC[1]]);});
+      td.addEventListener('mouseleave',function(){hovC=null;render();document.getElementById('detail').innerHTML='Hover any cell for breakdown';});
+    })(tds[i]);
+  }
+
+  renderExp();renderBtns();renderProf(cells);
+}
+
+function showDetail(c){
+  var label,lc;
+  if(c.combined>4){label='Strong outperformance';lc='var(--color-text-success)';}
+  else if(c.combined>1){label='Mild outperformance';lc='var(--color-text-success)';}
+  else if(c.combined>-1){label='Near expected';lc='var(--color-text-secondary)';}
+  else if(c.combined>-4){label='Mild underperformance';lc='var(--color-text-danger)';}
+  else{label='Strong underperformance';lc='var(--color-text-danger)';}
+
+  document.getElementById('detail').innerHTML=
+    '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">'+
+      '<span style="color:'+lc+';font-weight:500;">'+label+'</span>'+
+      '<span style="font-size:12px;color:var(--color-text-secondary);">Stock '+fL(c.rs)+' / Index '+fL(c.rm)+'</span>'+
+    '</div>'+
+    '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;">'+
+      '<div><div style="font-size:11px;color:var(--color-text-secondary);">Stock moved</div><div style="font-size:14px;font-weight:500;color:var(--color-text-primary);">'+fPct(c.rs)+'</div></div>'+
+      '<div><div style="font-size:11px;color:var(--color-text-secondary);">Model expected</div><div style="font-size:14px;font-weight:500;color:var(--color-text-primary);">'+fPct(c.ex)+'</div></div>'+
+      '<div><div style="font-size:11px;color:var(--color-text-secondary);">Divergence from index</div><div style="font-size:14px;font-weight:500;color:'+(c.ar>=0?'var(--color-text-success)':'var(--color-text-danger)')+';">'+fPct(c.ar)+' ('+fBps(c.arBps)+')</div></div>'+
+      '<div><div style="font-size:11px;color:var(--color-text-secondary);">Divergence from own avg</div><div style="font-size:14px;font-weight:500;color:'+(c.rs-gv('med')>=0?'var(--color-text-success)':'var(--color-text-danger)')+';">'+fPct(c.rs-gv('med'))+'</div></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:20px;flex-wrap:wrap;">'+
+      '<div><div style="font-size:11px;color:#1D9E75;">vs Index score</div><div style="font-size:14px;font-weight:500;color:var(--color-text-primary);">'+Math.round(c.idxScore)+'</div></div>'+
+      '<div><div style="font-size:11px;color:#D85A30;">vs Own history score</div><div style="font-size:14px;font-weight:500;color:var(--color-text-primary);">'+Math.round(c.ownScore)+'</div></div>'+
+      '<div><div style="font-size:11px;color:#534AB7;">Combined score</div><div style="font-size:14px;font-weight:500;color:var(--color-text-primary);">'+Math.round(c.combined)+'</div></div>'+
+    '</div>';
+}
+
+function renderExp(){
+  var h='';
+  for(var ci=0;ci<MV.length;ci++){
+    var ex=mu(MV[ci]);
+    h+='<div style="flex:1;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:6px 4px;text-align:center;">'+
+      '<div style="font-size:11px;color:var(--color-text-secondary);">Index '+fL(MV[ci])+'</div>'+
+      '<div style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin-top:2px;">Stock '+fPct(ex)+'</div>'+
+    '</div>';
+  }
+  document.getElementById('exp-row').innerHTML=h;
+}
+
+function renderBtns(){
+  var h='';
+  for(var ri=0;ri<MV.length;ri++){
+    var a=ri===selRow;
+    h+='<button data-ri="'+ri+'" style="border:0.5px solid '+(a?'var(--color-border-info)':'var(--color-border-tertiary)')+';border-radius:var(--border-radius-md);padding:4px 10px;font-size:12px;color:'+(a?'var(--color-text-info)':'var(--color-text-secondary)')+';background:'+(a?'var(--color-background-info)':'transparent')+';cursor:pointer;font-family:var(--font-mono);">'+fL(MV[ri])+'</button>';
+  }
+  var wrap=document.getElementById('row-btns');
+  wrap.innerHTML=h;
+  var btns=wrap.querySelectorAll('button');
+  for(var i=0;i<btns.length;i++){(function(b){b.addEventListener('click',function(){selRow=Number(b.dataset.ri);render();});})(btns[i]);}
+}
+
+function renderProf(cells){
+  var row=cells[selRow],labels=MV.map(fL);
+  var dk=matchMedia('(prefers-color-scheme:dark)').matches;
+  var gridC=dk?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.05)';
+  var tickC=dk?'rgba(255,255,255,0.5)':'rgba(0,0,0,0.4)';
+
+  if(profChart)profChart.destroy();
+  profChart=new Chart(document.getElementById('profChart'),{
+    type:'line',
+    data:{labels:labels,datasets:[
+      {label:'Combined',data:row.map(function(c){return Math.round(c.combined);}),borderColor:'#534AB7',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#534AB7',tension:0.2},
+      {label:'vs Index',data:row.map(function(c){return Math.round(c.idxScore);}),borderColor:'#1D9E75',borderWidth:1.8,pointRadius:3,pointBackgroundColor:'#1D9E75',borderDash:[5,3],tension:0.2},
+      {label:'vs Own history',data:row.map(function(c){return Math.round(c.ownScore);}),borderColor:'#D85A30',borderWidth:1.8,pointRadius:3,pointBackgroundColor:'#D85A30',borderDash:[2,3],tension:0.2},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:false,
+      interaction:{mode:'index',intersect:false},
+      scales:{
+        x:{grid:{color:gridC},ticks:{color:tickC,font:{size:11},autoSkip:false}},
+        y:{grid:{color:gridC},ticks:{color:tickC,font:{size:11}}}
+      },
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{
+          title:function(ctx){return'Index: '+ctx[0].label;},
+          label:function(ctx){var c=row[ctx.dataIndex];if(ctx.datasetIndex===0)return'Combined: '+Math.round(c.combined);if(ctx.datasetIndex===1)return'vs Index: '+Math.round(c.idxScore);return'vs Own: '+Math.round(c.ownScore);},
+          afterBody:function(ctx){var c=row[ctx[0].dataIndex];return['Expected: '+fPct(c.ex),'AR: '+fBps(c.arBps)];}
+        }}
+      }
+    }
+  });
+}
+
+var radios=document.querySelectorAll('input[name="md"]');
+for(var i=0;i<radios.length;i++)radios[i].addEventListener('change',render);
+render();
+</script>
+</body>
+</html>
