@@ -14,7 +14,7 @@ This was chosen for reasonable properties (log scaling, floor at 0.5, neutral at
 - Fit the multiplier empirically: for known news days, what's the relationship between volume ratio and news impact?
 - Use quantile-based thresholds instead of a continuous function
 - Should the 0.5 coefficient be different? Should the floor be different?
-- Does the multiplier shape differ between intraday and gap periods?
+- Does the multiplier shape differ between close-to-close and gap periods?
 
 ### Q2: Should we use Fama-French factors instead of single-index?
 
@@ -36,22 +36,7 @@ We chose p=2 because we're ranking days, not computing moments. But we haven't t
 
 Empirical test needed: once we have labeled news days, compare recall@20 (of the top 20 scored days, how many had identifiable news?) at p=1.0, p=1.5, p=2.0. If p=1.5 and p=2.0 give identical recall, use p=1.5 for robustness.
 
-### Q5: Rolling window size — is 60 days optimal?
-
-We inherited 60 from the initial pipeline (standard in event study literature for the estimation window). But:
-- Shorter (30-40 days): adapts faster to regime changes, more NaN warmup
-- Longer (90-120 days): more stable estimates, misses structural breaks
-
-Test: compare beta stability and AR distributions at window=40, 60, 90. If the stock's beta genuinely shifts over time (e.g., biotech entering a new trial phase), shorter windows catch it.
-
-### Q6: Intraday vs gap — should they get different models?
-
-The pipeline computes separate intraday and gap returns. Currently they use the same formula structure with different fitted parameters. But gap returns might have fundamentally different properties:
-- Overnight news is the primary driver of gaps
-- Gap volume doesn't exist in the same way (pre-market is thin)
-- The volume multiplier may not apply to gaps at all
-
-Consider: for gap returns, drop the volume multiplier and rely only on z_AR and z_own.
+Note (2026-03-27): Entry 15's Precision@K shows all metrics converge by K≥50, and Cohen's d is small for all. This suggests the specific formula matters less than expected — the signal-to-noise ratio may be the binding constraint, not the scoring exponent. Still worth testing p directly.
 
 ### Q7: What NLP model for news embeddings in stage 2?
 
@@ -69,6 +54,27 @@ The deep research recommended a contradiction term: c_t = max(0, -a_t * e_t), wh
 Current position: deferred because z_AR already captures this implicitly. But there's a case for it: z_AR treats "moved less than expected in the same direction" and "moved opposite to expected" as the same magnitude. A contradiction term would specifically amplify the opposite-direction case.
 
 Test: once we have data, check whether opposite-direction days have systematically different news characteristics than same-direction misses.
+
+### Q9: Why do ~38% of top/bottom-100 extreme days have no news?
+
+Entry 14 found that even the best metric (A_gap top 100) has 24% no-news days. Across all metrics, ~38% of extreme events lack headlines. Two hypotheses:
+1. **Incomplete news coverage**: the news.csv dataset may not capture all relevant articles (especially pre-market/after-hours wire reports, analyst notes, SEC filings).
+2. **Non-news extreme moves**: some extremes are driven by options expiration, index rebalancing, or liquidity events that don't generate headlines.
+
+Test: manually inspect 20 random no-news extreme days — search for news via external sources. If most have identifiable events missing from our dataset, it's a coverage gap. If many are genuinely news-free, we need a microstructure filter.
+
+### Q10: Why do bottom-100 extreme events universally revert?
+
+Entry 16 found that all metrics' most negative scores show strong positive excess returns over 1-5 days (+55 to +93 bps cumulative by day+5). This is reversal, not continuation. Possible explanations:
+1. **Overreaction**: markets overshoot on bad news and correct over subsequent days
+2. **Liquidity-driven extremes**: some large drops are caused by forced selling (margin calls, fund redemptions) that reverse once selling pressure subsides
+3. **Asymmetric information incorporation**: bad news may be priced in faster (panic) while the correction is gradual
+
+This matters because if we use forward returns as training signal, negative-score days would confusingly show positive forward returns. The downstream model may need asymmetric treatment of positive vs negative events.
+
+### Q11: Should the prediction target be cumulative 3-5 day returns instead of day+1?
+
+Entry 16 showed day+1 continuation rates near 50% (coin-flip) for all metrics, but cumulative returns at day+3 to day+5 show clear directional drift for positive events. This suggests the information signal takes 2-3 days to fully incorporate. Using day+1 returns as labels for the downstream model may add noise; cumulative 3-5 day excess returns may be better training targets.
 
 ---
 
@@ -109,3 +115,19 @@ z = AR / σ₀ is just AR divided by a constant (since σ₀ is the same for eve
 **Answer**: Subtract ln(2)/K from rm_pos, add ln(2)/K to rm_neg.
 
 Without centering, at rm=0 the split produces +ln(2)/K and -ln(2)/K instead of zero. When beta_up ≠ beta_down, this creates a bias: expected(0) ≠ alpha. The centering fix ensures the expected stock move at zero index move equals alpha, which is the model's intended behavior.
+
+### A6: Intraday vs gap — should they get different models?
+
+**Answer**: Replaced intraday (open-to-close) with close-to-close (prev close to close). Kept gap as a separate signal.
+
+The intraday return missed gap-triggered events: news causing a -5% gap followed by +3% intraday recovery would score the intraday as +3% (missing the news). Close-to-close captures the full day's verdict (-2% net). Gap is kept because it isolates the initial market reaction to overnight news — a complementary signal.
+
+Evidence: MacKinlay 1997 uses close-to-close as the standard event study return. Entry 10 validated close-to-close for beta estimation. See journal Entry 13. Resolved 2026-03-27.
+
+### A7: Which scoring metric to use for news impact identification?
+
+**Answer**: A (pure SAR: sign(zi) × zi²) as primary metric.
+
+Evaluated A, D, E, Ev, Dv across six tests: news presence, precision@K, Cohen's d, per-ticker consistency, cumulative forward drift, and continuation rates at K=20/50/100. A wins on extreme-event precision (95% at gap K=10), per-ticker consistency (std 7.8%), and cumulative drift at K=100 (89.8 bps). D is redundant (rho=0.999). Ev has best Cohen's d but weakest drift. Keep zi, zo, zv as separate feature columns for the downstream model.
+
+Evidence: Entries 14-18. Resolved 2026-03-27.

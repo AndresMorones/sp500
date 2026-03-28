@@ -172,7 +172,7 @@ def next_trading_day(ticker, date_str):
     return None
 
 news_gap = {}   # (ticker, date) -> [(headline, summary), ...]
-news_intra = {} # (ticker, date) -> [(headline, summary), ...]
+news_cc = {}    # (ticker, date) -> [(headline, summary), ...] close-to-close (market hours news)
 
 with open(os.path.join(RAW_DIR, "news.csv"), encoding="utf-8") as f:
     for row in csv.DictReader(f):
@@ -192,7 +192,7 @@ with open(os.path.join(RAW_DIR, "news.csv"), encoding="utf-8") as f:
         elif hour < MARKET_CLOSE_HOUR:
             # Market hours -> today's intraday
             target_date = date_str
-            bucket = news_intra
+            bucket = news_cc
         else:
             # After close -> next trading day's gap
             target_date = next_trading_day(ticker, date_str)
@@ -206,8 +206,8 @@ with open(os.path.join(RAW_DIR, "news.csv"), encoding="utf-8") as f:
         bucket[key].append((headline, summary))
 
 news_gap_count = sum(len(v) for v in news_gap.values())
-news_intra_count = sum(len(v) for v in news_intra.values())
-print(f"News loaded: {news_gap_count} gap articles, {news_intra_count} intraday articles")
+news_cc_count = sum(len(v) for v in news_cc.values())
+print(f"News loaded: {news_gap_count} gap articles, {news_cc_count} close-to-close articles")
 
 # --- 4. Build per-ticker timelines (history + price.csv dates) ---
 
@@ -244,15 +244,15 @@ for ticker, days in stocks.items():
     for i, d in enumerate(days):
         if i == 0:
             d["stock_gap"] = None
-            d["stock_intra"] = (d["close"] - d["open"]) / d["open"] if d["open"] else 0
+            d["stock_cc"] = None
             d["sp_gap"] = None
-            d["sp_intra"] = (d["sp_close"] - d["sp_open"]) / d["sp_open"] if d["sp_open"] else 0
+            d["sp_cc"] = None
         else:
             prev = days[i - 1]
             d["stock_gap"] = (d["open"] - prev["close"]) / prev["close"] if prev["close"] else 0
-            d["stock_intra"] = (d["close"] - d["open"]) / d["open"] if d["open"] else 0
+            d["stock_cc"] = (d["close"] - prev["close"]) / prev["close"] if prev["close"] else 0
             d["sp_gap"] = (d["sp_open"] - prev["sp_close"]) / prev["sp_close"] if prev["sp_close"] else 0
-            d["sp_intra"] = (d["sp_close"] - d["sp_open"]) / d["sp_open"] if d["sp_open"] else 0
+            d["sp_cc"] = (d["sp_close"] - prev["sp_close"]) / prev["sp_close"] if prev["sp_close"] else 0
 
 # --- 6. Rolling stats, z-scores, scores — only output target dates ---
 
@@ -263,22 +263,28 @@ for ticker, days in stocks.items():
         d = days[i]
         if not d["is_target"]:
             continue
-        if d["stock_gap"] is None:
+        if d["stock_gap"] is None or d["stock_cc"] is None:
             continue
 
         window = days[i - WINDOW:i]
         w_gap_stock = [w["stock_gap"] for w in window if w["stock_gap"] is not None]
         w_gap_sp = [w["sp_gap"] for w in window if w["sp_gap"] is not None]
-        w_intra_stock = [w["stock_intra"] for w in window]
-        w_intra_sp = [w["sp_intra"] for w in window]
+        w_cc_stock = [w["stock_cc"] for w in window if w["stock_cc"] is not None]
+        w_cc_sp = [w["sp_cc"] for w in window if w["sp_cc"] is not None]
         w_lnvol = [math.log(w["volume"]) for w in window if w["volume"] > 0]
 
         if len(w_gap_stock) < 30 or len(w_gap_sp) < 30:
+            continue
+        if len(w_cc_stock) < 30 or len(w_cc_sp) < 30:
             continue
 
         n_gap = min(len(w_gap_stock), len(w_gap_sp))
         w_gap_stock = w_gap_stock[-n_gap:]
         w_gap_sp = w_gap_sp[-n_gap:]
+
+        n_cc = min(len(w_cc_stock), len(w_cc_sp))
+        w_cc_stock = w_cc_stock[-n_cc:]
+        w_cc_sp = w_cc_sp[-n_cc:]
 
         # Beta, alpha, residual std for gap
         beta_gap, alpha_gap = ols_beta_alpha(w_gap_sp, w_gap_stock)
@@ -286,11 +292,11 @@ for ticker, days in stocks.items():
         sown_gap = std(w_gap_stock)
         med_gap = median(w_gap_stock)
 
-        # Beta, alpha, residual std for intraday
-        beta_intra, alpha_intra = ols_beta_alpha(w_intra_sp, w_intra_stock)
-        s0_intra = residual_std(w_intra_sp, w_intra_stock, beta_intra, alpha_intra)
-        sown_intra = std(w_intra_stock)
-        med_intra = median(w_intra_stock)
+        # Beta, alpha, residual std for close-to-close
+        beta_cc, alpha_cc = ols_beta_alpha(w_cc_sp, w_cc_stock)
+        s0_cc = residual_std(w_cc_sp, w_cc_stock, beta_cc, alpha_cc)
+        sown_cc = std(w_cc_stock)
+        med_cc = median(w_cc_stock)
 
         # Volume z-score (log space)
         if len(w_lnvol) > 1:
@@ -307,48 +313,48 @@ for ticker, days in stocks.items():
         zi_gap = (d["stock_gap"] - expected_gap) / max(s0_gap, 1e-8)
         zo_gap = (d["stock_gap"] - med_gap) / max(sown_gap, 1e-8)
 
-        # Intraday z-scores
-        expected_intra = alpha_intra + beta_intra * d["sp_intra"]
-        zi_intra = (d["stock_intra"] - expected_intra) / max(s0_intra, 1e-8)
-        zo_intra = (d["stock_intra"] - med_intra) / max(sown_intra, 1e-8)
+        # Close-to-close z-scores
+        expected_cc = alpha_cc + beta_cc * d["sp_cc"]
+        zi_cc = (d["stock_cc"] - expected_cc) / max(s0_cc, 1e-8)
+        zo_cc = (d["stock_cc"] - med_cc) / max(sown_cc, 1e-8)
 
         row = {
             "date": d["date"],
             "ticker": ticker,
             "stock_gap": d["stock_gap"],
-            "stock_intra": d["stock_intra"],
+            "stock_cc": d["stock_cc"],
             "sp_gap": d["sp_gap"],
-            "sp_intra": d["sp_intra"],
+            "sp_cc": d["sp_cc"],
             "volume": d["volume"],
             "beta_gap": beta_gap,
-            "beta_intra": beta_intra,
+            "beta_cc": beta_cc,
             "zv": zv,
         }
 
         for name, fn in SCORE_FNS:
             row[f"{name}_gap"] = fn(zi_gap, zo_gap, zv)
-            row[f"{name}_intra"] = fn(zi_intra, zo_intra, zv)
+            row[f"{name}_cc"] = fn(zi_cc, zo_cc, zv)
 
         # News columns
         nkey = (ticker, d["date"])
         gap_articles = news_gap.get(nkey, [])
-        intra_articles = news_intra.get(nkey, [])
+        cc_articles = news_cc.get(nkey, [])
         row["headline_gap"] = " | ".join(h for h, s in gap_articles) if gap_articles else ""
         row["summary_gap"] = " | ".join(s for h, s in gap_articles) if gap_articles else ""
-        row["headline_intra"] = " | ".join(h for h, s in intra_articles) if intra_articles else ""
-        row["summary_intra"] = " | ".join(s for h, s in intra_articles) if intra_articles else ""
+        row["headline_cc"] = " | ".join(h for h, s in cc_articles) if cc_articles else ""
+        row["summary_cc"] = " | ".join(s for h, s in cc_articles) if cc_articles else ""
 
         results.append(row)
 
 # --- 7. Output CSV ---
 
 fieldnames = [
-    "date", "ticker", "stock_gap", "stock_intra", "sp_gap", "sp_intra",
-    "volume", "beta_gap", "beta_intra", "zv",
+    "date", "ticker", "stock_gap", "stock_cc", "sp_gap", "sp_cc",
+    "volume", "beta_gap", "beta_cc", "zv",
 ]
 for name, _ in SCORE_FNS:
-    fieldnames.extend([f"{name}_gap", f"{name}_intra"])
-fieldnames.extend(["headline_gap", "summary_gap", "headline_intra", "summary_intra"])
+    fieldnames.extend([f"{name}_gap", f"{name}_cc"])
+fieldnames.extend(["headline_gap", "summary_gap", "headline_cc", "summary_cc"])
 
 with open(os.path.join(OUT_DIR, "scores_output.csv"), "w", newline="", encoding="utf-8") as f:
     w = csv.DictWriter(f, fieldnames=fieldnames)
@@ -385,16 +391,16 @@ print(f"{'='*120}")
 
 aapl = [r for r in results if r["ticker"] == "AAPL"][-10:]
 
-header = f"{'Date':>12} {'Gap%':>7} {'Intra%':>7} {'SP Gap%':>7} {'SP Int%':>7} {'Beta_g':>6} {'zv':>5}"
+header = f"{'Date':>12} {'Gap%':>7} {'CC%':>7} {'SP Gap%':>7} {'SP CC%':>7} {'Beta_g':>6} {'Beta_cc':>7} {'zv':>5}"
 for name, _ in SCORE_FNS:
-    header += f" {name+'_g':>8} {name+'_i':>8}"
+    header += f" {name+'_g':>8} {name+'_cc':>8}"
 print(header)
 print("-" * len(header))
 
 for r in aapl:
-    line = (f"{r['date']:>12} {r['stock_gap']*100:>7.2f} {r['stock_intra']*100:>7.2f} "
-            f"{r['sp_gap']*100:>7.2f} {r['sp_intra']*100:>7.2f} "
-            f"{r['beta_gap']:>6.2f} {r['zv']:>5.1f}")
+    line = (f"{r['date']:>12} {r['stock_gap']*100:>7.2f} {r['stock_cc']*100:>7.2f} "
+            f"{r['sp_gap']*100:>7.2f} {r['sp_cc']*100:>7.2f} "
+            f"{r['beta_gap']:>6.2f} {r['beta_cc']:>7.2f} {r['zv']:>5.1f}")
     for name, _ in SCORE_FNS:
-        line += f" {r[name+'_gap']:>8.1f} {r[name+'_intra']:>8.1f}"
+        line += f" {r[name+'_gap']:>8.1f} {r[name+'_cc']:>8.1f}"
     print(line)

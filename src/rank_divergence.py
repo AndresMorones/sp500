@@ -39,7 +39,7 @@ for ticker in tickers:
     print(f"  {ticker} ({len(t_rows)} trading days, top/bottom {n})")
     print(f"{'#' * 130}")
 
-    for period in ["gap", "intra"]:
+    for period in ["gap", "cc"]:
         for direction in ["high", "low"]:
             label = f"{'TOP' if direction == 'high' else 'BOTTOM'} {n} {period.upper()}"
             print(f"\n{'=' * 130}")
