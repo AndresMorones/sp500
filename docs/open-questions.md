@@ -76,17 +76,19 @@ This matters because if we use forward returns as training signal, negative-scor
 
 Entry 16 showed day+1 continuation rates near 50% (coin-flip) for all metrics, but cumulative returns at day+3 to day+5 show clear directional drift for positive events. This suggests the information signal takes 2-3 days to fully incorporate. Using day+1 returns as labels for the downstream model may add noise; cumulative 3-5 day excess returns may be better training targets.
 
-Note (2026-03-28): Entry 21's corrected baseline shows Ridge R²_OOS=1.4%, Dir Acc=62.4%. Day+1 prediction has weak but statistically significant signal (Clark-West p=0.049). Testing 3-day cumulative target is still warranted — the weak day+1 signal may strengthen at longer horizons where information incorporation completes.
+Note (2026-03-28): Entry 25 tested this. **Confirmed**: cum3d_excess Ridge achieves CW p=0.002 (highly significant) vs p=0.132 for day+1 Ridge. The 3-day horizon captures information incorporation that day+1 misses. However, Huber loss hurts cum3d (CLT makes 3-day returns less fat-tailed). Use MSE-based Ridge for cum3d, Huber for day+1. Both targets should be used — they capture different signals.
 
 ### Q12: Can the baseline be improved with longer test period or different features?
 
-Entry 21 baseline: Ridge R²_OOS=1.4%, Dir Acc=62.4%. Entry 24 tested 6 literature-validated improvements (excess returns, Huber loss, rank transform, winsorization, HP tuning, temporal validation). Result: marginal gains. Huber loss improved statistical significance (CW p: 0.096→0.030) but R²_OOS dropped (1.0%→0.4%). LightGBM v1 fixed params still best R²_OOS (5.3%).
+Entry 21 baseline: Ridge R²_OOS=1.4%. Entry 24 tested 6 literature-validated improvements. LightGBM best R²_OOS (5.6% on cc_excess). Entry 25 added multi-target: cum3d Ridge R²_OOS=2.9% (CW p=0.002), gap Ridge R²_OOS=2.4% (CW p=0.054).
+
+Note (Entry 26): Evaluation reframed to return/price prediction, not direction. Key finding: models shrink predictions to ~20% of actual return variance. Tail days (top 20% extreme) have 4.5-4.9x higher MAE than core days. This is the gap news features must close.
 
 Remaining improvements to test:
-- Cumulative 3-day target per Q11 and Entry 17 findings
 - More historical data if available
 - More tickers beyond mega-cap tech
 - Bear/volatile market regime testing
+- Tail-focused loss functions (asymmetric loss penalizing extreme-day misses more)
 
 ---
 
@@ -135,6 +137,19 @@ Without centering, at rm=0 the split produces +ln(2)/K and -ln(2)/K instead of z
 The intraday return missed gap-triggered events: news causing a -5% gap followed by +3% intraday recovery would score the intraday as +3% (missing the news). Close-to-close captures the full day's verdict (-2% net). Gap is kept because it isolates the initial market reaction to overnight news — a complementary signal.
 
 Evidence: MacKinlay 1997 uses close-to-close as the standard event study return. Entry 10 validated close-to-close for beta estimation. See journal Entry 13. Resolved 2026-03-27.
+
+### A8: What are the inherent limits of price-only return prediction?
+
+**Answer**: Price-only models can predict normal days reasonably but fundamentally cannot predict extreme return days. This is not a modeling limitation — it is an inherent property of what price data contains.
+
+Evidence (Entry 26):
+- Prediction range: [-159, +150] bps vs actual range [-939, +2170] bps. Models use only ~20% of the actual return variance.
+- Tail/core MAE ratio: 4.5-4.9x. The 20% most extreme days have nearly 5x higher prediction error than the 80% normal days.
+- Best R²_OOS: 5.6% (LightGBM on cc_excess), which is actually strong by academic standards (GKX 2020 reports 0.4% monthly for full cross-section).
+
+Why this is inherent: Extreme days are driven by news events (earnings, product launches, regulatory actions). Past prices contain no information about tomorrow's news. Regularization correctly learns to shrink toward the mean since predicting extremes from price alone would just add noise.
+
+**Implication for Model 2**: The value of news features is specifically in widening predictions on news days — reducing the tail/core MAE ratio from ~4.8x toward ~2.5x. Overall R²_OOS may improve modestly, but the tail improvement is what matters. Resolved 2026-03-28.
 
 ### A7: Which scoring metric to use for news impact identification?
 

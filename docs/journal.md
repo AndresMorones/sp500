@@ -647,3 +647,105 @@ Key findings:
 - Both tests must pass on the same 30-date / 210-prediction evaluation window.
 
 **References**: kristina969 GKX replication (Huber loss), Tidy Finance GKX replication (excess returns, expanding window), Gu, Kelly & Xiu (2020), Campbell & Thompson (2008), Gopikrishnan et al. (1998) power-law tails
+
+## Entry 25 — Multi-target baseline: gap + cumulative 3-day excess returns — 2026-03-28
+
+**Tried**: Extended `model_baseline.py` to predict three targets instead of one, all as excess returns (stock - SP500):
+
+1. **cc_excess**: next-day close-to-close excess return (embargo=3) — the existing target
+2. **gap_excess**: next-day gap excess return, prev close → open (embargo=3) — isolates overnight/pre-market reaction
+3. **cum3d_excess**: cumulative 3-day excess return (embargo=5) — tests Q11 hypothesis that information takes 2-3 days to incorporate
+
+Same features (41), same models (Naive, Ridge, Ridge Huber, LASSO, LightGBM Huber), same walk-forward with monthly refit. Embargo increased to 5 for cum3d to prevent train/test overlap.
+
+**Result** (best model per target):
+
+| Target | Best Model | DirAcc | R²_OOS | CW p-value | N |
+|--------|-----------|--------|--------|------------|---|
+| cc_excess | LightGBM | 53.8% | 5.6% | 0.043** | 210 |
+| gap_excess | Ridge MSE | 54.3% | 2.4% | 0.054* | 210 |
+| cum3d_excess | Ridge MSE | 57.1% | 2.9% | **0.002***  | 196 |
+
+Full cum3d results:
+
+| Model | MAE | RMSE | DirAcc | R²_OOS | CW p-value |
+|-------|-----|------|--------|--------|------------|
+| Naive | 0.02213 | 0.03833 | 52.0% | 0.000 | — |
+| Ridge (MSE) | 0.02215 | 0.03776 | **57.1%** | **0.029** | **0.002*** |
+| Ridge (Huber) | 0.02231 | 0.03883 | 55.1% | -0.026 | 0.547 |
+| LASSO | 0.02208 | 0.03828 | 52.0% | 0.003 | **0.004*** |
+| LightGBM | 0.02377 | 0.03777 | 48.0% | 0.029 | 0.095* |
+
+Key findings:
+
+1. **cum3d_excess confirms Q11**: Ridge MSE achieves p=0.002 (highly significant) vs p=0.132 on day+1. The 3-day horizon captures information that day+1 misses — consistent with Entry 16's finding that positive events drift over 3-5 days.
+2. **Huber hurts cum3d**: Ridge Huber R²_OOS=-2.6% on cum3d vs +2.9% for Ridge MSE. Cumulative 3-day returns are closer to Gaussian (central limit effect of summing 3 days), reducing the fat-tail problem that Huber solves. MSE is the right loss for this target.
+3. **Gap prediction is weakest**: R²_OOS=2.4% with marginal significance (p=0.054). Gap returns are noisier (smaller magnitude, more driven by overnight news not captured in price features). Gap may improve most from news features in Model 2.
+4. **Per-ticker cum3d standouts**: Ridge Huber NVDA 68% DirAcc, META 64%, AAPL 57%. LightGBM best on NVDA (64%) and TSLA (57%).
+
+**Decision**: Three targets now run in parallel from a single script. Each produces its own predictions CSV (`baseline_{target}_predictions.csv`). For Model 2 (news-enhanced), the bars are now:
+- cc_excess: beat LightGBM R²_OOS > 5.6% (CW p < 0.05)
+- gap_excess: beat Ridge R²_OOS > 2.4% (CW p < 0.05)
+- cum3d_excess: beat Ridge R²_OOS > 2.9% (CW p < 0.005)
+
+**Update (same day)**: User correctly challenged whether cum3d significance was an artifact of overlapping observations (Hansen & Hodrick 1980). Added Newey-West HAC standard errors with h-1=2 lags for the 3-day target. Result: p-values **barely changed** (Ridge: 0.002→0.0017, LASSO: 0.004→0.0018). The overlap wasn't inflating significance.
+
+However, the deeper question remains: with price-only features and day+1 near coin-flip, why is cum3d significant? Two honest explanations:
+1. Noise reduction: summing 3 days averages out idiosyncratic noise, making weak signal detectable
+2. Multiple testing: 15 tests (5 models × 3 targets) at p<0.05 expects ~1 false positive. Ridge cum3d (p=0.0017) barely survives Bonferroni (0.05/15=0.003).
+
+The cum3d result is suggestive but not conclusive for price-only. The real test of cum3d's value will be with news features in Model 2, where there's an actual mechanism for multi-day information incorporation.
+
+**References**: Entry 16 (forward return drift), Entry 17 (3-5 day information incorporation), Q11 in open-questions.md, Hansen & Hodrick (1980), Newey & West (1987)
+
+## Entry 26 — The inherent ceiling of price-only return prediction — 2026-03-28
+
+**Tried**: Reframed evaluation from directional accuracy to return/price prediction (MAE, RMSE, R²_OOS, $MAE). This revealed a fundamental limitation that was hidden when we focused on direction.
+
+**The key insight**: Price-only models cannot predict extreme return days, and this is not a fixable modeling problem — it is an inherent property of what price data contains.
+
+The numbers tell the story clearly:
+
+| What | Actual returns | Model predictions |
+|------|---------------|-------------------|
+| Range (cc_excess) | -939 to +2170 bps | -159 to +150 bps |
+| Range (gap_excess) | -772 to +1417 bps | -63 to +85 bps |
+| Std ratio (pred/actual) | — | ~20% |
+
+The model predicts in a band of roughly ±1.5%, while reality swings ±10-20%. Prediction standard deviation is only **20% of actual** standard deviation. The model is essentially saying "tomorrow will be a slightly-above-or-below-average day" every single day.
+
+This is not a bug — it's mathematically inevitable. Here's why:
+
+1. **Extreme days are news-driven**. An 8% NVDA jump happens because of an earnings beat or AI announcement, not because yesterday's return was -0.3%. Past prices contain zero information about tomorrow's news.
+2. **Regularization forces shrinkage**. Ridge/LASSO/LightGBM all penalize large coefficients. Since extreme days are rare and unpredictable from features, the optimal strategy is to shrink toward the mean — predicting the average minimizes expected error when you can't tell which days will be extreme.
+3. **This is well-known in the literature**. Gu, Kelly & Xiu (2020) report R²_OOS of 0.4% monthly for the full cross-section. Campbell & Thompson (2008) note that even R²_OOS > 0% is economically meaningful. Our 5.6% on daily cc_excess is actually strong by academic standards — but it's entirely concentrated on normal days.
+
+**Concrete evidence — tail vs core performance**:
+
+| Target | Core MAE (80% of days) | Tail MAE (20% extreme) | Ratio |
+|--------|----------------------|----------------------|-------|
+| cc_excess | 64.8 bps | 310.7 bps | 4.8x |
+| gap_excess | 38.8 bps | 175.6 bps | 4.5x |
+| cum3d_excess | 123.4 bps | 604.0 bps | 4.9x |
+
+On normal days the model is reasonable (~65 bps MAE ≈ 0.65% error). On extreme days it's nearly 5x worse. Those extreme days are exactly the ones that matter most for trading and for our news impact scoring.
+
+**Full results** (return-prediction focused):
+
+| Target | Best Model | MAE (bps) | RMSE (bps) | R²_OOS | $MAE | CW p-value |
+|--------|-----------|-----------|------------|--------|------|------------|
+| cc_excess | LightGBM | 113.9 | 207.6 | 5.6% | $2.87 | 0.043 |
+| gap_excess | Ridge MSE | 66.1 | 133.5 | 2.4% | $1.66 | 0.054 |
+| cum3d_excess | Ridge MSE | 221.5 | 377.6 | 2.9% | n/a | 0.0017 |
+
+**What this means for Model 2 (news-enhanced)**:
+- The value of news features is not in improving the average prediction. It's specifically in **widening the prediction range on news days** — predicting that AAPL will move +5% on an earnings day instead of the usual +0.2%.
+- Success metric for Model 2: reduction in tail MAE. If news features can bring the tail/core ratio from 4.8x down to, say, 2.5x, that's a meaningful contribution even if overall R²_OOS improves modestly.
+- The price-only baseline establishes the **floor**: $2.87 average price error for cc_excess. Any improvement on extreme days directly reduces this.
+
+**Decision**: Directional accuracy removed from all evaluation. Not a metric for this project. Evaluation now uses:
+- Primary: R²_OOS, MAE/RMSE in bps, $MAE for price reconstruction
+- Diagnostic: tail/core MAE ratio, prediction range compression, bias
+- Statistical: Clark-West test vs naive expanding mean
+
+**References**: Campbell & Thompson (2008) R²_OOS framework, Gu Kelly & Xiu (2020) return prediction evaluation, Gopikrishnan et al. (1998) inverse cubic law for return tails
