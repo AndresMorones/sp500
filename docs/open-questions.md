@@ -36,7 +36,7 @@ We chose p=2 because we're ranking days, not computing moments. But we haven't t
 
 Empirical test needed: once we have labeled news days, compare recall@20 (of the top 20 scored days, how many had identifiable news?) at p=1.0, p=1.5, p=2.0. If p=1.5 and p=2.0 give identical recall, use p=1.5 for robustness.
 
-Note (2026-03-27): Entry 15's Precision@K shows all metrics converge by K≥50, and Cohen's d is small for all. This suggests the specific formula matters less than expected — the signal-to-noise ratio may be the binding constraint, not the scoring exponent. Still worth testing p directly.
+Note (2026-03-28): Entry 22's corrected cc Precision@K shows metrics do NOT converge by K≥50 — cc holds 75-81% even at K=500, well above the ~61% baseline rate. The earlier convergence finding (Entry 15) was an artifact of incomplete cc news matching. Cohen's d remains small for all metrics (max 0.180 for Ev). The formula still matters less than expected for gap, but cc now shows meaningful separation at all K values. Still worth testing p directly.
 
 ### Q7: What NLP model for news embeddings in stage 2?
 
@@ -55,9 +55,9 @@ Current position: deferred because z_AR already captures this implicitly. But th
 
 Test: once we have data, check whether opposite-direction days have systematically different news characteristics than same-direction misses.
 
-### Q9: Why do ~38% of top/bottom-100 extreme days have no news?
+### Q9: Why do ~20-31% of top/bottom-100 extreme days have no news?
 
-Entry 14 found that even the best metric (A_gap top 100) has 24% no-news days. Across all metrics, ~38% of extreme events lack headlines. Two hypotheses:
+Entry 22 (corrected): A_gap top/bottom 100 has ~31.5% no-news days, A_cc top/bottom 100 has ~20.5% no-news days. CC is better because it captures both gap and intraday news windows. Two hypotheses:
 1. **Incomplete news coverage**: the news.csv dataset may not capture all relevant articles (especially pre-market/after-hours wire reports, analyst notes, SEC filings).
 2. **Non-news extreme moves**: some extremes are driven by options expiration, index rebalancing, or liquidity events that don't generate headlines.
 
@@ -75,6 +75,20 @@ This matters because if we use forward returns as training signal, negative-scor
 ### Q11: Should the prediction target be cumulative 3-5 day returns instead of day+1?
 
 Entry 16 showed day+1 continuation rates near 50% (coin-flip) for all metrics, but cumulative returns at day+3 to day+5 show clear directional drift for positive events. This suggests the information signal takes 2-3 days to fully incorporate. Using day+1 returns as labels for the downstream model may add noise; cumulative 3-5 day excess returns may be better training targets.
+
+Note (2026-03-28): Entry 21's corrected baseline shows Ridge R²_OOS=1.4%, Dir Acc=62.4%. Day+1 prediction has weak but statistically significant signal (Clark-West p=0.049). Testing 3-day cumulative target is still warranted — the weak day+1 signal may strengthen at longer horizons where information incorporation completes.
+
+### Q12: Can the baseline be improved with longer test period or different features?
+
+Entry 21 established the corrected baseline: Ridge R²_OOS=1.4%, Dir Acc=62.4% on 30 test dates (210 predictions). Limitations:
+1. **30 test dates is still short** — need more data for statistical power. Clark-West p=0.049 is borderline.
+2. **All 7 tickers are mega-cap tech** — the model may not generalize to other sectors or market caps.
+3. **Bull market test period (Sep-Oct 2024)** — need bear/volatile regimes to validate.
+
+Potential improvements to test:
+- Excess returns (stock - SP500) instead of raw returns to remove shared market component
+- Cumulative 3-day target per Q11 and Entry 17 findings
+- More historical data if available
 
 ---
 

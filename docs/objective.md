@@ -32,7 +32,7 @@ Will be provided by the user. Expected format:
 
 - All model parameters (alpha, beta, sigma) must be estimated from historical data via rolling windows, not hand-picked
 - The methodology should be grounded in established finance literature (event study methodology, abnormal return framework)
-- Separate treatment of close-to-close returns and overnight gap returns
+- Two return types per day: gap (prev close to open) and close-to-close (prev close to close) — see journal Entry 13
 - Rolling estimation window of 120 days for the beta model (tested 30/60/120 — 120d produced lowest MAE for 6/7 tickers, see journal Entry 10)
 - MAD-based volatility estimation (robust to fat tails, per the inverse cubic law — Gopikrishnan et al. 1998)
 

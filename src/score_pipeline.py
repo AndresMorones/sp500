@@ -3,110 +3,16 @@ import math
 import os
 from datetime import datetime
 
-# --- Config ---
-WINDOW = 120  # rolling estimation window (MacKinlay 1997, Kolari et al. 2021)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW_DIR = os.path.join(BASE_DIR, "data", "raw")
-OUT_DIR = os.path.join(BASE_DIR, "data", "output")
-
-# Mapping: ticker -> individual stock history file
-STOCK_HISTORY_FILES = {
-    "AAPL": os.path.join(RAW_DIR, "Apple Stock Price History.csv"),
-    "AMZN": os.path.join(RAW_DIR, "Amazon.com Stock Price History.csv"),
-    "GOOGL": os.path.join(RAW_DIR, "Alphabet A Stock Price History.csv"),
-    "META": os.path.join(RAW_DIR, "Meta Platforms Stock Price History.csv"),
-    "MSFT": os.path.join(RAW_DIR, "Microsoft Stock Price History.csv"),
-    "NVDA": os.path.join(RAW_DIR, "NVIDIA Stock Price History.csv"),
-    "TSLA": os.path.join(RAW_DIR, "Tesla Stock Price History.csv"),
-}
-
-# --- Helpers ---
-
-def sign(x):
-    return (1 if x > 0 else -1 if x < 0 else 0)
-
-def mean(xs):
-    return sum(xs) / len(xs)
-
-def var(xs):
-    m = mean(xs)
-    return sum((x - m) ** 2 for x in xs) / (len(xs) - 1)
-
-def std(xs):
-    return math.sqrt(var(xs))
-
-def cov(xs, ys):
-    mx, my = mean(xs), mean(ys)
-    return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / (len(xs) - 1)
-
-def median(xs):
-    s = sorted(xs)
-    n = len(s)
-    if n % 2 == 1:
-        return s[n // 2]
-    return (s[n // 2 - 1] + s[n // 2]) / 2
-
-def ols_beta_alpha(xs, ys):
-    """OLS: y = alpha + beta * x. Returns (beta, alpha)."""
-    v = var(xs)
-    if v < 1e-16:
-        return 0.0, mean(ys)
-    b = cov(xs, ys) / v
-    a = mean(ys) - b * mean(xs)
-    return b, a
-
-def residual_std(xs, ys, beta, alpha):
-    """Std dev of residuals: y - (alpha + beta*x)."""
-    resids = [y - (alpha + beta * x) for x, y in zip(xs, ys)]
-    return std(resids)
-
-def parse_investing_vol(vol_str):
-    """Parse volume strings like '33.50M', '1.23B', '' -> int."""
-    vol_str = vol_str.strip()
-    if not vol_str or vol_str == "-":
-        return 0
-    multiplier = 1
-    if vol_str.endswith("M"):
-        multiplier = 1_000_000
-        vol_str = vol_str[:-1]
-    elif vol_str.endswith("B"):
-        multiplier = 1_000_000_000
-        vol_str = vol_str[:-1]
-    elif vol_str.endswith("K"):
-        multiplier = 1_000
-        vol_str = vol_str[:-1]
-    return int(float(vol_str.replace(",", "")) * multiplier)
-
-# --- Scoring functions ---
-
-def score_a(zi, zo, zv):
-    return sign(zi) * zi * zi
-
-def score_d(zi, zo, zv):
-    return sign(zi) * zi * zi * max(1, abs(zo))
-
-def score_e(zi, zo, zv):
-    return sign(zo) * zo * zo
-
-def score_ev(zi, zo, zv):
-    return sign(zo) * math.sqrt(zo * zo + zv * zv)
-
-def score_dv(zi, zo, zv):
-    d = zi * zi * max(1, abs(zo))
-    return sign(zi) * math.sqrt(d * d + zv * zv)
-
-SCORE_FNS = [
-    ("A", score_a),
-    ("D", score_d),
-    ("E", score_e),
-    ("Ev", score_ev),
-    ("Dv", score_dv),
-]
+from common import (
+    WINDOW, MIN_PERIODS, EPSILON, BASE_DIR, RAW_DIR, OUT_DIR,
+    STOCK_HISTORY_FILES, SCORE_FNS,
+    sign, mean, std, median, ols, residual_std, parse_investing_vol,
+)
 
 # --- 1. Load S&P 500 data (new extended file) ---
 
 sp500 = {}  # date_str -> {open, close}
-with open(os.path.join(RAW_DIR, "S&P 500 Historical Data (1).csv"), encoding="utf-8-sig") as f:
+with open(os.path.join(RAW_DIR, "S&P 500 Historical Data.csv"), encoding="utf-8-sig") as f:
     for row in csv.DictReader(f):
         dt = datetime.strptime(row["Date"], "%m/%d/%Y")
         date_str = dt.strftime("%Y-%m-%d")
@@ -152,7 +58,7 @@ for ticker, filename in STOCK_HISTORY_FILES.items():
 
 # --- 3b. Load news.csv and map to trading days ---
 # Pre-market (00:00-09:29) -> today's gap
-# Market hours (09:30-15:59) -> today's intraday
+# Market hours (09:30-15:59) -> today's close-to-close
 # After close (16:00-23:59) -> next trading day's gap
 
 MARKET_OPEN_HOUR, MARKET_OPEN_MIN = 9, 30
@@ -190,7 +96,7 @@ with open(os.path.join(RAW_DIR, "news.csv"), encoding="utf-8") as f:
             target_date = date_str
             bucket = news_gap
         elif hour < MARKET_CLOSE_HOUR:
-            # Market hours -> today's intraday
+            # Market hours -> today's close-to-close
             target_date = date_str
             bucket = news_cc
         else:
@@ -205,9 +111,16 @@ with open(os.path.join(RAW_DIR, "news.csv"), encoding="utf-8") as f:
             bucket[key] = []
         bucket[key].append((headline, summary))
 
+# cc return spans the full day (prev close -> close), which includes the gap.
+# Any news that drove the gap also affected the cc return — merge gap into cc.
+for key, articles in news_gap.items():
+    if key not in news_cc:
+        news_cc[key] = []
+    news_cc[key].extend(articles)
+
 news_gap_count = sum(len(v) for v in news_gap.values())
 news_cc_count = sum(len(v) for v in news_cc.values())
-print(f"News loaded: {news_gap_count} gap articles, {news_cc_count} close-to-close articles")
+print(f"News loaded: {news_gap_count} gap articles, {news_cc_count} cc articles (cc includes gap news)")
 
 # --- 4. Build per-ticker timelines (history + price.csv dates) ---
 
@@ -273,9 +186,9 @@ for ticker, days in stocks.items():
         w_cc_sp = [w["sp_cc"] for w in window if w["sp_cc"] is not None]
         w_lnvol = [math.log(w["volume"]) for w in window if w["volume"] > 0]
 
-        if len(w_gap_stock) < 30 or len(w_gap_sp) < 30:
+        if len(w_gap_stock) < MIN_PERIODS or len(w_gap_sp) < MIN_PERIODS:
             continue
-        if len(w_cc_stock) < 30 or len(w_cc_sp) < 30:
+        if len(w_cc_stock) < MIN_PERIODS or len(w_cc_sp) < MIN_PERIODS:
             continue
 
         n_gap = min(len(w_gap_stock), len(w_gap_sp))
@@ -287,14 +200,14 @@ for ticker, days in stocks.items():
         w_cc_sp = w_cc_sp[-n_cc:]
 
         # Beta, alpha, residual std for gap
-        beta_gap, alpha_gap = ols_beta_alpha(w_gap_sp, w_gap_stock)
-        s0_gap = residual_std(w_gap_sp, w_gap_stock, beta_gap, alpha_gap)
+        alpha_gap, beta_gap = ols(w_gap_sp, w_gap_stock)
+        s0_gap = residual_std(w_gap_sp, w_gap_stock, alpha_gap, beta_gap)
         sown_gap = std(w_gap_stock)
         med_gap = median(w_gap_stock)
 
         # Beta, alpha, residual std for close-to-close
-        beta_cc, alpha_cc = ols_beta_alpha(w_cc_sp, w_cc_stock)
-        s0_cc = residual_std(w_cc_sp, w_cc_stock, beta_cc, alpha_cc)
+        alpha_cc, beta_cc = ols(w_cc_sp, w_cc_stock)
+        s0_cc = residual_std(w_cc_sp, w_cc_stock, alpha_cc, beta_cc)
         sown_cc = std(w_cc_stock)
         med_cc = median(w_cc_stock)
 
@@ -306,17 +219,17 @@ for ticker, days in stocks.items():
             avg_lnvol = 0
             std_lnvol = 1.0
         lnvol_today = math.log(d["volume"]) if d["volume"] > 0 else avg_lnvol
-        zv = (lnvol_today - avg_lnvol) / max(std_lnvol, 1e-8)
+        zv = (lnvol_today - avg_lnvol) / max(std_lnvol, EPSILON)
 
         # Gap z-scores
         expected_gap = alpha_gap + beta_gap * d["sp_gap"]
-        zi_gap = (d["stock_gap"] - expected_gap) / max(s0_gap, 1e-8)
-        zo_gap = (d["stock_gap"] - med_gap) / max(sown_gap, 1e-8)
+        zi_gap = (d["stock_gap"] - expected_gap) / max(s0_gap, EPSILON)
+        zo_gap = (d["stock_gap"] - med_gap) / max(sown_gap, EPSILON)
 
         # Close-to-close z-scores
         expected_cc = alpha_cc + beta_cc * d["sp_cc"]
-        zi_cc = (d["stock_cc"] - expected_cc) / max(s0_cc, 1e-8)
-        zo_cc = (d["stock_cc"] - med_cc) / max(sown_cc, 1e-8)
+        zi_cc = (d["stock_cc"] - expected_cc) / max(s0_cc, EPSILON)
+        zo_cc = (d["stock_cc"] - med_cc) / max(sown_cc, EPSILON)
 
         row = {
             "date": d["date"],

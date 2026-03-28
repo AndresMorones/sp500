@@ -1,0 +1,12 @@
+# Keep this file up to date — add new dependencies here whenever a script
+# introduces an import that isn't stdlib. Group by script/purpose.
+
+# Core pipeline (src/score_pipeline.py, common.py): stdlib only
+
+# Sandbox visualization
+rich>=13.0
+
+# Model baseline (src/model_baseline.py)
+numpy>=1.24
+scikit-learn>=1.3
+lightgbm>=4.0
