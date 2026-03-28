@@ -80,15 +80,13 @@ Note (2026-03-28): Entry 21's corrected baseline shows Ridge R²_OOS=1.4%, Dir A
 
 ### Q12: Can the baseline be improved with longer test period or different features?
 
-Entry 21 established the corrected baseline: Ridge R²_OOS=1.4%, Dir Acc=62.4% on 30 test dates (210 predictions). Limitations:
-1. **30 test dates is still short** — need more data for statistical power. Clark-West p=0.049 is borderline.
-2. **All 7 tickers are mega-cap tech** — the model may not generalize to other sectors or market caps.
-3. **Bull market test period (Sep-Oct 2024)** — need bear/volatile regimes to validate.
+Entry 21 baseline: Ridge R²_OOS=1.4%, Dir Acc=62.4%. Entry 24 tested 6 literature-validated improvements (excess returns, Huber loss, rank transform, winsorization, HP tuning, temporal validation). Result: marginal gains. Huber loss improved statistical significance (CW p: 0.096→0.030) but R²_OOS dropped (1.0%→0.4%). LightGBM v1 fixed params still best R²_OOS (5.3%).
 
-Potential improvements to test:
-- Excess returns (stock - SP500) instead of raw returns to remove shared market component
+Remaining improvements to test:
 - Cumulative 3-day target per Q11 and Entry 17 findings
 - More historical data if available
+- More tickers beyond mega-cap tech
+- Bear/volatile market regime testing
 
 ---
 

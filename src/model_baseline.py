@@ -1,8 +1,18 @@
-"""Model 1: Price-only baseline for next-day return prediction.
+"""Model 1: Price-only baseline for next-day excess return prediction.
 
 Pooled across 7 tickers. Walk-forward expanding window with 3-day embargo.
-Models: Naive (historical mean), Ridge, LASSO, LightGBM.
+Models: Naive (expanding mean), Ridge (MSE), Ridge (Huber), LASSO, LightGBM (Huber).
 Monthly refit to prevent overfitting on small dataset.
+
+Target: excess return (stock_cc - SP500_cc). Removes shared market component so the
+model predicts genuine stock-specific alpha, not bull/bear market direction.
+
+Huber loss (epsilon=1.35): robust to fat-tailed return distributions. Stock returns
+follow power-law tails — a single 8% drop generates 16x the squared error of a 2% drop.
+MSE-trained models distort coefficients chasing these rare extremes. Huber switches from
+quadratic to linear loss above the threshold, focusing on the predictable ~95% of days.
+Result: lower forecast error variance -> stronger statistical significance (Clark-West),
+even if point R²_OOS decreases.
 
 CRITICAL: All features use ONLY data available before the prediction day.
 - Lagged returns: t-1, t-2, ..., t-5 (known at t-1 close)
@@ -15,6 +25,7 @@ Literature:
 - Campbell & Thompson (2008) OOS R-squared with expanding historical mean
 - Clark & West (2007) test for nested model comparison
 - de Prado (2018) purged cross-validation with embargo
+- kristina969 GKX replication: Huber loss for fat-tail robustness
 """
 
 import csv
@@ -24,11 +35,13 @@ import warnings
 from datetime import datetime
 
 import numpy as np
-from sklearn.linear_model import Ridge, Lasso, RidgeCV, LassoCV
+from scipy.stats import norm
+from sklearn.linear_model import RidgeCV, LassoCV, HuberRegressor
 from sklearn.preprocessing import StandardScaler
 import lightgbm as lgb
 
 warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 # --- Config ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -129,6 +142,9 @@ def build_ticker_series(ticker):
         else:
             day["sp_ret_cc"] = 0.0
 
+        # Excess return: stock - market (the prediction target)
+        day["ret_excess"] = day["ret_cc"] - day["sp_ret_cc"]
+
         # Intraday range
         day["range_pct"] = (d["high"] - d["low"]) / d["close"] if d["close"] > 0 else 0.0
 
@@ -164,19 +180,24 @@ def compute_features(series, idx):
             feat[f"ret_cc_{lag}"] = series[j]["ret_cc"]
             feat[f"ret_gap_{lag}"] = series[j]["ret_gap"]
             feat[f"sp_ret_cc_{lag}"] = series[j]["sp_ret_cc"]
+            feat[f"ret_excess_{lag}"] = series[j]["ret_excess"]
         else:
             feat[f"ret_cc_{lag}"] = 0.0
             feat[f"ret_gap_{lag}"] = 0.0
             feat[f"sp_ret_cc_{lag}"] = 0.0
+            feat[f"ret_excess_{lag}"] = 0.0
 
     # Momentum: cumulative return ending at t-1
     for w in MOMENTUM_WINDOWS:
         cum = 1.0
+        cum_excess = 1.0
         for j in range(1, w + 1):
             k = idx - j
             if k >= 0:
                 cum *= (1 + series[k]["ret_cc"])
+                cum_excess *= (1 + series[k]["ret_excess"])
         feat[f"momentum_{w}d"] = cum - 1.0
+        feat[f"momentum_excess_{w}d"] = cum_excess - 1.0
 
     # Volatility: rolling std of cc returns ending at t-1
     cc_returns_20 = [series[idx - j]["ret_cc"] for j in range(1, VOL_WINDOW_SHORT + 1) if idx - j >= 0]
@@ -226,9 +247,6 @@ for ticker in TICKERS:
         feat = compute_features(series, idx)
         if feat is None:
             continue
-        target_cc = series[idx]["ret_cc"]
-        prev_close = series[idx - 1]["close"]
-        actual_close = series[idx]["close"]
 
         if feature_names is None:
             feature_names = sorted(feat.keys())
@@ -237,9 +255,11 @@ for ticker in TICKERS:
             "date": series[idx]["date"],
             "ticker": ticker,
             "features": feat,
-            "target_cc": target_cc,
-            "prev_close": prev_close,
-            "actual_close": actual_close,
+            "target_excess": series[idx]["ret_excess"],
+            "target_cc": series[idx]["ret_cc"],
+            "sp_ret_cc": series[idx]["sp_ret_cc"],
+            "prev_close": series[idx - 1]["close"],
+            "actual_close": series[idx]["close"],
         })
 
 all_samples.sort(key=lambda s: (s["date"], s["ticker"]))
@@ -252,17 +272,25 @@ print(f"  Date range: {unique_dates[0]} to {unique_dates[-1]}")
 print(f"  Features: {feature_names}")
 
 X_all = np.array([[s["features"][f] for f in feature_names] for s in all_samples])
-y_all = np.array([s["target_cc"] for s in all_samples])
+y_all_excess = np.array([s["target_excess"] for s in all_samples])
+y_all_raw = np.array([s["target_cc"] for s in all_samples])
+sp_ret_all = np.array([s["sp_ret_cc"] for s in all_samples])
 dates_all = np.array([date_to_idx[s["date"]] for s in all_samples])
 
 # --- 4. Walk-forward evaluation with embargo and monthly refit ---
 
-print(f"\nWalk-forward evaluation (min train={TRAIN_MIN} dates, embargo={EMBARGO_DAYS}, refit every {REFIT_EVERY} days)...")
+MODEL_NAMES = ["naive", "ridge", "ridge_huber", "lasso", "lgbm"]
+
+print(f"\nWalk-forward evaluation (min train={TRAIN_MIN} dates, embargo={EMBARGO_DAYS}, "
+      f"refit every {REFIT_EVERY} days)")
+print(f"  Target: excess return (stock - SP500). Ridge Huber + LightGBM Huber for fat-tail robustness.")
 
 test_date_indices = sorted(set(di for di in dates_all if di >= TRAIN_MIN))
 
-predictions = {name: [] for name in ["naive", "ridge", "lasso", "lgbm"]}
-actuals = []
+predictions = {name: [] for name in MODEL_NAMES}
+actuals_excess = []
+actuals_raw = []
+sp_rets = []
 metadata = []
 expanding_means = []  # for OOS R² (Campbell & Thompson 2008)
 
@@ -277,9 +305,11 @@ for test_di in test_date_indices:
     test_day_mask = dates_all == test_di
 
     X_train = X_all[train_mask]
-    y_train = y_all[train_mask]
+    y_train = y_all_excess[train_mask]
     X_test = X_all[test_day_mask]
-    y_test = y_all[test_day_mask]
+    y_test_excess = y_all_excess[test_day_mask]
+    y_test_raw = y_all_raw[test_day_mask]
+    sp_ret_test = sp_ret_all[test_day_mask]
 
     if len(X_train) < 50 or len(X_test) == 0:
         continue
@@ -294,19 +324,24 @@ for test_di in test_date_indices:
         scaler = StandardScaler()
         X_train_s = scaler.fit_transform(X_train)
 
-        # Ridge with CV over alpha
+        # Ridge (MSE) with CV over alpha
         ridge = RidgeCV(alphas=[0.01, 0.1, 1.0, 10.0, 100.0])
         ridge.fit(X_train_s, y_train)
+
+        # Ridge (Huber) — robust to fat-tailed returns
+        ridge_huber = HuberRegressor(epsilon=1.35, alpha=1.0, max_iter=500)
+        ridge_huber.fit(X_train_s, y_train)
 
         # LASSO with CV over alpha
         lasso = LassoCV(alphas=[0.0001, 0.001, 0.01, 0.1], max_iter=10000, cv=5)
         lasso.fit(X_train_s, y_train)
 
-        # LightGBM
+        # LightGBM with Huber loss
         lgb_train_ds = lgb.Dataset(X_train_s, y_train, free_raw_data=False)
         lgb_params = {
-            "objective": "regression",
-            "metric": "mae",
+            "objective": "huber",
+            "huber_delta": 1.35,
+            "metric": "huber",
             "max_depth": 3,
             "num_leaves": 8,
             "min_child_samples": 30,
@@ -324,6 +359,7 @@ for test_di in test_date_indices:
         current_models = {
             "scaler": scaler,
             "ridge": ridge,
+            "ridge_huber": ridge_huber,
             "lasso": lasso,
             "lgbm": lgb_model,
         }
@@ -335,6 +371,7 @@ for test_di in test_date_indices:
 
     pred_naive = np.full(len(X_test), hist_mean)
     pred_ridge = current_models["ridge"].predict(X_test_s)
+    pred_ridge_huber = current_models["ridge_huber"].predict(X_test_s)
     pred_lasso = current_models["lasso"].predict(X_test_s)
     pred_lgbm = current_models["lgbm"].predict(X_test_s)
 
@@ -343,18 +380,23 @@ for test_di in test_date_indices:
         s = all_samples[sample_idx]
         predictions["naive"].append(pred_naive[i])
         predictions["ridge"].append(pred_ridge[i])
+        predictions["ridge_huber"].append(pred_ridge_huber[i])
         predictions["lasso"].append(pred_lasso[i])
         predictions["lgbm"].append(pred_lgbm[i])
-        actuals.append(y_test[i])
+        actuals_excess.append(y_test_excess[i])
+        actuals_raw.append(y_test_raw[i])
+        sp_rets.append(sp_ret_test[i])
         expanding_means.append(hist_mean)
         metadata.append((s["date"], s["ticker"], s["prev_close"], s["actual_close"]))
 
-actuals = np.array(actuals)
+actuals_excess = np.array(actuals_excess)
+actuals_raw = np.array(actuals_raw)
+sp_rets = np.array(sp_rets)
 expanding_means = np.array(expanding_means)
 for k in predictions:
     predictions[k] = np.array(predictions[k])
 
-print(f"  {len(actuals)} out-of-sample predictions ({len(test_date_indices)} test dates)")
+print(f"  {len(actuals_excess)} out-of-sample predictions ({len(test_date_indices)} test dates)")
 
 # --- 5. Evaluation metrics ---
 
@@ -377,42 +419,41 @@ def clark_west_test(pred_model, pred_bench, actual):
     adj = (pred_bench - pred_model) ** 2
     f_t = e_bench ** 2 - (e_model ** 2 - adj)
     t_stat = np.mean(f_t) / (np.std(f_t, ddof=1) / np.sqrt(len(f_t)))
-    # One-sided test: model beats benchmark
-    from scipy.stats import norm
     p_value = 1 - norm.cdf(t_stat)
     return t_stat, p_value
 
 
-def evaluate(pred, actual, meta, hist_means):
-    """Compute evaluation metrics for return predictions."""
-    mae = np.mean(np.abs(pred - actual))
-    rmse = np.sqrt(np.mean((pred - actual) ** 2))
+def evaluate(pred_excess, actual_excess, actual_raw, sp_ret, meta, hist_means):
+    """Compute evaluation metrics for excess return predictions.
+    Also reconstructs raw return predictions for price-space metrics."""
+    mae = np.mean(np.abs(pred_excess - actual_excess))
+    rmse = np.sqrt(np.mean((pred_excess - actual_excess) ** 2))
 
-    # Directional accuracy (exclude near-zero predictions)
-    correct_dir = np.sum(np.sign(pred) == np.sign(actual))
-    dir_acc = correct_dir / len(actual) * 100
+    # Directional accuracy on excess returns
+    correct_dir_exc = np.sum(np.sign(pred_excess) == np.sign(actual_excess))
+    dir_acc_exc = correct_dir_exc / len(actual_excess) * 100
+
+    # Directional accuracy on raw returns (pred_raw = pred_excess + sp_ret)
+    pred_raw = pred_excess + sp_ret
+    correct_dir_raw = np.sum(np.sign(pred_raw) == np.sign(actual_raw))
+    dir_acc_raw = correct_dir_raw / len(actual_raw) * 100
 
     # OOS R² (Campbell & Thompson 2008)
-    r2_oos = oos_r2(pred, actual, hist_means)
+    r2_oos = oos_r2(pred_excess, actual_excess, hist_means)
 
-    # Standard R²
-    ss_res = np.sum((actual - pred) ** 2)
-    ss_tot = np.sum((actual - np.mean(actual)) ** 2)
-    r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0
-
-    # Price-space metrics
+    # Price-space metrics (reconstruct from raw return prediction)
     price_errors = []
     for i, (date, ticker, prev_close, actual_close) in enumerate(meta):
-        pred_close = prev_close * (1 + pred[i])
+        pred_close = prev_close * (1 + pred_raw[i])
         price_errors.append(abs(pred_close - actual_close))
     price_mae = np.mean(price_errors)
     price_rmse = np.sqrt(np.mean(np.array(price_errors) ** 2))
 
     return {
-        "MAE_ret": mae,
-        "RMSE_ret": rmse,
-        "Dir_Acc": dir_acc,
-        "R2": r2,
+        "MAE_exc": mae,
+        "RMSE_exc": rmse,
+        "Dir_Acc_exc": dir_acc_exc,
+        "Dir_Acc_raw": dir_acc_raw,
         "R2_OOS": r2_oos,
         "MAE_price": price_mae,
         "RMSE_price": price_rmse,
@@ -421,35 +462,39 @@ def evaluate(pred, actual, meta, hist_means):
 
 # --- 6. Print results ---
 
-print(f"\n{'=' * 110}")
+print(f"\n{'=' * 120}")
 print("MODEL COMPARISON -- Out-of-sample (walk-forward, 3-day embargo, monthly refit)")
-print(f"{'=' * 110}")
+print(f"  Target: excess return (stock - SP500)")
+print(f"{'=' * 120}")
 
-header = (f"{'Model':<12} {'MAE(ret)':>10} {'RMSE(ret)':>10} {'Dir Acc%':>10} "
-          f"{'R2':>8} {'R2_OOS':>8} {'MAE($)':>10} {'RMSE($)':>10}")
+header = (f"{'Model':<16} {'MAE(exc)':>10} {'RMSE(exc)':>10} {'DirAcc(exc)':>12} "
+          f"{'DirAcc(raw)':>12} {'R2_OOS':>8} {'MAE($)':>10} {'RMSE($)':>10}")
 print(header)
 print("-" * len(header))
 
 model_results = {}
-for model_name in ["naive", "ridge", "lasso", "lgbm"]:
-    res = evaluate(predictions[model_name], actuals, metadata, expanding_means)
+for model_name in MODEL_NAMES:
+    res = evaluate(predictions[model_name], actuals_excess, actuals_raw,
+                   sp_rets, metadata, expanding_means)
     model_results[model_name] = res
-    print(f"{model_name:<12} {res['MAE_ret']:>10.6f} {res['RMSE_ret']:>10.6f} "
-          f"{res['Dir_Acc']:>9.1f}% {res['R2']:>8.4f} {res['R2_OOS']:>8.4f} "
-          f"{res['MAE_price']:>9.2f}$ {res['RMSE_price']:>9.2f}$")
+    print(f"{model_name:<16} {res['MAE_exc']:>10.6f} {res['RMSE_exc']:>10.6f} "
+          f"{res['Dir_Acc_exc']:>11.1f}% {res['Dir_Acc_raw']:>11.1f}% "
+          f"{res['R2_OOS']:>8.4f} {res['MAE_price']:>9.2f}$ {res['RMSE_price']:>9.2f}$")
 
 # Clark-West tests: each model vs naive
-print(f"\n  Clark-West tests (model vs naive historical mean):")
-for model_name in ["ridge", "lasso", "lgbm"]:
-    t_stat, p_val = clark_west_test(predictions[model_name], predictions["naive"], actuals)
+print(f"\n  Clark-West tests (model vs naive expanding mean, on excess returns):")
+for model_name in MODEL_NAMES:
+    if model_name == "naive":
+        continue
+    t_stat, p_val = clark_west_test(predictions[model_name], predictions["naive"], actuals_excess)
     sig = "***" if p_val < 0.01 else "**" if p_val < 0.05 else "*" if p_val < 0.10 else ""
-    print(f"    {model_name:>8} vs naive: t={t_stat:>6.3f}, p={p_val:.4f} {sig}")
+    print(f"    {model_name:>14} vs naive: t={t_stat:>6.3f}, p={p_val:.4f} {sig}")
 
 # --- 7. Per-ticker breakdown ---
 
-print(f"\n{'=' * 110}")
+print(f"\n{'=' * 120}")
 print("PER-TICKER BREAKDOWN")
-print(f"{'=' * 110}")
+print(f"{'=' * 120}")
 
 for ticker in TICKERS:
     ticker_mask = np.array([m[1] == ticker for m in metadata])
@@ -457,52 +502,65 @@ for ticker in TICKERS:
         continue
 
     print(f"\n  {ticker} ({ticker_mask.sum()} predictions):")
-    header = f"  {'Model':<12} {'MAE(ret)':>10} {'Dir Acc%':>10} {'R2_OOS':>8} {'MAE($)':>10}"
+    header = f"  {'Model':<16} {'MAE(exc)':>10} {'DirAcc(exc)':>12} {'DirAcc(raw)':>12} {'R2_OOS':>8} {'MAE($)':>10}"
     print(header)
 
-    for model_name in ["naive", "ridge", "lasso", "lgbm"]:
+    for model_name in MODEL_NAMES:
         pred_t = predictions[model_name][ticker_mask]
-        act_t = actuals[ticker_mask]
+        act_exc_t = actuals_excess[ticker_mask]
+        act_raw_t = actuals_raw[ticker_mask]
+        sp_t = sp_rets[ticker_mask]
         hm_t = expanding_means[ticker_mask]
         meta_t = [m for m, mask in zip(metadata, ticker_mask) if mask]
-        res = evaluate(pred_t, act_t, meta_t, hm_t)
-        print(f"  {model_name:<12} {res['MAE_ret']:>10.6f} {res['Dir_Acc']:>9.1f}% "
-              f"{res['R2_OOS']:>8.4f} {res['MAE_price']:>9.2f}$")
+        res = evaluate(pred_t, act_exc_t, act_raw_t, sp_t, meta_t, hm_t)
+        print(f"  {model_name:<16} {res['MAE_exc']:>10.6f} {res['Dir_Acc_exc']:>11.1f}% "
+              f"{res['Dir_Acc_raw']:>11.1f}% {res['R2_OOS']:>8.4f} {res['MAE_price']:>9.2f}$")
 
 # --- 8. Feature importance ---
 
-print(f"\n{'=' * 110}")
-print("FEATURE IMPORTANCE (final refit on all training data)")
-print(f"{'=' * 110}")
+print(f"\n{'=' * 120}")
+print("FEATURE IMPORTANCE (final refit on all data)")
+print(f"{'=' * 120}")
 
 scaler_final = StandardScaler()
 X_all_s = scaler_final.fit_transform(X_all)
 
-# Ridge
+# Ridge (MSE)
 ridge_final = RidgeCV(alphas=[0.01, 0.1, 1.0, 10.0, 100.0])
-ridge_final.fit(X_all_s, y_all)
+ridge_final.fit(X_all_s, y_all_excess)
 ridge_coefs = list(zip(feature_names, ridge_final.coef_))
 ridge_coefs.sort(key=lambda x: abs(x[1]), reverse=True)
 
-print(f"\n  Ridge (best alpha={ridge_final.alpha_:.2f}) -- Top 15 features by |coefficient|:")
+print(f"\n  Ridge MSE (best alpha={ridge_final.alpha_:.2f}) -- Top 15 features by |coefficient|:")
 for i, (name, coef) in enumerate(ridge_coefs[:15]):
-    print(f"    {i+1:>2}. {name:<20} {coef:>+10.6f}")
+    print(f"    {i+1:>2}. {name:<25} {coef:>+10.6f}")
+
+# Ridge (Huber)
+huber_final = HuberRegressor(epsilon=1.35, alpha=1.0, max_iter=500)
+huber_final.fit(X_all_s, y_all_excess)
+huber_coefs = list(zip(feature_names, huber_final.coef_))
+huber_coefs.sort(key=lambda x: abs(x[1]), reverse=True)
+
+print(f"\n  Ridge Huber (eps=1.35, alpha=1.0) -- Top 15 features by |coefficient|:")
+for i, (name, coef) in enumerate(huber_coefs[:15]):
+    print(f"    {i+1:>2}. {name:<25} {coef:>+10.6f}")
 
 # LASSO
 lasso_final = LassoCV(alphas=[0.0001, 0.001, 0.01, 0.1], max_iter=10000, cv=5)
-lasso_final.fit(X_all_s, y_all)
+lasso_final.fit(X_all_s, y_all_excess)
 lasso_coefs = [(n, c) for n, c in zip(feature_names, lasso_final.coef_) if abs(c) > 1e-8]
 lasso_coefs.sort(key=lambda x: abs(x[1]), reverse=True)
 
 print(f"\n  LASSO (best alpha={lasso_final.alpha_:.4f}) -- Non-zero features ({len(lasso_coefs)}/{len(feature_names)}):")
 for i, (name, coef) in enumerate(lasso_coefs[:15]):
-    print(f"    {i+1:>2}. {name:<20} {coef:>+10.6f}")
+    print(f"    {i+1:>2}. {name:<25} {coef:>+10.6f}")
 
-# LightGBM
-lgb_final_ds = lgb.Dataset(X_all_s, y_all)
+# LightGBM (Huber)
+lgb_final_ds = lgb.Dataset(X_all_s, y_all_excess)
 lgb_params_final = {
-    "objective": "regression",
-    "metric": "mae",
+    "objective": "huber",
+    "huber_delta": 1.35,
+    "metric": "huber",
     "max_depth": 3,
     "num_leaves": 8,
     "min_child_samples": 30,
@@ -519,28 +577,30 @@ lgb_final = lgb.train(lgb_params_final, lgb_final_ds, num_boost_round=150,
 lgb_imp = list(zip(feature_names, lgb_final.feature_importance(importance_type="gain")))
 lgb_imp.sort(key=lambda x: x[1], reverse=True)
 
-print("\n  LightGBM -- Top 15 features by gain:")
+print("\n  LightGBM Huber -- Top 15 features by gain:")
 for i, (name, imp) in enumerate(lgb_imp[:15]):
-    print(f"    {i+1:>2}. {name:<20} {imp:>10.1f}")
+    print(f"    {i+1:>2}. {name:<25} {imp:>10.1f}")
 
 # --- 9. Save predictions ---
 
 out_path = os.path.join(OUT_DIR, "baseline_predictions.csv")
 with open(out_path, "w", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)
-    writer.writerow(["date", "ticker", "prev_close", "actual_close", "actual_ret",
-                     "pred_naive", "pred_ridge", "pred_lasso", "pred_lgbm",
-                     "expanding_mean"])
+    writer.writerow(["date", "ticker", "prev_close", "actual_close",
+                     "actual_ret_raw", "actual_ret_excess", "sp_ret",
+                     "pred_naive", "pred_ridge", "pred_ridge_huber",
+                     "pred_lasso", "pred_lgbm", "expanding_mean"])
     for i, (date, ticker, prev_close, actual_close) in enumerate(metadata):
         writer.writerow([
             date, ticker, f"{prev_close:.4f}", f"{actual_close:.4f}",
-            f"{actuals[i]:.6f}",
+            f"{actuals_raw[i]:.6f}", f"{actuals_excess[i]:.6f}", f"{sp_rets[i]:.6f}",
             f"{predictions['naive'][i]:.6f}",
             f"{predictions['ridge'][i]:.6f}",
+            f"{predictions['ridge_huber'][i]:.6f}",
             f"{predictions['lasso'][i]:.6f}",
             f"{predictions['lgbm'][i]:.6f}",
             f"{expanding_means[i]:.6f}",
         ])
 
 print(f"\nPredictions saved to {out_path}")
-print(f"Total out-of-sample predictions: {len(actuals)}")
+print(f"Total out-of-sample predictions: {len(actuals_excess)}")

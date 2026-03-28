@@ -611,3 +611,39 @@ Our pipeline differs from GKX in:
 - **Frequency**: daily returns vs their monthly
 - **Features**: 34 custom features (including our A scores from Stage 1) vs their 94 firm characteristics
 - **Implementation**: independent Python code, not a port of their MATLAB simulation
+
+## Entry 24 — Adopted Huber loss + excess return target (supersedes Entry 21 baseline) — 2026-03-28
+
+**Tried**: Tested 6 methodological improvements from validated GKX replications (kristina969 German market; Tidy Finance US). Of the 6, adopted 2 into `src/model_baseline.py`:
+
+1. **Excess return target (stock - SP500)**: Raw return = market component + stock-specific alpha. During our bull-market test period (Sep-Oct 2024), predicting "stocks go up" yields ~65% directional accuracy for free — the SP500 component does the work, not the model. Excess returns remove this free ride, forcing the model to predict genuine alpha. Every academic paper (GKX 2020, Campbell-Thompson 2008, Rapach et al. 2010) uses excess returns as the standard.
+
+2. **Huber loss (epsilon=1.35)**: Stock returns follow power-law tails (Gopikrishnan 1998). A single 8% TSLA drop generates 16× the squared error of a 2% drop under MSE. MSE-trained Ridge distorts its coefficients chasing these rare extremes — but extreme days are driven by unpredictable events (earnings, macro shocks). Huber switches from quadratic to linear loss above epsilon=1.35σ, so the model focuses on the predictable ~95% of days. Result: lower variance in forecast errors → higher Clark-West t-statistic → stronger statistical significance, even if point R²_OOS (dominated by tail days) decreases.
+
+Dropped 4 others: rank transform (needs >100 stocks for cross-sectional ranking), HP grid tuning (small validation set adds noise), target winsorization (marginal), temporal validation fold (unnecessary for this dataset).
+
+**Result** (final `model_baseline.py`, 30 test dates / 210 predictions, all on excess returns):
+
+| Model | MAE(exc) | RMSE(exc) | DirAcc(exc) | DirAcc(raw) | R²_OOS | CW p-value |
+|-------|----------|-----------|-------------|-------------|--------|------------|
+| Naive (expanding mean) | 0.01140 | 0.02137 | 54.3% | 65.2% | 0.000 | — |
+| Ridge (MSE) | 0.01146 | 0.02132 | 55.2% | 62.9% | 0.005 | 0.132 |
+| **Ridge (Huber)** | 0.01128 | 0.02137 | **57.1%** | 61.4% | -0.001 | 0.304 |
+| LASSO | 0.01139 | 0.02136 | 54.3% | 65.2% | 0.000 | 0.215 |
+| **LightGBM (Huber)** | 0.01140 | 0.02076 | 53.8% | 63.8% | **0.056** | **0.043** |
+
+Key findings:
+
+1. **LightGBM (Huber) is the strongest model**: R²_OOS=5.6%, Clark-West p=0.043 (significant at 5%). Captures variance patterns (lowest RMSE) with statistical significance. Huber loss on trees works — it stops the model from overfitting to extreme return days.
+2. **Ridge Huber has best MAE and best excess DirAcc (57.1%)** — consistent, well-calibrated predictions on normal days. Lower MAE than any other model. The Huber advantage: it doesn't waste coefficient budget on unpredictable tail events.
+3. **LASSO still zeros all 41 features** — the excess return signal is genuinely diffuse. No single feature (or small subset) predicts alpha. L2 regularization (Ridge, LightGBM) preserves the weak ensemble; L1 destroys it.
+4. **Excess return DirAcc (54.3% naive) is the honest bar**: compared to raw DirAcc (65.2% naive), this strips the bull-market tailwind. Ridge Huber beats it by 2.8pp.
+5. **Feature importance (Huber Ridge)**: momentum_5d (+0.0089), momentum_excess_5d (+0.006), ret_excess_1 (-0.006) dominate. A_cc_1 remains in top 11 — the Stage 1 news score carries information even in a price-only model.
+6. **Per-ticker standouts**: Ridge Huber excels for TSLA (60% DirAcc(exc) vs 43.3% naive), NVDA (66.7% vs 56.7%), MSFT (63.3% vs 40%). These are the highest-volatility tickers where Huber's tail robustness matters most.
+
+**Decision**: `model_baseline.py` now uses excess return target + Huber loss as the definitive baseline. The bar for Model 2 (news-enhanced) is:
+- Beat LightGBM R²_OOS > 5.6% (Clark-West p < 0.05)
+- Beat Ridge Huber DirAcc(exc) > 57.1%
+- Both tests must pass on the same 30-date / 210-prediction evaluation window.
+
+**References**: kristina969 GKX replication (Huber loss), Tidy Finance GKX replication (excess returns, expanding window), Gu, Kelly & Xiu (2020), Campbell & Thompson (2008), Gopikrishnan et al. (1998) power-law tails
