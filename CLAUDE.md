@@ -21,20 +21,30 @@ When ending a session: update journal.md with what was tried, update open-questi
 sp500/
 ├── data/
 │   ├── raw/          # Source CSVs (price.csv, news.csv, S&P 500, individual stock histories)
-│   └── output/       # Generated outputs (scores_output.csv)
+│   └── output/       # Generated outputs (scores_output.csv, baseline_predictions.csv)
 ├── docs/             # objective.md, journal.md, open-questions.md
 ├── src/              # Production pipeline code
+│   ├── common.py            # Shared constants, math helpers, OLS, scoring functions, data loaders
 │   ├── score_pipeline.py    # Main scoring pipeline — produces scores_output.csv
 │   ├── score_analysis.py    # Metric evaluation (overlap, Cohen's d, Precision@K, forward returns)
 │   ├── rank_divergence.py   # Per-ticker rank comparison between metrics
-│   └── beta_window_test.py  # Out-of-sample beta window and model comparison
+│   ├── beta_window_test.py  # Out-of-sample beta window and model comparison
+│   └── model_baseline.py    # Stage 2 baseline models (Ridge, LASSO, LightGBM)
+├── tests/
+│   └── test_smoke.py        # Pipeline invariant checks (run with pytest or standalone)
 ├── sandbox/          # Exploration tools — not production
-│   ├── combined_news_impact_matrix.html  # Interactive matrix (open in browser, no server)
+│   ├── combined_news_impact_matrix.html
 │   ├── combined_news_impact_matrix.py
 │   ├── compare_scoring_options.py
 │   └── Notes
+├── requirements.txt  # All dependencies — update whenever a new import is added
+├── .gitignore
 └── CLAUDE.md
 ```
+
+## Dependency management
+
+All non-stdlib imports must be listed in `requirements.txt`, grouped by the script that needs them. When adding a new import to any script, update `requirements.txt` in the same commit.
 
 ## Running the pipeline
 

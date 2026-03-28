@@ -372,3 +372,242 @@ Why not the others:
 - Keep **zi, zo, zv as separate feature columns** for the model — don't collapse into a single score. The model can learn its own weighting (per Entry 9).
 - Use **K=50 per ticker** as the high-confidence training set, expand to K=100 with noisier labels.
 - Account for **day+1 mean reversion** — the initial price reaction overshoots. Cumulative 3-5 day excess returns are more informative training targets than day+1 (per Entry 17, Q11).
+
+## Entry 19 — Model 1: Price-only baseline (walk-forward) — 2026-03-28
+
+**Tried**: Built pooled prediction models across 7 tickers for next-day close-to-close return. Four models: Naive (predict 0), Ridge, LASSO, LightGBM. Walk-forward expanding window (train on first 150 dates, predict forward). 34 features: lagged returns (cc, gap, SP500), momentum (5d, 20d), volatility (20d std, 60d ratio), range, volume, A scores, beta, day-of-week, ticker one-hot. Script: `src/model_baseline.py`.
+
+**Result**:
+
+| Model | MAE(ret) | RMSE(ret) | Dir Acc | R² | MAE($) |
+|-------|----------|-----------|---------|-----|--------|
+| Naive | 0.01306  | 0.02279   | 0.5%    | -0.013 | $3.27 |
+| Ridge | 0.00977  | 0.01387   | 72.4%   | 0.625  | $2.43 |
+| LASSO | 0.00970  | 0.01381   | 72.4%   | 0.628  | $2.42 |
+| LightGBM | 0.00908 | 0.01455 | 76.5%   | 0.587  | $2.35 |
+
+Key findings:
+
+1. **All models massively beat naive baseline.** ~72-76% directional accuracy vs 0.5% for naive. R² of 0.59-0.63 is exceptionally high for daily return prediction.
+2. **LightGBM wins on MAE and directional accuracy (76.5%)** but Ridge/LASSO win on RMSE and R². LightGBM is better at getting direction right but occasionally makes larger errors.
+3. **LASSO and Ridge are nearly identical** — the L1 penalty drops only 6/34 features. Most features carry some signal.
+4. **A_cc is the #1 feature across all models.** Ridge coef +0.018, LASSO coef +0.018, LightGBM top gain. The Stage 1 abnormal return score is the single most predictive feature for next-day returns — even in a price-only model.
+5. **Per-ticker: LightGBM dominates volatile stocks.** AAPL 87.1%, NVDA 80.6%, META 74.2% directional accuracy. Ridge/LASSO are more consistent across tickers.
+6. **TSLA hardest to predict** — highest MAE across all models ($4.10-$6.45), consistent with its high idiosyncratic volatility.
+
+Feature importance consensus (top 5 across all models):
+1. A_cc (abnormal return score) — overwhelmingly #1
+2. range_pct (intraday range) — volatility proxy
+3. A_gap (gap abnormal return)
+4. momentum_5d / sp_ret_cc_4
+5. vol_20d (realized volatility)
+
+**Decision**: The price-only baseline is strong (R²=0.63, 76.5% direction accuracy). A_cc being the top feature validates the Stage 1 scoring work — the abnormal return captures information content that persists into the next day. The news-enhanced Model 2 must beat these numbers to justify the additional complexity.
+
+**References**: Gu, Kelly & Xiu (2020), "Pooling and winsorizing ML forecasts" (J. Banking & Finance 2024), Leippold, Wang & Zhou (2022)
+
+## Entry 20 — Include gap news in cc news columns — 2026-03-28
+
+**Tried**: Merged gap news into cc news columns. CC return = prev close → close, which spans the full day including the overnight gap, so cc news should include both intraday and gap articles.
+
+After the gap/cc bucketing loop, all gap news entries are now copied into cc. Gap columns remain pure (overnight only), cc includes all news that affected the full-day return.
+
+**Result**: CC article count rose from ~1642 to 4425 (now includes 2783 gap articles). CC Precision@K for metric A:
+- K=10: 90.0%
+- K=20: 87.5%
+- K=50: 81.0%
+- K=100: 79.5%
+
+CC per-ticker consistency for A: mean 74.9% (std 7.5%). Gap metrics unchanged.
+
+**Decision**: CC news columns now correctly reflect all news affecting the full-day return. Prior cc evaluation numbers were based on incomplete news matching.
+
+**References**: MacKinlay (1997) — close-to-close is the standard event study return, defined as full-day inclusive of overnight moves.
+
+## Entry 21 — Model 1 baseline with proper academic methodology — 2026-03-28
+
+**Tried**: Price-only baseline with methodology aligned to Gu, Kelly & Xiu (2020). Pooled across 7 tickers, walk-forward expanding window. Key methodological choices: (1) 3-day embargo between train/test (de Prado 2018) to prevent rolling-window leakage, (2) monthly refit (GKX standard), (3) Campbell-Thompson OOS R² with expanding historical mean benchmark, (4) Clark-West (2007) significance tests, (5) RidgeCV/LassoCV for hyperparameter tuning. 34 features: lagged returns (cc, gap, SP500 at lags 1-5), momentum (5d, 20d), volatility (20d std, vol ratio), range, volume z-score, A scores (lagged 1 day), beta, day-of-week, ticker one-hot. Script: `src/model_baseline.py`.
+
+**Result**:
+
+| Model | MAE(ret) | RMSE(ret) | Dir Acc | R²_OOS | MAE($) | Clark-West p |
+|-------|----------|-----------|---------|--------|--------|-------------|
+| Naive (hist mean) | 0.01291 | 0.02286 | 57.6% | 0.000 | $3.25 | — |
+| Ridge | 0.01290 | 0.02271 | **62.4%** | **0.014** | $3.20 | **0.049** |
+| LASSO | 0.01290 | 0.02286 | 57.6% | 0.001 | $3.25 | 0.185 |
+| LightGBM | 0.01335 | 0.02187 | 50.0% | **0.085** | $3.39 | **0.041** |
+
+Key findings:
+
+1. **Ridge is the best model** — OOS R²=1.4%, 62.4% directional accuracy, Clark-West p=0.049 (significant at 5%). Consistent with GKX finding that Ridge outperforms LASSO for return prediction.
+2. **LASSO shrinks ALL 34 features to zero** (best alpha=0.1). No single feature survives L1 regularization — the predictive signal exists only as a collective ensemble. Ridge (L2) preserves this by keeping all features at small weights.
+3. **LightGBM captures variance, not direction** — highest OOS R² (8.5%) but only 50% directional accuracy. It predicts magnitude well (volatility clustering) but not sign.
+4. **Naive baseline: 57.6% directional accuracy** — the expanding mean is slightly positive (bull market), so predicting "up" most days is right more often than not. This is the real bar.
+5. **Per-ticker: Ridge beats naive for META (70% vs 60%), MSFT (63% vs 47%), TSLA (60% vs 47%).** Other tickers show no improvement — consistent with weak per-ticker signal in small samples.
+6. **Feature importance (Ridge, alpha=100):** ret_gap_4, ret_cc_1, sp_ret_cc_4, range_pct_1, A_cc_1 are the top features. Lagged returns and cross-asset momentum dominate. A_cc_1 remains in top 6.
+7. **Test period: 30 dates, 210 predictions.** Statistical power is limited. Borderline Clark-West p-values reflect this.
+
+**Decision**: Ridge establishes the price-only baseline at R²_OOS=1.4%, Dir Acc=62.4%. These numbers are realistic for daily stock return prediction — GKX report ~0.4% monthly OOS R². The news-enhanced Model 2 must beat R²_OOS > 1.4% and Dir Acc > 62.4% to justify additional complexity.
+
+**References**: Gu, Kelly & Xiu (2020), Campbell & Thompson (2008), Clark & West (2007), de Prado (2018)
+
+## Entry 22 — Corrected cc-period evaluation (supersedes Entries 14, 15 cc numbers) — 2026-03-28
+
+**Tried**: Re-ran full evaluation after Entry 20's fix (cc news now includes gap news). All cc-specific numbers from Entries 14 and 15 were computed with incomplete cc news (~1642 articles). Corrected cc dataset has 4425 articles. Gap numbers unchanged.
+
+**Result**:
+
+Corrected cc news presence (top/bottom 100):
+
+| Metric | High CC | Low CC |
+|--------|---------|--------|
+| A      | 84%     | 75%    |
+| D      | 85%     | 76%    |
+| E      | 78%     | 75%    |
+| Ev     | 84%     | 78%    |
+| Dv     | 85%     | 78%    |
+
+Corrected cc Cohen's d:
+
+| Metric | CC d  |
+|--------|-------|
+| Ev     | 0.180 |
+| E      | 0.097 |
+| A      | 0.088 |
+| Dv     | 0.058 |
+| D      | 0.057 |
+
+Corrected cc Precision@K:
+
+| K   | A     | D     | E     | Ev    | Dv    |
+|-----|-------|-------|-------|-------|-------|
+| 10  | 90.0% | 90.0% | 95.0% | 95.0% | 90.0% |
+| 20  | 87.5% | 85.0% | 90.0% | 90.0% | 85.0% |
+| 50  | 81.0% | 79.0% | 82.0% | 85.0% | 81.0% |
+| 100 | 79.5% | 80.5% | 76.5% | 81.0% | 81.5% |
+| 150 | 78.3% | 76.7% | 76.0% | 80.3% | 79.3% |
+| 200 | 76.8% | 77.5% | 75.0% | 80.2% | 76.8% |
+| 300 | 75.3% | 75.2% | 75.2% | 77.7% | 77.7% |
+| 500 | 74.4% | 74.5% | 75.9% | 75.8% | 76.0% |
+
+Corrected cc per-ticker consistency:
+
+| Metric | Mean  | Std   | Min(ticker) | Max(ticker)  |
+|--------|-------|-------|-------------|--------------|
+| A      | 74.9% | 7.5%  | GOOGL 64.6% | AMZN 90.6% |
+| D      | 74.6% | 7.6%  | GOOGL 64.6% | AMZN 90.6% |
+| E      | 74.9% | 6.2%  | META 67.7%  | AMZN 88.5% |
+| Ev     | 76.6% | 9.1%  | GOOGL 60.4% | AMZN 90.6% |
+| Dv     | 76.3% | 7.5%  | GOOGL 63.5% | AMZN 89.6% |
+
+Key comparisons (gap vs corrected cc for metric A):
+
+| Test | Gap | CC (corrected) | Delta |
+|------|-----|----------------|-------|
+| Precision@10 | 95.0% | 90.0% | -5pp |
+| Precision@50 | 69.0% | 81.0% | +12pp |
+| Precision@100 | 68.5% | 79.5% | +11pp |
+| Per-ticker mean | 65.2% | 74.9% | +9.7pp |
+| Per-ticker std | 7.9% | 7.5% | -0.4pp |
+| Cohen's d | 0.078 | 0.088 | +0.010 |
+
+**Decision**: CC is now stronger than gap at K≥50, with better per-ticker consistency (lower std) and higher Cohen's d. The old finding that "CC is ~15pp worse than gap" (Entry 15) was an artifact of incomplete news matching. CC's advantage at higher K makes sense: cc return captures the full day's information incorporation, while gap captures only the initial reaction. Gap retains an edge at K=10 (95% vs 90%) because overnight news produces cleaner, less-contested price moves. Both periods are valuable — gap for detecting the initial shock, cc for measuring total information content.
+
+**References**: Supersedes Entry 14 (cc hit rates), Entry 15 (cc precision, Cohen's d, consistency).
+
+## Entry 23 — Academic references and model provenance — 2026-03-28
+
+**Purpose**: Formal documentation of the academic literature underpinning the methodology across all stages. Our implementation is *inspired by and methodologically aligned with* these papers — it is not a direct code replication of any single one.
+
+### Stage 1: News impact scoring (Entries 1-18)
+
+**Core methodology — Event study / abnormal return framework:**
+
+1. **MacKinlay, A.C. (1997)** "Event Studies in Economics and Finance." *Journal of Economic Literature*, 35(1), 13-39.
+   - Foundation for our market model approach: expected return = alpha + beta × market return
+   - Close-to-close as the standard event study return (Entry 13)
+   - Used in: beta estimation, residual computation, z-score normalization
+
+2. **Holler, J. (2014)** "Event studies." Meta-review finding the market model is used in 79.1% of event studies (Entry 2)
+
+3. **Gopikrishnan, P., Meyer, M., Amaral, L.A.N., & Stanley, H.E. (1998)** "Inverse cubic law for the distribution of stock price variations." *Physical Review E*, 60(5), 5305.
+   - Justifies MAD-based volatility (robust to fat tails), non-linear scoring with p=2 (Entry 4, Entry 8)
+   - Tail exponent α≈3 means moments above order 3 are infinite — rules out p≥3 scoring
+
+4. **Gabaix, X. (2009)** "Power Laws in Economics and Finance." *Annual Review of Economics*, 1, 255-294.
+   - Confirms ζ_r = 3.1 ± 0.1 across 1000 largest US stocks (Entry 4)
+
+5. **Kim, O. & Verrecchia, R.E. (1991)** "Trading Volume and Price Reactions to Public Announcements." *Journal of Accounting Research*, 29(2), 302-321.
+   - Theoretical basis for volume as a separate signal from price (Entry 6)
+   - "Price change reflects average change in beliefs; volume reflects sum of differences"
+
+6. **Karpoff, J.M. (1987)** "The Relation Between Price Changes and Trading Volume: A Survey." *Journal of Financial and Quantitative Analysis*, 22(1), 109-126.
+   - Volume positively related to magnitude of price change — justifies our volume multiplier (Entry 6)
+
+7. **Patton, A.J. & Verardo, M. (2012)** "Does Beta Move with News?" *Review of Financial Studies*, 25(9), 2789-2839.
+   - Rolling beta estimation; supports 120-day window (Entry 10)
+
+8. **Lewellen, J. & Nagel, S. (2006)** "The Conditional CAPM Does Not Explain Asset-Pricing Anomalies." *Journal of Financial Economics*, 82(2), 289-314.
+   - Rolling window beta methodology (Entry 10)
+
+9. **Kothari, S.P. & Warner, J.B. (2007)** "Econometrics of Event Studies." *Handbook of Corporate Finance*, 1, 3-36.
+   - Even 50% beta misestimation causes small error relative to 1%+ abnormal returns we detect (Q2)
+
+### Stage 2: Model 1 baseline (Entries 19-21)
+
+**Core methodology — ML for asset pricing:**
+
+10. **Gu, S., Kelly, B., & Xiu, D. (2020)** "Empirical Asset Pricing via Machine Learning." *The Review of Financial Studies*, 33(5), 2223-2273.
+    - THE benchmark paper. Validates Ridge, LASSO, GBRT, neural nets on stock return prediction
+    - Our model uses the same model classes and evaluation framework, adapted to 7 mega-cap tech stocks
+    - Key finding we replicate: Ridge outperforms LASSO (L2 preserves ensemble of weak signals, L1 kills it)
+    - Their top predictors (momentum, volatility, liquidity) align with our feature set
+    - Data/code: https://dachxiu.chicagobooth.edu/ (MATLAB simulation only, not empirical code)
+    - **Our code is NOT a replication** — it is methodologically inspired, implemented independently in Python
+
+11. **Avramov, D., Cheng, S., & Metzker, L. (2023)** "Machine Learning vs. Economic Restrictions: Evidence from Stock Return Predictability." *Management Science*, 69(5), 2587-2619.
+    - ML prediction is weakest for large, liquid stocks — explains our modest R²_OOS=1.4% on mega-cap tech
+    - Justifies realistic expectations for this dataset
+
+12. **Campbell, S.D. & Thompson, S.B. (2008)** "Predicting Excess Stock Returns Out of Sample: Can Anything Beat the Historical Average?" *The Review of Financial Studies*, 21(4), 1509-1531.
+    - OOS R² methodology used in Entry 21
+    - Expanding historical mean as the proper benchmark (not predict-zero)
+    - Even small OOS R² generates economic value
+
+13. **Clark, T.E. & West, K.D. (2007)** "Approximately Normal Tests for Equal Predictive Accuracy in Nested Models." *Journal of Econometrics*, 138(1), 291-311.
+    - Statistical significance test used in Entry 21 (Ridge p=0.049)
+    - Designed for comparing nested forecasting models with estimated parameters
+
+14. **Rapach, D.E., Strauss, J.K., & Zhou, G. (2010)** "Out-of-Sample Equity Premium Prediction: Combination Forecasts and Links to the Real Economy." *The Review of Financial Studies*, 23(2), 821-862.
+    - Combining weak predictors outperforms any single predictor — validates our pooled multi-feature approach
+    - Shows even 1-2% OOS R² is economically meaningful
+
+15. **Leippold, M., Wang, Q., & Zhou, W. (2022)** "Machine Learning in the Chinese Stock Market." *Journal of Financial Economics*, 145(2), 64-82.
+    - Volume/liquidity features emerge as the single most important predictors — validates our volume z-score and A_cc features
+    - One of few top-tier papers testing daily (not just monthly) returns
+
+16. **de Prado, M.L. (2018)** *Advances in Financial Machine Learning*. Wiley.
+    - Purged cross-validation with embargo — we implement the 3-day embargo between train and test sets (Entry 21)
+
+17. **Welch, I. & Goyal, A. (2008)** "A Comprehensive Look at the Empirical Performance of Equity Premium Prediction." *The Review of Financial Studies*, 21(4), 1455-1508.
+    - The "null hypothesis" paper: no predictor reliably beats the historical mean OOS
+    - Every paper above responds to this challenge — our Ridge beating the mean (Clark-West p=0.049) is measured against this bar
+
+**Pooled model justification:**
+
+18. **"Pooling and winsorizing machine learning forecasts to predict stock returns with high-dimensional data"** (2024). *Journal of Banking & Finance*.
+    - Pooled models outperform per-ticker for small samples — critical finding for our 7-ticker, 241-day dataset
+
+### How our implementation relates to the literature
+
+Our pipeline follows the GKX (2020) methodology in spirit:
+- **Same model classes**: Ridge (L2), LASSO (L1), gradient-boosted trees ✅
+- **Same evaluation**: OOS R², walk-forward expanding window, statistical significance tests ✅
+- **Same feature categories**: momentum, volatility, liquidity/volume ✅
+- **Same key finding**: Ridge > LASSO for return prediction (weak ensemble signal) ✅
+
+Our pipeline differs from GKX in:
+- **Scale**: 7 stocks × 241 days vs their 30,000 stocks × 60 years
+- **Frequency**: daily returns vs their monthly
+- **Features**: 34 custom features (including our A scores from Stage 1) vs their 94 firm characteristics
+- **Implementation**: independent Python code, not a port of their MATLAB simulation
