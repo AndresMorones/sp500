@@ -15,13 +15,37 @@ Read all files in `docs/` before starting any work. Challenge any assumption —
 When starting a session: read all three docs, check open-questions.md for what needs attention.
 When ending a session: update journal.md with what was tried, update open-questions.md if anything was resolved or new questions emerged.
 
+## Project structure
+
+```
+sp500/
+├── data/
+│   ├── raw/          # Source CSVs (price.csv, S&P 500, individual stock histories)
+│   └── output/       # Generated outputs (scores_output.csv)
+├── docs/             # objective.md, journal.md, open-questions.md
+├── src/              # Production pipeline code
+│   └── score_pipeline.py
+├── sandbox/          # Exploration tools (HTML matrix, Python comparisons)
+│   ├── combined_news_impact_matrix.html
+│   ├── combined_news_impact_matrix.py
+│   └── compare_scoring_options.py
+└── CLAUDE.md
+```
+
+## Running the pipeline
+
+```bash
+python src/score_pipeline.py
+```
+Outputs `data/output/scores_output.csv`. Uses rolling 120-day beta estimation per ticker.
+
 ## Running the visualization sandbox
 
-Open `combined_news_impact_matrix.html` directly in a browser — no build step, server, or dependencies required. The only external dependency is Chart.js 4.4.1 loaded from CDN. This is a demo tool for exploring how parameter changes affect scoring — not the production pipeline.
+Open `sandbox/combined_news_impact_matrix.html` directly in a browser — no build step, server, or dependencies required. The only external dependency is Chart.js 4.4.1 loaded from CDN. This is a demo tool for exploring how parameter changes affect scoring — not the production pipeline.
 
 ## Architecture of the sandbox
 
-Single-file HTML application (~330 lines) — all CSS, HTML, and JavaScript live in `combined_news_impact_matrix.html`.
+Single-file HTML application (~330 lines) — all CSS, HTML, and JavaScript live in `sandbox/combined_news_impact_matrix.html`.
 
 ### Model overview
 
