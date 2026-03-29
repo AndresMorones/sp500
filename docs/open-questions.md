@@ -38,14 +38,37 @@ Empirical test needed: once we have labeled news days, compare recall@20 (of the
 
 Note (2026-03-28): Entry 22's corrected cc Precision@K shows metrics do NOT converge by K≥50 — cc holds 75-81% even at K=500, well above the ~61% baseline rate. The earlier convergence finding (Entry 15) was an artifact of incomplete cc news matching. Cohen's d remains small for all metrics (max 0.180 for Ev). The formula still matters less than expected for gap, but cc now shows meaningful separation at all K values. Still worth testing p directly.
 
-### Q7: What NLP model for news embeddings in stage 2?
+### Q13: Should the prediction target be raw closing price or excess return?
 
-Not immediate but worth tracking. Literature suggests:
-- FinBERT (domain-adapted BERT) — standard baseline for financial sentiment
-- GPT-4 with financial prompts — potentially better but expensive
-- Hybrid: FinBERT embeddings as features into a lighter model
+Every closest-match paper in the news+ML literature (arXiv:2505.05325, arXiv:2508.04975, arXiv:2407.16150) predicts **raw next-day closing price**, not excess return. Our excess return target comes from the event study literature (MacKinlay 1997, GKX 2020). These are different research traditions.
 
-Stanford CS224N research warns: "only a small part of the variance in financial data can be explained by news" — the signal-to-noise ratio is inherently low. The quality of our stage 1 scoring directly determines how much signal the NLP model has to work with.
+Arguments for raw price: standard in news+ML literature, directly useful, avoids compounding errors from beta estimation.
+Arguments for excess return: removes market component, isolates stock-specific signal, grounded in our A-metric framework.
+
+Test: run the downstream model on both targets and compare MAPE/MAE. If excess return produces better predictions when reconstructed back to price, keep it. Otherwise switch.
+
+### Q14: What downstream model should consume the LLM-structured news features?
+
+Paper 3 (arXiv:2508.04975) found Transformer/LSTM benefit 10-26% MSE from LLM features, but Ridge benefits modestly. Paper 5 (arXiv:2602.00086) found TimesNet and PatchTST benefit most. This suggests non-linear temporal models extract more signal from rich news features than linear models.
+
+Options to test:
+1. LightGBM (tree-based, handles mixed features naturally — our current baseline)
+2. LSTM (validated at our exact scale by arXiv:2505.05325 — MAPE 2.72% on 4 tech stocks, 1 year)
+3. Transformer/TimesNet (if LSTM shows signal, test more complex architectures)
+
+Start with LightGBM (simplest), then LSTM, compare.
+
+### Q15: How many of the 14 LLM dimensions actually help prediction?
+
+No paper in the literature uses more than 3 news features per stock. We extract 14 dimensions. With ~600 articles per stock, risk of overfitting is real — the model may latch onto noise in rarely-occurring dimension combinations.
+
+Ablation needed:
+- Round 1: 3 dimensions only (severity, direction, surprise)
+- Round 2: add temporal_horizon, materiality, information_density
+- Round 3: all 14
+- Compare: does marginal improvement justify additional dimensions?
+
+Paper 2 (ICIAAI 2025 Tesla) found some news categories HURT prediction — more features is not always better.
 
 ### Q8: Should the directional contradiction term be added?
 
@@ -137,6 +160,21 @@ Without centering, at rm=0 the split produces +ln(2)/K and -ln(2)/K instead of z
 The intraday return missed gap-triggered events: news causing a -5% gap followed by +3% intraday recovery would score the intraday as +3% (missing the news). Close-to-close captures the full day's verdict (-2% net). Gap is kept because it isolates the initial market reaction to overnight news — a complementary signal.
 
 Evidence: MacKinlay 1997 uses close-to-close as the standard event study return. Entry 10 validated close-to-close for beta estimation. See journal Entry 13. Resolved 2026-03-27.
+
+### A7: What NLP model / approach for news feature extraction in Stage 3?
+
+**Answer**: LLM structured extraction, not embeddings or sentiment scores.
+
+Literature review (Entry 27) found three approaches ranked by effectiveness:
+1. **Structured extraction** (LLM extracts event type, severity, duration, etc.) — best (arXiv:2512.19484)
+2. **Embeddings** (FinBERT/BERT/LLM hidden states) — moderate
+3. **Sentiment scores** (VADER/FinBERT pos/neg/neu) — weakest
+
+Our implementation (news_scorer.py) uses Claude to extract 14 structured dimensions + 8 per-ticker business categories per article. This is the richest approach in the literature — no paper extracts more than 3 news features.
+
+FinBERT (2019) is no longer SOTA for sentiment — Llama-3-70B (79.3%) and DeBERTa (75%) outperform it (59.7%) — but this is moot since we bypass sentiment entirely with structured extraction.
+
+Evidence: 6 papers reviewed in docs/stage3_methodology_review.md. Resolved 2026-03-28.
 
 ### A8: What are the inherent limits of price-only return prediction?
 

@@ -1,0 +1,135 @@
+{
+  "ticker": "TSLA",
+  "categories": [
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports, delivery and production numbers, revenue, margins, EPS, guidance revisions, energy storage deployment figures, and financial results relative to analyst expectations."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market roundups, sector rotation, macro data reactions, index movements, and general EV or tech industry sentiment that mentions the company as part of a wider narrative."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst & Consensus Signals",
+      "description": "Analyst upgrades, downgrades, price target changes, buy/sell ratings, proxy advisor recommendations, and institutional investor positioning or recommendation changes."
+    },
+    {
+      "id": "autonomous_driving_robotaxi",
+      "label": "Autonomous Driving & Robotaxi",
+      "description": "Full Self-Driving software development, robotaxi strategy and unveil events, Cybercab design and reception, NHTSA Autopilot investigations, FSD regulatory approval efforts, and autonomous vehicle safety incidents."
+    },
+    {
+      "id": "musk_compensation_governance",
+      "label": "Musk Compensation & Governance",
+      "description": "The $56 billion pay package litigation and shareholder vote, Delaware court ruling, reincorporation to Texas, board independence concerns, proxy advisor recommendations, and demands for greater voting control."
+    },
+    {
+      "id": "pricing_demand_competition",
+      "label": "Pricing, Demand & Competition",
+      "description": "Vehicle price cuts and increases across global markets, demand signals, incentive programs, competitive dynamics with rivals, monthly regional sales data, EV price wars, and market share shifts."
+    },
+    {
+      "id": "recalls_safety_regulatory",
+      "label": "Recalls, Safety & Regulatory",
+      "description": "Vehicle recalls across all models, NHTSA safety investigations, steering and suspension probes, crash investigations, environmental compliance actions, and safety-related regulatory proceedings."
+    },
+    {
+      "id": "workforce_operations",
+      "label": "Workforce & Operations",
+      "description": "Mass layoffs and restructuring, executive departures, factory shutdowns and disruptions, gigafactory expansion, labor strikes and union organizing, supply chain decisions, and supercharger team changes."
+    },
+    {
+      "id": "musk_political_legal_personal",
+      "label": "Musk Political, Legal & Personal",
+      "description": "Political endorsements and campaign activity, SEC and DOJ enforcement actions, personal controversies, lawsuits involving other ventures, and personal conduct reporting that creates headline risk for the stock."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=trivial mention or tangential reference with no impact on revenue, margins, or addressable market, 10=event directly and substantially alters the company's revenue trajectory, margin structure, or total addressable market"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome or content was fully anticipated and already reflected in consensus expectations, 10=outcome or revelation was completely unexpected and contradicts prevailing market expectations"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=impact confined to the next few trading days with no structural implications, 10=structural shift that reshapes the company's competitive position or business model for years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral or matter-of-fact tone with no evaluative language, 10=extremely strong positive or negative tone conveying urgency, euphoria, or alarm"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure opinion, speculation, or rehashed narrative with no new data points, 10=dense with specific hard numbers such as revenue figures, unit counts, margins, percentages, or regulatory findings"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could reasonably be interpreted as either positive or negative for the stock, 10=unambiguously positive or negative with no room for competing interpretations"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only this specific company with no sector or market implications, 10=macro or market-wide event affecting broad asset classes beyond any single company"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no meaningful effect on the company's competitive position relative to rivals, 10=fundamentally reshapes the company's competitive standing in key markets"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory, legal, or government enforcement angle whatsoever, 10=major regulatory action, investigation, or legal ruling with direct consequences for operations or liability"
+    },
+    {
+      "id": "management_signal",
+      "scale": "1=no leadership, strategic direction, or executive decision angle, 10=major strategic pivot, leadership change, or CEO commitment that redefines company direction"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the prevailing investor thesis and existing market narrative about the company, 10=fundamentally challenges or reverses the dominant investment thesis"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash or follow-up of a previously reported story adding no new information beyond prior coverage, 10=first report of genuinely new information not previously in the public domain"
+    },
+    {
+      "id": "actionability",
+      "scale": "1=background context or color that provides no basis for immediate investment decisions, 10=concrete new information that investors can immediately incorporate into valuation or positioning"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or reported figures exactly match prior guidance and consensus estimates, 10=reported financial figures dramatically exceed or miss prior guidance and analyst consensus as described in the article"
+    },
+    {
+      "id": "controversy",
+      "scale": "1=consensus view with no meaningful disagreement among investors or stakeholders, 10=deeply polarizing event that divides investors, analysts, or public opinion on the company's direction"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Ranges from trivial mentions in market roundups and tangential personal anecdotes to events with massive direct financial impact such as cancellation of a major vehicle platform, quarterly earnings revealing margin compression or surprise beats, workforce reductions, and global pricing strategy changes. Appeared in all 3 runs.",
+      "surprise": "Clear variation from fully anticipated scheduled events meeting consensus to genuine shocks: major earnings beats after quarters of misses, abrupt product line cancellations that blindsided investors, factory arson attacks, and executive departures. Appeared in all 3 runs.",
+      "temporal_horizon": "Spans from single-day price adjustments and one-off recall notices to structural multi-year pivots like abandoning a product line in favor of a new business model, regulatory regime changes reshaping competitive dynamics for years, and ongoing compensation litigation sagas. Appeared in all 3 runs.",
+      "sentiment_strength": "Ranges from flat data releases and neutral regulatory filings to intensely charged coverage conveying alarm over safety fatalities, euphoria over earnings surprises, or combative executive rhetoric toward advertisers and critics. Appeared in all 3 runs.",
+      "information_density": "Wide spectrum from pure opinion columns and speculative analysis to articles packed with specific EPS figures, delivery counts, margin percentages, energy deployment numbers, and precise price change amounts across multiple markets. Appeared in all 3 runs.",
+      "directional_clarity": "Some events are unambiguously directional such as earnings beats or confirmed investigations, while others like tariff structures, executive control demands, or business model pivots have genuinely ambiguous implications that split investor interpretation. Appeared in all 3 runs.",
+      "scope": "Ranges from company-only events like specific model recalls and internal layoff notices through sector-wide EV dynamics like price wars and tariff regimes to macro-level stories about monetary policy and broad index rotation. Appeared in 2 of 3 runs (kept in Runs 1 and 2; Run 3 dropped it as lacking mid-range variation, but the other two runs demonstrated sufficient spread).",
+      "competitive_impact": "Strong variation: rival companies overtaking in global sales, competitor bankruptcies removing challengers, tariff structures reshaping import economics, and partnership announcements in adjacent markets, versus routine operational updates with no competitive dimension. Appeared in 2 of 3 runs (kept in Runs 2 and 3; Run 1 dropped it as capturable by materiality and scope, but the other two runs showed it captures distinct competitive-positioning signal).",
+      "regulatory_risk": "Massive variation: from articles with zero regulatory content to multiple active safety investigations following fatalities, securities enforcement actions against executives, fraud examinations of product claims, and tariff determinations affecting import costs. Appeared in all 3 runs.",
+      "management_signal": "Ranges from routine operational updates to extremely high-signal events: executive demands for greater voting control before advancing key initiatives, senior leadership departures, entire team eliminations, and strategic pivots that redefine the company's direction. Appeared in all 3 runs.",
+      "narrative_shift": "Most routine news reinforces existing narratives, but product line cancellations in favor of new business models, earnings turnarounds after quarters of deterioration, and executive political entanglements each challenged or reversed the prevailing investment thesis. Appeared in all 3 runs.",
+      "repeatedness": "Very high variation due to corpus structure: many articles are first-break reports of genuinely new events, while substantial portions are explicit rehashes across outlets reporting identical figures, boilerplate legal notices, or Nth articles on the same ongoing saga. Appeared in all 3 runs.",
+      "actionability": "Ranges from background color pieces and historical industry context to immediately actionable information: revised quarterly guidance, confirmed price changes effective on specific dates, delivery numbers versus consensus, and regulatory recall announcements with specific vehicle counts. Appeared in 2 of 3 runs (kept in Runs 1 and 2; Run 3 dropped it as lacking discriminating power, but the other two runs showed sufficient variation between background context and hard actionable data).",
+      "financial_result_surprise": "Highly relevant given multiple quarterly reporting cycles in the corpus spanning the full range: earnings misses with margin compression, delivery misses versus consensus, modest beats against lowered expectations, and dramatic upside surprises with analysts expressing genuine shock. Most non-earnings articles score at the floor, providing clean separation. Appeared in all 3 runs.",
+      "controversy": "Ranges from consensus-view delivery reports to deeply divisive events where major institutional investors and retail shareholders hold sharply opposing views, executive actions polarize the investor base, and product safety debates divide analysts. Appeared in 2 of 3 runs (kept in Runs 1 and 3; Run 2 dropped it as capturable by low directional_clarity plus high management_signal, but the other two runs showed controversy captures a distinct polarization signal beyond mere ambiguity)."
+    },
+    "dropped": {
+      "expected_duration": "Dropped \u2014 appeared in only 1 of 3 runs (kept only in Run 3). Both Run 1 and Run 2 independently dropped it as too correlated with temporal_horizon: events with long-term structural impact also tend to persist in news cycles, and short-horizon events fade quickly, producing near-identical scores across articles."
+    },
+    "added": {}
+  }
+}

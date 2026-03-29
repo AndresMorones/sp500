@@ -1,0 +1,131 @@
+{
+  "ticker": "MSFT",
+  "categories": [
+    {
+      "id": "ai_cloud_infrastructure",
+      "label": "AI & Cloud Infrastructure Investment",
+      "description": "Global data center buildouts, Azure capacity expansion, AI compute investments, and energy procurement deals (nuclear, renewables) to power cloud and AI workloads."
+    },
+    {
+      "id": "openai_partnership_dynamics",
+      "label": "OpenAI Partnership & Ecosystem",
+      "description": "Microsoft's investment in and relationship with OpenAI, including OpenAI's funding rounds, leadership upheaval (Altman firing/return), governance restructuring, board seat changes, and competitive dynamics with OpenAI's enterprise ambitions."
+    },
+    {
+      "id": "antitrust_regulatory_compliance",
+      "label": "Antitrust, Regulatory & Legal",
+      "description": "EU antitrust charges (Teams bundling), cloud licensing complaints (CISPE), FTC/CMA probes of the OpenAI investment, Inflection AI hiring scrutiny, data privacy fines (LinkedIn GDPR), and other legal or compliance actions."
+    },
+    {
+      "id": "cybersecurity_service_reliability",
+      "label": "Cybersecurity & Service Reliability",
+      "description": "Russian state-sponsored hacks (Midnight Blizzard), the global CrowdStrike-linked IT outage, Azure and Microsoft 365 service disruptions, government security review criticism, and cybersecurity product launches."
+    },
+    {
+      "id": "strategic_partnerships_ecosystem",
+      "label": "Strategic Partnerships & Enterprise Ecosystem",
+      "description": "Enterprise partnerships spanning cloud, AI, and security (Vodafone, BlackRock AI fund, Siemens, Palantir, Sainsbury's, Cognizant, IBM) and smaller Azure Marketplace integrations that expand Microsoft's platform reach."
+    },
+    {
+      "id": "gaming_entertainment_strategy",
+      "label": "Gaming & Entertainment Strategy",
+      "description": "Xbox and Activision Blizzard integration, gaming division layoffs, multiplatform game releases, next-console groundwork, Call of Duty subscription model shift, and competitive positioning against Sony and Nintendo."
+    },
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports (FY24 Q2, Q3, Q4), revenue and EPS figures, cloud revenue forecast revisions, dividend increases, the $60 billion share buyback authorization, and securities litigation tied to financial disclosures."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad tech sector rallies and selloffs, Nasdaq corrections, Fed rate decisions, AI speculation cycles, Magnificent Seven momentum, and macro news that mentions Microsoft as part of a wider market narrative."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst & Consensus Signals",
+      "description": "Analyst upgrades, price target changes, and rating reaffirmations from firms including Wedbush, UBS, HSBC, BofA, New Street, and Jefferies."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=trivial operational noise with no measurable effect on revenue, margins, or addressable market, 10=direct and quantifiable large-scale impact on revenue streams, profit margins, or total addressable market"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome or content fully expected and already reflected in consensus expectations, 10=outcome or content completely unexpected with no prior indication from guidance, leaks, or market positioning"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=impact limited to the next few trading days with no lasting structural effect, 10=structural shift affecting competitive position, business model, or industry dynamics for years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral tone conveying factual information without positive or negative valence, 10=extremely strong positive or negative language signaling a decisive verdict on the company's prospects"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure opinion, speculation, or rehashed narrative with no new data, 10=hard quantitative data with specific financial figures, metrics, or verifiable facts"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could reasonably be interpreted as positive or negative, 10=unambiguously and overwhelmingly positive or negative with no reasonable alternative interpretation"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only this company's specific operations or products, 5=sector-wide implications for cloud, AI, or tech broadly, 10=macro or economy-wide event affecting all asset classes"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no effect on competitive positioning relative to peers, 10=major shift in competitive landscape altering market share dynamics or strategic positioning against key rivals"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory, legal, or compliance dimension whatsoever, 10=major regulatory action with potential to force structural business changes, large fines, or blocked transactions"
+    },
+    {
+      "id": "management_signal",
+      "scale": "1=no leadership, governance, or strategic direction angle, 10=major leadership change, strategic pivot announcement, or CEO-level decision revealing new corporate direction"
+    },
+    {
+      "id": "expected_duration",
+      "scale": "1=transient story fully resolved within a single news cycle, 10=persistent story generating follow-up coverage and remaining material for weeks or months"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces and is fully consistent with the prevailing investor thesis, 10=fundamentally challenges or changes the dominant narrative about the company's trajectory"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash or incremental follow-up of a story already widely reported with no new information, 10=first report of genuinely new information not previously available to the market"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or reported figures exactly match prior guidance and consensus estimates, 10=reported figures dramatically exceed or miss prior guidance and analyst consensus expectations"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Ranges from trivial Azure Marketplace listings and small carbon credit purchases to $100B Stargate supercomputer plans and quarterly earnings revealing cloud growth trajectory \u2014 wide spread in business impact.",
+      "surprise": "Ranges from scheduled dividend declarations and routine partnership extensions to the completely unexpected Altman firing, the CrowdStrike-linked global outage, and the severity of Russian hack disclosures.",
+      "temporal_horizon": "Ranges from one-day service outages and flash headlines to 20-year nuclear power purchase agreements, structural AI infrastructure buildouts across multiple countries, and EU antitrust precedents.",
+      "sentiment_strength": "Ranges from neutral factual reports on Azure Marketplace additions to strongly negative security breach disclosures and scathing government review board reports, and strongly positive earnings beats with raised guidance.",
+      "information_density": "Ranges from one-line flash headlines and opinion-driven AI speculation roundups to full earnings releases with segment-level revenue breakdowns, EPS figures, and forward guidance.",
+      "directional_clarity": "Ranges from ambiguous events like OpenAI restructuring (unclear if good or bad for Microsoft's stake) and antitrust probes (unknown outcome) to clearly positive earnings beats and clearly negative hack escalation disclosures.",
+      "scope": "Ranges from MSFT-only events like Teams unbundling and Xbox layoffs to sector-wide AI investment trends and macro events like Fed rate decisions and global equity selloffs.",
+      "competitive_impact": "Ranges from routine partner integrations with no competitive effect to Google filing EU complaints against Microsoft cloud practices, OpenAI pitching ChatGPT Enterprise to Microsoft customers, and the Mistral AI partnership diversifying beyond OpenAI.",
+      "regulatory_risk": "Ranges from articles with zero regulatory angle to EU antitrust charges over Teams bundling, FTC/CMA investigations of the OpenAI investment, CISPE cloud complaint settlement, and LinkedIn's \u20ac310M GDPR fine.",
+      "management_signal": "Ranges from routine HR announcements to hiring DeepMind co-founder Suleyman to lead all AI, the Altman firing/reinstatement reshaping OpenAI governance, Brad Smith testifying before Congress on security failures, and the $60B buyback signaling capital return confidence.",
+      "expected_duration": "Ranges from Azure outages resolved within hours and single-day market roundups to the months-long Altman saga, persistent Russian hacker intrusion story spanning January through March, and EU antitrust proceedings extending across the full year.",
+      "narrative_shift": "Ranges from partnership announcements reinforcing the dominant AI-investment thesis to the security review board report shifting Microsoft's reputation narrative from AI leader to security-negligent, and the cloud revenue forecast cut challenging the AI-monetization story.",
+      "repeatedness": "Many stories appear as 5-10 near-duplicate articles about the same event (OpenAI $6.6B round, Three Mile Island deal, Teams unbundling). First reports carry new information; subsequent coverage adds little. Clear variation between breaking news and nth rehash.",
+      "financial_result_surprise": "Most articles score minimal as they contain no financial results. Meaningful variation exists across earnings articles: Q3 FY24 beat estimates with strong cloud growth, Q4 FY24 beat revenue but cloud guidance disappointed, and the mid-quarter cloud revenue forecast cut was a negative surprise."
+    },
+    "dropped": {
+      "controversy": "Most MSFT articles reflect consensus-aligned views. Even the antitrust and security stories generated limited investor disagreement \u2014 the debate was about magnitude of impact, not direction. This dimension would cluster near 1-3 for the vast majority of articles, providing insufficient variation. The meaningful signal is better captured by directional_clarity and regulatory_risk.",
+      "actionability": "Overlaps heavily with materiality and information_density in this corpus. Articles with hard financial data and high materiality are inherently more actionable. The few cases where actionability diverges (e.g., a structural shift that is material but not immediately tradeable) are better captured by temporal_horizon. Adding this dimension would create redundant scoring without unique signal."
+    },
+    "added": {}
+  }
+}

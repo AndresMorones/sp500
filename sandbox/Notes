@@ -1,9 +1,227 @@
 Same prompt but for claude settings
 
+one good way to wnsure for combining news is taking and scoring more relevant ones is comparing if high impact gap news have similar score granted by claude as in cc
 
-- Cumulative 3-day model baseline
+one good way to wnsure for combining news is taking and scoring more relevant ones is comparing if high impact gap news have similar score granted by claude as in cc
 
-for the core purpose of identifying with news,
+add option for api key instead of claude code subscription later
 
-Predicting stock prices based on historical data and corresponding market news. The task requires developing a predictive model from scratch that demonstrates robust performance on unseen data, synthesizing different data sources in stock price prediction.
- research validated academically recognized models from github research papers, find the most robust. and analyze methodlogy to compared
+
+
+
+One Concern
+The repeatedness dimension is smart but hard to score in Phase 2. When Claude sees a batch of 10 dates, it doesn't have context about whether the same story appeared on previous dates. It can only judge within the same day's articles. This means cross-day repeatedness (Monday's OpenAI story rehashed on Tuesday) won't be captured. This is acceptable — within-day dedup is the main value, and the prediction model will naturally handle multi-day decay through lagged features.
+
+
+
+Plan: Academic Model Research and Comparison for Stage 3 (News-Enhanced Prediction)
+Context
+The project has completed Stage 1 (news impact scoring via event study methodology) and Stage 2 (price-only baseline with Ridge/LightGBM, best R2_OOS=5.6%). The key finding from Entry 26 is that price-only models shrink predictions to ~20% of actual variance, with a tail/core MAE ratio of 4.8x — extreme days driven by news are fundamentally unpredictable from price alone.
+
+The user requests: research academically validated models from GitHub papers that combine price + news for stock prediction, find the most robust, and compare methodology to our current approach. Updated with 2024-2025 state-of-the-art.
+
+The 2024-2025 Paradigm Shift
+The field has moved significantly since 2022. Key changes:
+
+FinBERT (2019) is no longer SOTA. Llama-3-70B achieves 79.3% on financial sentiment vs FinBERT's 59.7%. FinLlama (Llama-2 fine-tuned) produced 44.7% higher cumulative returns than FinBERT in trading tests.
+
+LLMs as feature extractors, not predictors. The major insight from 2024-2025: LLMs are terrible at directly predicting prices (worse than linear regression), but excellent at extracting structured features (event type, severity, duration, affected entities). This is a paradigm shift from "embed and predict" to "extract and predict."
+
+Gated cross-attention beats simple concatenation. MSGCA (2024) achieves 8-32% improvement over previous SOTA by learning to dynamically weight modalities. When news is contradictory, the model downweights it; when price signal is strong, it upweights price.
+
+LLM embeddings outperform FinBERT. Guo & Hauptmann (EMNLP 2024) showed token-level LLM embeddings produce stronger portfolios than conventional sentiment scores or FinBERT embeddings.
+
+Chain-of-Thought reasoning for finance. Fino1 (Feb 2025) with CoT + RL outperforms GPT-o1, DeepSeek-R1, and GPT-4.5 on financial reasoning tasks.
+
+Reality check: improvements are modest. Even SOTA achieves ~60-65% directional accuracy. LLM-based trading strategy Sharpe ratios are declining (6.54 in 2021 → 1.22 in 2024) as markets adapt. Simple methods remain competitive.
+
+Top Academic Models (Ranked by Relevance, Updated)
+Tier 1 — Directly Aligned with Our Framework
+Model	Paper	Year/Venue	Target	Method
+Ke, Kelly, Xiu	"Predicting Returns With Text Data"	2019/NBER	Market model residuals	Supervised sentiment learned against returns
+Duan et al.	"Target-Specific Representations for CAR Prediction"	2018/ACL	Cumulative Abnormal Returns	Abstract-guided document attention
+PEAD.txt	"Post-Earnings Announcement Drift Using Text"	2021/Philly Fed	Post-announcement abnormal drift	Frozen Sentence-BERT + ML
+Guo & Hauptmann	"Fine-Tuning LLMs for Stock Return Prediction Using Newsflow"	2024/EMNLP	Stock returns	Token-level LLM embeddings + aggregation
+FININ	"Modeling News Interactions and Influence"	2024/EMNLP	Market prediction	News-news + news-price interaction networks
+Tier 2 — Strong 2024-2025 Architectures
+Model	Year/Venue	Method	GitHub
+MSGCA	2024/Springer	Gated cross-attention multimodal fusion (8-32% improvement)	changzong/MSGCA
+Fino1	2025/arXiv	CoT + RL financial reasoning (beats GPT-o1)	The-FinAI/Fino1
+AlphaFin	2024/LREC	RAG + Stock-Chain (30%+ ARR)	AlphaFin-proj/AlphaFin
+FinGPT v3	2024/arXiv	LoRA fine-tuned LLM for sentiment (87% F1)	AI4Finance-Foundation/FinGPT
+FinCast	2024/arXiv	Decoder-only sparse MoE (20-23% error reduction)	—
+DASF-Net	2024/MDPI	Diffusion-based graph + FinBERT	—
+AlphaForge	2025/AAAI	LLM-generated formulaic alpha factors	—
+Tier 3 — Established (2018-2021)
+Model	Method	GitHub
+HAN	Hierarchical attention for news	donghyeonk/han
+REST	Relational event-driven + stock graph	—
+HATS	Graph attention inter-stock	dmis-lab/hats
+FinBERT-LSTM	FinBERT sentiment + LSTM	xraptorgg/FinBERT-LSTM
+StockNet	Tweets + price variational model	yumoxu/stocknet-code
+Detailed Comparison to Our Methodology
+Ke, Kelly, Xiu (2019) — Most Philosophically Aligned
+Similar: Both target market model residuals. Both use Ridge/LASSO. Both pool across stocks. Infeasible for us: Requires millions of articles for word-level weight learning. Our 4,440 articles is 100x too small. Extractable insight: Sentiment should be adapted to predict returns, not just classify tone.
+
+Duan et al. (2018) — Best Target Match (CAR)
+Similar: Both predict Cumulative Abnormal Returns (our cum3d_excess). Headline+summary maps to their abstract+document. Infeasible for us: Attention model millions of parameters → overfit on 4,440 articles. Extractable insight: Target cum3d, use headline as guiding signal for embeddings.
+
+PEAD.txt (2021) — Foundation of Our Approach
+Similar: Frozen embeddings into ML models for multi-day drift prediction. Why it fits: No fine-tuning needed, compatible with Ridge/LightGBM, targets multi-day drift. Limitation: Uses Sentence-BERT (2019) — newer LLM embeddings outperform it.
+
+Guo & Hauptmann (EMNLP 2024) — Updated Embedding Approach
+Key finding: Token-level LLM embeddings outperform conventional sentiment scores AND FinBERT for stock return prediction. Decoder-based LLMs (GPT-style) produce stronger features than encoder-based (BERT-style). Relevance: This is the 2024 update to the PEAD.txt approach — same architecture (frozen encoder → features → ML), but with a better encoder. Practical constraint: Large LLM inference is expensive. Need to balance quality vs compute.
+
+MSGCA (2024) — Best Fusion Architecture
+Key finding: Gated cross-attention between price + text + graph modalities, with learned gates that dynamically weight contributions. 8-32% improvement over simple concatenation. Relevance: Our late-fusion plan (concatenate features) may leave performance on the table. Gated fusion could help when news is contradictory or missing. Practical constraint: Requires neural network training. May overfit on our small dataset.
+
+Fino1 (Feb 2025) — Best Financial Reasoning
+Key finding: CoT + RL on Llama-3.1-8B outperforms GPT-o1 and GPT-4.5 on financial reasoning. Relevance: Could be used for structured feature extraction (event type, severity, duration) rather than just embeddings. Practical constraint: Requires API calls or local GPU for 8B model inference.
+
+AlphaFin (2024) — RAG Approach
+Key finding: RAG + Stock-Chain contextualizes news with historical patterns. 30%+ ARR. Relevance: Could ground news impact prediction in historical event similarity. Practical constraint: Complex infrastructure. Best reserved as a stretch goal.
+
+NLP Model Decision: Updated for 2024-2025
+Performance Hierarchy (2024-2025 evidence)
+Model	Financial Sentiment Accuracy	Return Prediction Quality	Compute Cost	Availability
+Llama-3-70B	79.3%	Best (decoder LLM embeddings)	High (70B params)	Open-source
+Fino1 (8B)	—	Best reasoning	Medium (8B params)	Open-source
+FinGPT v3	87.6% F1	Moderate (45-53% direction)	Medium	Open-source
+FinMA-7B	Beats GPT-4 on some tasks	—	Medium (7B params)	Open-source
+ProsusAI/finbert	59.7% (97% on easy benchmark)	Moderate	Low (110M params, CPU)	Open-source
+GPT-4o	68.2%	Comparable to stat models	API cost	Proprietary
+Recommended Approach: Two-Track Strategy
+Given our constraints (4,440 articles, 7 stocks, academic rigor, reproducibility), the updated recommendation is:
+
+Track A (Primary): Frozen LLM Embeddings — Modernized PEAD-Lite
+
+Use a modern encoder instead of FinBERT. Options in order of preference:
+Sentence-Transformers all-MiniLM-L6-v2 or all-mpnet-base-v2 (384/768 dims, fast, CPU-friendly, better than original S-BERT)
+FinBERT as comparison baseline (to measure the improvement from modern encoders)
+Llama-3-8B embeddings (if GPU available — extract hidden state as embedding)
+Late fusion into Ridge/LightGBM (same as before)
+This is the minimal viable approach — fast, reproducible, ablatable
+Track B (Enhanced): LLM-Structured Feature Extraction — The 2024-2025 Innovation
+
+Use an LLM (GPT-4o or Claude API, or local Fino1/Llama) to extract structured features from each article:
+event_type: earnings, product_launch, regulatory, M&A, analyst_rating, macro, legal, leadership, other
+severity: 1-5 scale (how significant is this event?)
+expected_duration: transient (1 day), short (2-5 days), persistent (weeks+)
+direction_signal: positive, negative, mixed, neutral
+specificity: company-specific, sector-wide, market-wide
+These become categorical/ordinal features alongside embeddings
+This is the paradigm shift: structured extraction >> raw embeddings for interpretability and signal quality
+With only 4,440 articles, LLM API cost is trivial (~$5-15 for GPT-4o)
+Track C (Stretch): Gated Fusion
+
+If Track A/B show signal, test MSGCA-style gated fusion between price and news modalities
+Only worth trying if simple concatenation underperforms expectations
+Updated Implementation Plan
+Phase 1: Embedding Extraction (Two Encoders)
+New file: src/news_embeddings.py
+
+Extract embeddings from BOTH:
+sentence-transformers/all-mpnet-base-v2 (768-dim, modern S-BERT, CPU-friendly)
+ProsusAI/finbert (768-dim, for comparison)
+Input: headline + " " + summary from news.csv
+Output: data/output/news_embeddings_mpnet.csv and news_embeddings_finbert.csv
+Also extract FinBERT sentiment probabilities (pos/neg/neu)
+~8 min total on CPU (4,440 articles × 2 models)
+Add sentence-transformers>=2.2, transformers>=4.30, torch>=2.0 to requirements.txt
+Phase 2: LLM Structured Feature Extraction (Track B)
+New file: src/news_llm_features.py
+
+For each of the 4,440 articles, call an LLM (Claude API or GPT-4o) with a structured prompt:
+Given this financial news headline and summary about {ticker}:
+Headline: {headline}
+Summary: {summary}
+
+Extract:
+1. event_type: [earnings|product|regulatory|M&A|analyst|macro|legal|leadership|other]
+2. severity: [1-5, where 5 = most market-moving]
+3. expected_duration: [transient|short|persistent]
+4. direction_signal: [positive|negative|mixed|neutral]
+5. specificity: [company|sector|market]
+
+Return JSON only.
+Output: data/output/news_structured_features.csv
+Cost: ~$5-15 for 4,440 articles via API
+This is the 2024-2025 innovation: structured LLM features, not just embeddings
+Phase 3: Day-Level Feature Aggregation
+New file: src/news_features.py
+
+Aggregate article-level features to (ticker, date) using score_pipeline.py's gap/cc bucketing
+For embeddings: max-pool when multiple articles; zero vector when none
+For structured features: take the max severity article's features (or aggregate)
+PCA on embeddings (fit on training window only)
+Binary has_news_gap, has_news_cc indicators
+Save data/output/day_news_features.csv
+Phase 4: News-Enhanced Model
+New file: src/model_news.py (extends model_baseline.py)
+
+Feature set options (tested as ablations):
+A: 41 price + PCA embeddings (mpnet) + has_news = ~93 features
+B: 41 price + 3 FinBERT sentiment + has_news = ~45 features
+C: 41 price + LLM structured features (one-hot event_type + severity + duration + direction + specificity) + has_news = ~60 features
+D: 41 price + PCA embeddings + LLM structured = ~110 features (full model)
+Same walk-forward, embargo, monthly refit, Clark-West evaluation
+PCA fit inside walk-forward loop
+Phase 5: Ablation Experiments
+Each as a separate journal entry with pre-committed criteria:
+
+Experiment	What It Tests	Success Criterion
+3A: mpnet vs FinBERT embeddings	Does modern encoder help?	mpnet R2_OOS > FinBERT R2_OOS by >1pp
+3B: Embeddings vs sentiment vs structured	Which feature type wins?	Compare R2_OOS across A/B/C/D
+3C: PCA dimensionality	Optimal embedding compression	Choose N maximizing R2_OOS on cc_excess
+3D: Tail-focused evaluation	Does news help extreme days?	Tail/core MAE ratio < 3.5x
+3E: Same-day gap news	Pre-market news for gap?	Gap R2_OOS improves by >1pp
+Phase 6 (Stretch): Advanced Architectures
+Only if Phase 5 shows signal
+6A: Gated fusion (MSGCA-style learned modality weights)
+6B: LSTM on 5-day embedding sequences
+6C: Cross-stock features (max A_cc across other 6 tickers)
+6D: RAG-based historical event matching (AlphaFin-style)
+Pre-Committed Success Criteria
+Primary: cc_excess R2_OOS > 5.6% (CW p<0.05) OR cum3d_excess R2_OOS > 2.9% (CW p<0.005)
+Secondary: Tail/core MAE ratio drops from 4.8x to below 3.5x on any target
+Guard rail: Core MAE (80% normal days) must not degrade by >5% vs baseline
+Key Architectural Decisions (Updated 2024-2025)
+Decision	Choice	2024-2025 Evidence
+Encoder model	all-mpnet-base-v2 (primary) + FinBERT (comparison)	Modern S-BERT encoders outperform FinBERT; Llama-3-70B is best but too heavy for CPU
+Structured extraction	LLM API (Claude/GPT-4o) for event_type, severity, duration	2024-2025 paradigm: LLMs as feature extractors >> LLMs as predictors. Trivial cost for 4,440 articles
+Fusion strategy	Late fusion first, gated fusion as stretch	MSGCA shows 8-32% gain from gated fusion, but needs neural net training → risky on small data
+Dimensionality	PCA to 50 (test 10-100)	Same as before — 768 dims needs reduction for LightGBM
+Multi-article days	Max-pool embeddings	Same — captures strongest signal
+No-news days	Zero vector + has_news binary	Same — natural sparsity
+Primary target	cum3d_excess	Confirmed by PEAD.txt, Duan et al., and our Entry 25
+Feature timing	Lag all news by 1 day (same-day gap experiment separately)	Same
+Risk Assessment
+Risk	Mitigation
+4,440 articles is thin	Frozen encoder (no fine-tuning), has_news gate, Ridge shrinkage
+Modern encoder not finance-specific	Test FinBERT alongside; 768 dims encode topic beyond sentiment
+LLM structured extraction inconsistent	Validate on 50-article sample first; use strict JSON schema
+Overfitting with ~110 features	Walk-forward embargo, Ridge L2, LightGBM regularization, PCA
+210-prediction test too small for significance	Use cum3d (stronger signal), report effect sizes alongside p-values
+Gated fusion overfits on small data	Only attempt as stretch after confirming signal from late fusion
+Critical Files
+src/model_baseline.py — Template for model_news.py
+src/score_pipeline.py — News bucketing logic (lines 59-123)
+src/common.py — Shared constants and helpers
+data/raw/news.csv — 4,440 articles (datetime, ticker, headline, summary)
+docs/open-questions.md — Q7, Q12 resolved by this plan
+Key 2024-2025 References
+Guo & Hauptmann (EMNLP 2024) — "Fine-Tuning LLMs for Stock Return Prediction Using Newsflow"
+Fino1 (Feb 2025) — CoT + RL financial reasoning, The-FinAI/Fino1
+MSGCA (2024) — Gated cross-attention multimodal fusion, changzong/MSGCA
+AlphaFin (2024) — RAG + Stock-Chain, AlphaFin-proj/AlphaFin
+FinGPT v3 (Dec 2024) — AI4Finance-Foundation/FinGPT
+FinBen (NeurIPS 2024) — Holistic financial LLM benchmark
+PriceSeer (2025) — Real-time stock prediction benchmark (reality check)
+FinCast (2024) — MoE foundation model, 20-23% error reduction
+AlphaForge (AAAI 2025) — LLM-generated alpha factors
+Verification
+Phase 1: Embedding shape (4440, 768), no NaNs
+Phase 2: LLM structured output validates on 50-article sample
+Phase 3: Feature alignment with scores_output.csv
+Phase 4: R2_OOS, MAE, tail/core ratio vs baseline
+After each phase: update journal.md + open-questions.md

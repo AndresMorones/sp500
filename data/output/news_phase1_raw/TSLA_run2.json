@@ -1,0 +1,131 @@
+{
+  "ticker": "TSLA",
+  "categories": [
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports, delivery and production numbers, revenue, margins, EPS, guidance revisions, and energy storage deployment figures."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market roundups, Magnificent Seven narratives, Nasdaq or S&P 500 moves, macro data reactions, and sector-wide EV or tech sentiment that mention Tesla."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst & Consensus Signals",
+      "description": "Analyst upgrades, downgrades, price target changes, buy/sell ratings, and institutional investor positioning on Tesla shares."
+    },
+    {
+      "id": "autonomous_driving_robotaxi",
+      "label": "Autonomous Driving & Robotaxi",
+      "description": "Full Self-Driving software development, robotaxi strategy and unveil events, Cybercab design, FSD regulatory approval efforts in China and the US, Dojo supercomputer, and AI compute investments."
+    },
+    {
+      "id": "musk_compensation_governance",
+      "label": "Musk Compensation & Governance",
+      "description": "The $56 billion pay package litigation, Delaware court ruling, shareholder vote campaigns, reincorporation to Texas, board composition, proxy advisor recommendations, and Musk's demand for 25% voting control."
+    },
+    {
+      "id": "pricing_demand_competition",
+      "label": "Pricing, Demand & Competition",
+      "description": "Price cuts and increases across global markets, EV demand trends, BYD and Chinese EV competition, EU tariffs on China-made EVs, EV price wars, and market share shifts."
+    },
+    {
+      "id": "workforce_labor_operations",
+      "label": "Workforce, Labor & Operations",
+      "description": "Mass layoffs, executive departures, factory shutdowns (Berlin arson, Red Sea disruption), gigafactory expansion, Nordic labor strikes, UAW organizing efforts, and Supercharger team restructuring."
+    },
+    {
+      "id": "vehicle_safety_recalls",
+      "label": "Vehicle Safety & Recalls",
+      "description": "NHTSA investigations, vehicle recalls (Autopilot, Cybertruck, braking, steering), crash investigations, Autopilot safety probes, and DOJ fraud examination of self-driving claims."
+    },
+    {
+      "id": "musk_political_legal_external",
+      "label": "Musk Political & Legal Activity",
+      "description": "Musk's Trump campaign involvement, SEC enforcement actions, personal controversies (drug use, immigration), lawsuits involving X/Twitter, OpenAI litigation, and non-Tesla venture spillover effects on Tesla sentiment."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=trivial mention with no connection to Tesla's revenue, margins, or addressable market, 10=directly and substantially impacts Tesla's revenue trajectory, margin structure, or total addressable market"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome or content was fully anticipated and already reflected in consensus expectations, 10=outcome or revelation was completely unexpected relative to prior consensus and guidance"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=affects Tesla's outlook for the next few days only, 10=represents a structural shift in Tesla's business model, competitive position, or regulatory environment for years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral or matter-of-fact tone with no evaluative language, 10=extremely strong positive or negative language conveying urgency or alarm"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure opinion, speculation, or rehashed narrative with no new data, 10=rich in specific hard numbers such as delivery counts, margins, EPS, price changes, or regulatory findings"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could be interpreted as positive or negative for Tesla, 10=unambiguously positive or negative with clear investment implications"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only Tesla as a single company, 5=affects the EV sector or a major regional market broadly, 10=reflects macro-level or global market forces"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no meaningful effect on Tesla's competitive position, 10=fundamentally alters Tesla's competitive standing relative to rivals or new entrants"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory, legal, or government enforcement angle, 10=major regulatory action, government investigation, or legal ruling with material consequences for Tesla"
+    },
+    {
+      "id": "management_signal",
+      "scale": "1=no relevance to Tesla leadership decisions, strategy, or executive actions, 10=reveals a major strategic pivot, leadership change, or CEO commitment decision with company-wide implications"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the prevailing investor thesis about Tesla without adding new framing, 10=fundamentally challenges or redirects the dominant Tesla investment narrative"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash or incremental follow-up of a previously reported story with no new information, 10=first report of genuinely new information not previously in the public domain"
+    },
+    {
+      "id": "actionability",
+      "scale": "1=background context or color that does not warrant immediate portfolio decisions, 10=contains specific information investors can act on immediately such as revised guidance or confirmed regulatory outcomes"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or results exactly in line with prior guidance and analyst consensus, 10=reported figures dramatically exceed or miss prior guidance and analyst expectations as described in the article"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Ranges from trivial noise like sponsored ginseng promotions and generic EV charging app guides to events with massive direct financial impact such as the cancellation of the low-cost car platform, quarterly earnings revealing margin compression, and the $56 billion pay package ruling.",
+      "surprise": "Clear variation from fully anticipated scheduled events (pre-announced delivery dates meeting consensus) to genuine shocks: Q3 2024 earnings massively beating expectations after quarters of misses, the abrupt cancellation of the affordable car program, the Berlin gigafactory arson attack, and Musk diverting Nvidia chips to xAI.",
+      "temporal_horizon": "Ranges from next-day price adjustment announcements and minor recalls with over-the-air fixes to structural multi-year pivots like abandoning the low-cost car in favor of robotaxis, the EU tariff regime on Chinese EVs reshaping competitive dynamics for years, and FSD regulatory approval pathways in China.",
+      "sentiment_strength": "Spans from flat data releases (monthly China sales figures) to intensely charged coverage: Musk telling advertisers to go fuck yourself, euphoric post-Q3-earnings analyst reactions, and alarmed coverage of DOJ fraud probes into Autopilot claims.",
+      "information_density": "Varies from pure opinion pieces and market mood narratives to data-rich quarterly filings with specific EPS, gross margin percentages, delivery unit counts, energy storage GWh figures, and precise price change amounts across multiple markets.",
+      "directional_clarity": "Ranges from deeply ambiguous events like EU tariffs on Chinese EVs (helps Tesla competitively but raises costs on its Shanghai-made cars) and Musk's demand for 25% voting control (commitment signal vs. governance red flag) to unambiguous events like massive earnings beats or confirmed NHTSA investigations.",
+      "scope": "Clear variation from Tesla-only events (Cybertruck recall, internal layoff notices) through sector-wide EV dynamics (BYD price war, EU EV tariff regime affecting all manufacturers) to macro-level stories (Fed rate decisions, broad Magnificent Seven rotation).",
+      "competitive_impact": "Strong variation: BYD overtaking Tesla as top global EV seller, Fisker's bankruptcy removing a competitor, Waymo partnering with Hyundai on robotaxis, EU tariffs reshaping the competitive landscape for Chinese imports, versus routine Tesla-specific operational updates with no competitive dimension.",
+      "regulatory_risk": "Massive variation unique to Tesla: from articles with zero regulatory content to NHTSA opening new Autopilot investigations, DOJ examining securities and wire fraud over FSD claims, SEC seeking sanctions against Musk, the Delaware court voiding Musk's pay package, and multiple large-scale vehicle recalls.",
+      "management_signal": "Ranges from no leadership relevance to extremely high-signal events: Musk demanding 25% voting control before pursuing AI, diverting Nvidia chips from Tesla to xAI, firing the entire Supercharger team, senior VP of powertrain departing after 18 years, and the pay package shareholder vote reflecting board-CEO dynamics.",
+      "narrative_shift": "Pronounced variation: the cancellation of the affordable car fundamentally shifted the Tesla story from mass-market EV maker to robotaxi-focused company; Q3 2024 earnings reversed months of declining narrative; the Cybercab unveil disappointed and reinforced skepticism about timelines; Musk's political activities introduced a new brand-risk narrative dimension.",
+      "repeatedness": "Very high variation due to corpus structure: many articles are first-break reports (Berlin arson, low-cost car cancellation, robotaxi delay to October) while others are explicit rehashes (multiple identical Pomerantz law firm press releases, repeated coverage of the same delivery numbers across outlets, Nth article on the pay package vote).",
+      "actionability": "Ranges from background color pieces (history of BYD, generic EV reliability surveys) to immediately actionable information: revised quarterly guidance, confirmed price changes effective on specific dates, delivery numbers vs. consensus, and NHTSA recall announcements with specific vehicle counts.",
+      "financial_result_surprise": "Highly relevant given multiple quarterly cycles in the corpus: Q4 2023 earnings missed with margin compression, Q1 2024 deliveries missed badly, Q2 2024 deliveries slightly beat lowered expectations, and Q3 2024 earnings dramatically beat on margins and growth guidance, showing the full range of this dimension."
+    },
+    "dropped": {
+      "expected_duration": "Overlaps too heavily with temporal_horizon for this corpus. Events with long temporal horizons (structural EV competition shifts, regulatory regime changes) are inherently persistent stories, while short-horizon events (daily price adjustments, single-day market moves) are inherently transient. The two dimensions would produce near-identical rankings across TSLA articles, adding redundant signal.",
+      "controversy": "For TSLA, the most divisive events (Musk pay package, robotaxi pivot, 25% voting control demand) are already well-captured by the combination of directional_clarity being low and management_signal being high. Articles where investors genuinely disagree tend to score low on directional_clarity by definition. Adding controversy as a separate dimension would largely duplicate this existing signal without revealing new variation."
+    },
+    "added": {}
+  }
+}
