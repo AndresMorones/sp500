@@ -749,3 +749,47 @@ On normal days the model is reasonable (~65 bps MAE ≈ 0.65% error). On extreme
 - Statistical: Clark-West test vs naive expanding mean
 
 **References**: Campbell & Thompson (2008) R²_OOS framework, Gu Kelly & Xiu (2020) return prediction evaluation, Gopikrishnan et al. (1998) inverse cubic law for return tails
+
+## Entry 27 — Stage 3 methodology research: academic model comparison — 2026-03-28
+
+**Tried**: Comprehensive literature review of 2024-2025 papers on stock price prediction using news + historical data. Searched for papers matching our exact setup (per-ticker models, few mega-cap tech stocks, news articles, ~1 year data). Compared their methodologies to our approach.
+
+**Key papers reviewed (closest matches)**:
+
+1. **Advanced LSTM** (arXiv:2505.05325, May 2025) — 4 tech stocks (AAPL, GOOGL, MSFT, AMZN), 1 year, VADER sentiment + LSTM. MAPE 2.72%. **Closest match to our scale.** Per-ticker models. Predicts next-day closing price.
+
+2. **Tesla LSTM** (ICIAAI 2025) — TSLA only, 5 LSTM variants with news sentiment. Found financial news helps but tech news sometimes HURTS prediction. Validates per-ticker category filtering.
+
+3. **LLM-Generated Alpha** (arXiv:2508.04975, Aug 2025) — 5 stocks, GPT-4 generates formulaic alpha factors, tests 7 downstream models. 10-26% MSE improvement from LLM features. Transformer/LSTM benefit most, Ridge least.
+
+4. **FinBERT-LSTM** (arXiv:2407.16150, 2024) — NASDAQ-100, hierarchical news (market/sector/stock) with learned weights. Validates categorized news approach.
+
+5. **LLM Sentiment Impact** (arXiv:2602.00086, Feb 2026) — 5 tech stocks, 96K articles. Compares DeBERTa/FinBERT/RoBERTa × LSTM/PatchTST/TimesNet. DeBERTa > FinBERT.
+
+6. **Structured Event Representation** (arXiv:2512.19484, 2025) — GPT extracts structured event triplets. Key finding: **structured extraction > embeddings > sentiment scores**.
+
+**Result — what the literature validates about our approach**:
+- Per-ticker models: standard for small stock universes. All closest-match papers use them.
+- Per-ticker news categories: validated by Tesla paper (some categories hurt) and FinBERT-LSTM (learned category weights help).
+- LLM structured extraction (14 dimensions): richest approach in the literature. No paper extracts as many dimensions. Paper 6 confirms structured > embeddings > sentiment.
+- Gap/CC bucketing: unique to our approach. No paper separates pre-market from intraday news.
+
+**Result — what the literature challenges**:
+- **Downstream model**: Papers 3 and 5 found LSTM/Transformer benefit 10-26% from news features, Ridge benefits modestly. Our Ridge/LightGBM may underexploit rich news features. Should test LSTM.
+- **Prediction target**: Every closest-match paper predicts raw closing price, not excess return. Our excess return target comes from event study literature, not the news+ML literature. Should test both.
+- **14 dimensions may be too many**: No paper uses more than 3 news features. Risk of overfitting with ~600 articles per stock. Should ablate: start with 3 (severity, direction, surprise), add incrementally.
+- **Evaluation**: Paper 3 uses Diebold-Mariano + Holm-Bonferroni (standard in this literature). Our Clark-West test is from the baseline work. Should justify or switch.
+
+**Also researched (2024-2025 paradigm shift)**:
+- FinBERT (2019) is no longer SOTA. Llama-3-70B achieves 79.3% vs FinBERT's 59.7% on financial sentiment.
+- LLMs as feature extractors, not predictors — LLMs are worse than linear regression at direct price prediction, but excellent at structured extraction.
+- FINSABER (KDD 2026) reality check: LLM strategy advantages deteriorate over 20-year backtests.
+- Lopez-Lira alpha decay: LLM-based Sharpe ratios declining from 6.5 (2021) to 1.2 (2024).
+
+**Decision**:
+- Our LLM structured extraction approach (news_scorer.py) is well-grounded and more advanced than anything in the literature.
+- Downstream model choice and prediction target remain open — research suggests testing LSTM and raw price alongside our current Ridge/excess return.
+- Full methodology review documented in `docs/stage3_methodology_review.md`.
+- Reference implementations cloned to `references/FinBERT-LSTM/` and `references/LLM-Sentiment-Stock-Prediction-DeBERTa-TimesNet/`.
+
+**References**: See docs/stage3_methodology_review.md for full citation list (10 papers with detailed methodology comparison and pseudocode).

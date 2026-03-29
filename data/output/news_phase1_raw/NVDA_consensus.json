@@ -1,0 +1,132 @@
+{
+  "ticker": "NVDA",
+  "categories": [
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports, revenue and EPS figures, profit margins, guidance revisions, stock split, dividend announcements, credit rating upgrades, and any article reporting specific financial results versus expectations."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market roundups, Magnificent Seven commentary, sector rotation, macro indicators (Fed policy, recession fears, inflation data), index milestones, and articles mentioning NVDA primarily as part of a wider market or tech narrative."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst & Consensus Signals",
+      "description": "Analyst upgrades, downgrades, price target changes, buy/sell ratings from brokerages, institutional positioning disclosures, and sell-side research notes on NVDA."
+    },
+    {
+      "id": "ai_platform_chip_launches",
+      "label": "AI Platform & Chip Launches",
+      "description": "New chip architecture announcements (Blackwell, Hopper), GTC and CES/Computex product reveals, NIM microservices, DGX systems, networking hardware, inference and training benchmarks, and major platform capability expansions."
+    },
+    {
+      "id": "regulatory_legal_geopolitical",
+      "label": "Regulatory, Legal & Geopolitical Risk",
+      "description": "DOJ antitrust investigations, French competition authority charges, US export control updates targeting China, securities fraud lawsuits and investigations, Supreme Court PSLRA case, copyright infringement claims, and country-specific chip sales restrictions."
+    },
+    {
+      "id": "enterprise_industry_partnerships",
+      "label": "Enterprise & Industry Partnerships",
+      "description": "Strategic partnerships with hyperscalers (AWS, Azure, Google Cloud, Oracle), enterprise software integrations (SAP, Cisco, ServiceNow, Accenture), AI deployments in healthcare, autonomous vehicles, robotics, digital twins, telecom, and manufacturing, plus acquisitions like Run:ai."
+    },
+    {
+      "id": "gaming_consumer_products",
+      "label": "Gaming & Consumer Products",
+      "description": "GeForce NOW game additions and promotions, RTX GPU launches (40 SUPER series), gaming events (Gamescom), consumer-facing software updates, DLSS and RTX video technology, and streaming technology partnerships."
+    },
+    {
+      "id": "global_expansion_sovereign_ai",
+      "label": "Global Expansion & Sovereign AI",
+      "description": "Country-level AI infrastructure investments and sovereign supercomputer deployments in India, Japan, Vietnam, Indonesia, Denmark, Thailand, and other nations, including government partnerships, international AI summits, and sovereign AI cloud initiatives."
+    },
+    {
+      "id": "competitive_landscape",
+      "label": "Competitive Landscape & Moat",
+      "description": "Huawei and AMD chip challenges, CUDA software ecosystem lock-in debates, competitor product launches, custom chip unit creation, market share dynamics, and articles framing NVDA's competitive positioning relative to rivals."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=no direct impact on revenue, margins, or addressable market; 10=directly and substantially affects near-term revenue, margin structure, or total addressable market size"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome or content fully expected and already priced into consensus; 10=outcome or revelation completely unexpected relative to prevailing assumptions"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=affects only the next few trading days with no lasting significance; 10=represents a structural shift in competitive position, market structure, or business model lasting years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral or purely informational tone with no positive or negative valence; 10=extremely strong positive or negative sentiment conveyed through language and framing"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure opinion, speculation, or rehashed narrative with no new data; 10=rich in hard data, specific figures, quantified metrics, or detailed technical specifications"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could reasonably be interpreted as positive or negative; 10=unambiguously positive or negative with clear directional implication for the stock"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only this company specifically; 5=sector-wide implications for semiconductors or AI; 10=macro or market-wide event affecting broad asset classes"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no implications for competitive positioning; 10=fundamentally reshapes competitive landscape by creating or destroying a major competitive advantage"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory, legal, or policy dimension; 10=major regulatory action, legal ruling, or policy change with direct consequences for operations or market access"
+    },
+    {
+      "id": "expected_duration",
+      "scale": "1=transient story fully resolved or forgotten within a day; 10=persistent story that remains in investor consciousness and generates follow-up coverage for weeks or months"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the prevailing investment thesis and consensus narrative; 10=fundamentally challenges or redirects the dominant narrative about the company"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash or follow-up of previously reported information adding no new facts; 10=first report of genuinely new information not previously available to the market"
+    },
+    {
+      "id": "actionability",
+      "scale": "1=background context or educational content with no immediate trading implications; 10=contains specific, time-sensitive information investors can act on immediately"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or results exactly match prior guidance and analyst expectations; 10=reported figures dramatically exceed or miss prior guidance and analyst consensus as described in the article"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Consensus 3/3. Ranges from GeForce NOW weekly game additions and blog posts with zero revenue impact to Blackwell platform launches defining next-generation data center revenue, quarterly earnings revealing billions in results, and DOJ antitrust subpoenas with direct business consequences.",
+      "surprise": "Consensus 3/3. Ranges from fully anticipated events like pre-announced GTC keynotes and scheduled weekly GeForce NOW posts to genuinely unexpected revelations such as DOJ subpoena reports, Blackwell production delay leaks, and the gap between Q2 FY25 earnings that beat estimates but disappointed elevated expectations.",
+      "temporal_horizon": "Consensus 3/3. Ranges from single-day game launches and weekly market recaps to Blackwell architecture announcements, export control policy shifts, and antitrust investigations with multi-year structural implications for competitive position and market access.",
+      "sentiment_strength": "Consensus 3/3. Ranges from neutral technical blog posts and informational product descriptions to strongly positive earnings celebrations with global market rallies and strongly negative antitrust probe and market selloff coverage using superlatives like 'soaring,' 'stunning,' and 'plunged.'",
+      "information_density": "Consensus 3/3. Varies from pure opinion columns and market-mood pieces with no specific data to earnings reports with exact revenue, EPS, and margin figures, analyst notes with precise price targets, and product launches with detailed technical specifications.",
+      "directional_clarity": "Consensus 3/3. Ranges from ambiguous articles debating whether AI valuations are stretched or justified and antitrust probes that could be minor or existential, to clearly positive massive earnings beats and clearly negative subpoena reports with unambiguous directional implications.",
+      "scope": "Consensus 3/3. Ranges from NVDA-specific events like the Run:ai acquisition and CEO pay raise to sector-wide semiconductor demand signals to broad macro events like recession fears, Fed rate decisions, and global equity selloffs where NVDA is one of many affected.",
+      "competitive_impact": "Consensus 3/3. Ranges from routine partnership announcements with no competitive implication to Huawei launching rival AI chips, AMD data center events challenging dominance, Silicon Valley efforts to break CUDA lock-in, France charging anticompetitive practices, and the custom chip unit targeting the ASIC market.",
+      "regulatory_risk": "Consensus 3/3. Most product and partnership articles have zero regulatory angle while DOJ antitrust probes, French competition charges, evolving US-China export controls, Supreme Court securities fraud case, and securities fraud investigation announcements score very high, providing sharp variation.",
+      "expected_duration": "Consensus 2/3 (kept by Runs 2 and 3, dropped by Run 1 as overlapping with temporal_horizon). Ranges from highly transient daily market roundups and single-game GeForce NOW additions forgotten within hours to persistent multi-month stories like the DOJ antitrust investigation, Blackwell production timeline, and US-China export control evolution. Retained because it captures news-cycle persistence independently of structural business impact.",
+      "narrative_shift": "Consensus 3/3. Most articles reinforce the dominant AI-demand-is-insatiable thesis, but Blackwell production delays, DOJ antitrust escalation, dot-com bubble comparisons, semiconductor glut fears, earnings that beat but disappointed, and the custom chip unit represent genuine thesis challenges or evolutions.",
+      "repeatedness": "Consensus 3/3. Strong variation between first-report exclusives like the Reuters custom chip unit story, DOJ subpoena disclosure, and Blackwell delay leak versus heavily rehashed stories where multiple outlets repackage the same earnings figures, France antitrust developments, or DOJ probe details with no new facts.",
+      "actionability": "Consensus 3/3. Ranges from educational AI blog posts and corporate thought leadership providing background context to earnings releases, analyst target changes, antitrust subpoena reports, and chip delay disclosures that investors can and do act on within minutes.",
+      "financial_result_surprise": "Consensus 3/3. Most articles report no financial results, but the three earnings cycles show meaningful variation from the Q4 FY24 blowout with revenue up 265% that sparked global rallies, the Q1 FY25 beat triggering a stock split, and Q2 FY25 results that technically beat but fell short of elevated expectations."
+    },
+    "dropped": {
+      "controversy": "Dropped by all 3 runs. NVDA coverage during this period was overwhelmingly consensus-directional rather than divisive. Even potentially contentious events like antitrust probes and bubble comparisons generated relatively one-sided investor reactions rather than genuine two-sided debate, making this dimension uninformative for differentiating articles.",
+      "management_signal": "Dropped by 2 of 3 runs (kept only by Run 1). While Jensen Huang appears frequently, his presence is so pervasive across product launches, keynotes, and strategic commentary that most substantive articles carry some management signal. The dimension clusters around moderate values with insufficient discrimination, and the few exceptions are already captured by materiality and narrative_shift.",
+      "demand_signal_strength": "Custom dimension proposed by Run 1 only. While AI demand sustainability is a dominant theme, it appeared in only 1 of 3 runs and is not robust under consensus rules. The concept is partially captured by the combination of materiality, narrative_shift, and competitive_impact."
+    },
+    "added": {}
+  }
+}

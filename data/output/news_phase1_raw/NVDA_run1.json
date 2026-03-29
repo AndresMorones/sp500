@@ -1,0 +1,137 @@
+{
+  "ticker": "NVDA",
+  "categories": [
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports, revenue and EPS figures, guidance revisions, dividend changes, stock split announcements, and credit rating upgrades."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market roundups, Magnificent Seven commentary, sector rotation, macro indicators (Fed policy, recession fears, inflation data), and general tech sentiment that mentions NVDA."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst Consensus Signals",
+      "description": "Analyst upgrades, downgrades, price target changes, buy/sell ratings from brokerages, and institutional positioning commentary on NVDA."
+    },
+    {
+      "id": "ai_platform_chip_launches",
+      "label": "AI Platform & Chip Launches",
+      "description": "New chip architecture announcements (Blackwell, Hopper), GTC and CES/Computex product reveals, NIM microservices, DGX systems, networking hardware, and major platform capability expansions."
+    },
+    {
+      "id": "regulatory_legal_export_controls",
+      "label": "Regulatory, Legal & Export Controls",
+      "description": "DOJ and French antitrust probes, US export control updates targeting China, Supreme Court securities fraud case, copyright lawsuits, and securities fraud investigation announcements."
+    },
+    {
+      "id": "enterprise_cloud_partnerships",
+      "label": "Enterprise & Cloud Partnerships",
+      "description": "Strategic partnerships with hyperscalers (AWS, Azure, Google Cloud, Oracle), enterprise software integrations (SAP, Cisco, ServiceNow, Accenture), and acquisitions like Run:ai or the custom chip unit."
+    },
+    {
+      "id": "sovereign_ai_global_expansion",
+      "label": "Sovereign AI & Global Expansion",
+      "description": "Country-level AI initiatives and sovereign supercomputer deployments in India, Japan, Vietnam, Indonesia, Denmark, and other nations, including government partnerships and international AI summits."
+    },
+    {
+      "id": "gaming_consumer_products",
+      "label": "Gaming & Consumer Products",
+      "description": "GeForce NOW game additions and promotions, RTX GPU launches (40 SUPER series), gaming events (Gamescom), consumer-facing software updates, and streaming technology partnerships."
+    },
+    {
+      "id": "industry_vertical_ai_applications",
+      "label": "Industry Vertical AI Applications",
+      "description": "AI deployments in healthcare, autonomous vehicles, robotics (GR00T, Isaac), digital twins, manufacturing, climate modeling, telecommunications, and other domain-specific use cases powered by NVIDIA technology."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=no direct impact on NVDA revenue, margins, or addressable market; 10=directly and substantially affects near-term revenue, margin structure, or total addressable market size"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome or content fully expected and already priced into consensus; 10=outcome or revealed information completely unexpected relative to prior consensus"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=affects only the next few trading days with no lasting significance; 10=represents a structural shift in competitive position, market structure, or business model lasting years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral or purely informational tone with no positive or negative valence; 10=extremely strong positive or negative sentiment conveyed through language and framing"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure opinion, speculation, or rehashed narrative with no new data; 10=rich in hard data, specific figures, quantified metrics, or detailed technical specifications"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could be interpreted as positive or negative; 10=unambiguously and clearly good or bad for the company"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only NVDA specifically; 5=sector-wide implications for semiconductors or AI; 10=macro or market-wide event affecting broad asset classes"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no implications for competitive positioning; 10=fundamentally alters competitive dynamics, market share, or barriers to entry in NVDA's key markets"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory, legal, or policy dimension; 10=major regulatory action, legal ruling, or policy change with direct consequences for NVDA's operations or market access"
+    },
+    {
+      "id": "management_signal",
+      "scale": "1=no leadership commentary or strategic signal; 10=major strategic pivot, CEO forward-looking statement on demand or vision, or significant executive action"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the prevailing investment thesis and consensus narrative; 10=fundamentally challenges or redirects the dominant narrative about the company"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash, follow-up, or echo of previously reported information; 10=first report of genuinely new information not previously available"
+    },
+    {
+      "id": "actionability",
+      "scale": "1=background context or educational content with no immediate trading implications; 10=contains specific, time-sensitive information investors can act on immediately"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or results exactly match prior guidance and analyst expectations; 10=reported figures dramatically exceed or miss prior guidance and analyst consensus as described in the article"
+    },
+    {
+      "id": "demand_signal_strength",
+      "scale": "1=no information about AI chip demand, customer adoption, or capacity utilization; 10=provides major new evidence confirming or challenging the sustainability of AI infrastructure demand"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Ranges from GeForce NOW weekly game additions and educational blog posts with zero revenue impact to Blackwell platform launches defining next-generation data center revenue and quarterly earnings revealing billions in actual results.",
+      "surprise": "Ranges from scheduled weekly GeForce NOW posts and predictable conference announcements to unexpected DOJ subpoena reports, Blackwell production delay leaks, and earnings outcomes that deviated from consensus despite technically beating estimates.",
+      "temporal_horizon": "Ranges from single-day game launches and weekly market recaps to Blackwell architecture announcements, export control policy changes, and sovereign AI infrastructure investments that reshape demand for years.",
+      "sentiment_strength": "Ranges from neutral technical blog posts and informational product descriptions to strongly positive earnings celebrations with global market rallies and strongly negative DOJ antitrust probe reports.",
+      "information_density": "Ranges from speculative market mood pieces and opinion columns about AI bubbles to earnings reports with exact revenue, EPS, and margin figures and technical product specifications with quantified performance benchmarks.",
+      "directional_clarity": "Ranges from ambiguous articles debating whether AI valuations are stretched or justified to clearly positive massive earnings beats and clearly negative antitrust subpoena reports.",
+      "scope": "Ranges from NVDA-specific events like the Run:ai acquisition to sector-wide semiconductor demand trends to macro events like recession fears and Fed rate decisions that drove broad market moves.",
+      "competitive_impact": "Ranges from routine partnership announcements with no competitive implication to Huawei launching rival AI chips, AMD data center events challenging NVDA's dominance, articles about breaking CUDA's software moat, and France charging anticompetitive practices.",
+      "regulatory_risk": "Most product and partnership articles have zero regulatory angle while DOJ antitrust probes, French competition charges, US export control updates, Supreme Court securities fraud case, and country-specific chip sales restrictions score very high.",
+      "management_signal": "Ranges from articles with no Jensen Huang or leadership commentary to major keynote addresses at GTC and CES unveiling new architectures, statements about customer demand being tense, and declarations about AI automating fifty-trillion-dollar industries.",
+      "narrative_shift": "Most articles reinforce the dominant AI-demand-is-insatiable narrative while Blackwell production delays, DOJ antitrust escalation, dot-com bubble comparisons, semiconductor glut fears, and earnings that beat but disappointed shifted sentiment.",
+      "repeatedness": "Many articles cover the same event from multiple outlets on the same day (especially earnings and antitrust news) while genuinely new reports like the custom chip unit reveal, Blackwell delay leak, and DOJ subpoena were first-time disclosures.",
+      "actionability": "Ranges from educational AI blog posts and technical deep dives providing background context to earnings results, analyst rating changes, and antitrust subpoena reports that investors could immediately trade on.",
+      "financial_result_surprise": "Only applies to earnings-related articles but captures critical variation between the Q4 FY24 blowout that sparked global rallies, the Q1 FY25 beat that triggered a stock split, and the Q2 FY25 beat that disappointed elevated expectations."
+    },
+    "dropped": {
+      "controversy": "NVDA coverage during this period was overwhelmingly consensus-driven with bulls and bears rarely divided on the same event; even negative events like antitrust probes were universally seen as negative rather than divisive, making this dimension uniformly low across most articles.",
+      "expected_duration": "Overlaps heavily with temporal_horizon for this corpus; articles with short temporal horizon also had short expected duration as news stories, and structurally important events also persisted in the news cycle, providing minimal additional discrimination."
+    },
+    "added": {
+      "demand_signal_strength": "A dominant recurring pattern in the corpus is articles providing evidence for or against the sustainability of AI infrastructure demand, ranging from sovereign AI orders and hyperscaler capex commitments that validate the demand thesis to semiconductor inventory glut reports and chip demand fear articles that challenge it, and this axis is not fully captured by materiality alone since many demand signals come from third-party actions rather than direct NVDA financials."
+    }
+  }
+}

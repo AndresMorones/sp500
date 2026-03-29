@@ -1,0 +1,131 @@
+{
+  "ticker": "TSLA",
+  "categories": [
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports, delivery and production numbers, revenue and margin figures, EPS, guidance revisions, and financial results relative to analyst expectations."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market roundups, tech sector trends, Magnificent Seven commentary, macro data mentions, and general market conditions that reference TSLA as part of a wider narrative."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst & Consensus Signals",
+      "description": "Analyst upgrades, downgrades, price target changes, buy/sell ratings, and institutional positioning on TSLA from sell-side firms and proxy advisors."
+    },
+    {
+      "id": "autonomous_driving_robotaxi",
+      "label": "Autonomous Driving & Robotaxi",
+      "description": "Full Self-Driving software development, robotaxi unveil events, Cybercab design and reception, NHTSA Autopilot investigations, and autonomous vehicle safety incidents and regulatory probes."
+    },
+    {
+      "id": "pricing_demand_competition",
+      "label": "Pricing, Demand & Competition",
+      "description": "Vehicle price cuts and increases across markets, demand signals, incentive programs, competitive dynamics with BYD and other EV makers, China monthly sales data, and EV market share shifts."
+    },
+    {
+      "id": "corporate_governance_compensation",
+      "label": "Corporate Governance & Musk Compensation",
+      "description": "Musk's $56 billion pay package litigation and shareholder vote, Delaware reincorporation to Texas, board independence concerns, Musk's demand for 25% voting control, and shareholder activism."
+    },
+    {
+      "id": "recalls_safety_regulatory",
+      "label": "Recalls, Safety & Regulatory",
+      "description": "Vehicle recalls across all models, NHTSA safety investigations, steering and suspension probes, Autopilot crash reports, hazardous waste settlements, and safety-related regulatory actions."
+    },
+    {
+      "id": "workforce_operations_labor",
+      "label": "Workforce, Operations & Labor",
+      "description": "Mass layoffs and restructuring, executive departures, factory shutdowns, Berlin gigafactory arson and Red Sea disruptions, Nordic labor strikes, UAW disputes, gigacasting strategy changes, and supply chain decisions."
+    },
+    {
+      "id": "musk_political_personal",
+      "label": "Musk Political & Personal Activity",
+      "description": "Musk's political campaigning for Trump, PAC spending, SEC and DOJ legal confrontations, X platform controversies, international diplomatic visits, OpenAI litigation, and personal conduct reporting."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=trivial operational detail or passing mention with no impact on revenue, margins, or addressable market, 10=event directly and substantially alters the company's revenue trajectory, margin structure, or total addressable market"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome or content was fully anticipated by the market and consistent with prior guidance or consensus expectations, 10=outcome or content was completely unexpected with no prior indication from guidance, leaks, or market consensus"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=impact confined to the next few trading days with no structural implications, 10=structural shift that reshapes the company's competitive position or business model for years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral or purely factual tone with no positive or negative framing, 10=extremely strong positive or negative tone conveying urgency or alarm"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure opinion, speculation, or rehashed narrative with no new data points, 10=hard quantitative data with specific figures, percentages, and verifiable metrics"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could be interpreted as either positive or negative for the stock, 10=unambiguously and clearly positive or negative with no room for competing interpretations"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only this specific company with no sector or market implications, 10=macro or market-wide event affecting broad asset classes beyond any single company"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory, legal, or government enforcement angle whatsoever, 10=major regulatory action, investigation, or legal ruling with direct consequences for operations or liability"
+    },
+    {
+      "id": "management_signal",
+      "scale": "1=no leadership, strategic direction, or executive decision angle, 10=major strategic pivot, leadership change, or CEO commitment that redefines company direction"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the prevailing investor thesis and existing market narrative about the company, 10=fundamentally challenges or reverses the dominant investment thesis"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash or follow-up of a widely known story adding no new information beyond prior coverage, 10=first report of genuinely new information not previously in the public domain"
+    },
+    {
+      "id": "actionability",
+      "scale": "1=background context or color that provides no basis for immediate investment decisions, 10=concrete new information that investors can immediately incorporate into valuation or positioning"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or reported figures exactly match prior guidance and consensus estimates, 10=reported financial figures dramatically exceed or miss prior guidance and analyst consensus as described in the article"
+    },
+    {
+      "id": "controversy",
+      "scale": "1=consensus view with no meaningful disagreement among investors or stakeholders, 10=highly divisive event where informed investors or major stakeholders hold sharply opposing views on implications"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Ranges from trivial mentions in market roundups and passing news-highlight blurbs to major earnings beats/misses, cancellation of the affordable car program, and 10% workforce reductions that directly reshape revenue and cost structure.",
+      "surprise": "Strong variation: Q3 2024 earnings were a genuine upside shock after a year of negative momentum, while scheduled delivery reports sometimes met and sometimes missed expectations. The Berlin arson attack and affordable car cancellation were highly unexpected, whereas recurring monthly China sales data was routine.",
+      "temporal_horizon": "Ranges from single-day price adjustments and one-off recall notices to structural shifts like canceling the low-cost vehicle platform, the Musk pay package saga reshaping governance for years, and the pivot toward robotaxis redefining the long-term business model.",
+      "sentiment_strength": "Varies from dry factual delivery-number reports to articles with extremely strong negative framing around layoffs and safety failures, and extremely positive framing around the Q3 2024 earnings beat and shareholder pay package approval.",
+      "information_density": "Ranges from pure opinion columns and speculative robotaxi analysis to articles packed with specific EPS figures, delivery counts, margin percentages, and recall unit numbers.",
+      "directional_clarity": "Some events were unambiguously negative (Q1 delivery miss, affordable car cancellation) or positive (Q3 2024 earnings beat), while others like the robotaxi reveal or Musk's political activity had deeply ambiguous implications for the stock.",
+      "scope": "Ranges from TSLA-only events like specific model recalls to sector-wide EU tariff decisions affecting all EV makers to broad macro articles about Fed rate paths and market-wide selloffs.",
+      "regulatory_risk": "High variation: many articles have zero regulatory angle, while others involve active NHTSA investigations into Autopilot, SEC subpoenas of Musk, DOJ warnings about PAC activity, and EU tariff proceedings.",
+      "management_signal": "Ranges from articles with no leadership angle to major strategic signals like Musk demanding 25% voting control, firing the entire Supercharger team, canceling the affordable car to pivot to robotaxis, and key executive departures.",
+      "narrative_shift": "Some articles reinforced the prevailing bearish narrative of slowing demand and margin compression, while others like the Q3 2024 earnings beat and robotaxi pivot fundamentally challenged or reversed the dominant thesis.",
+      "repeatedness": "Very high variation: many articles were first reports of breaking news, while substantial portions of the corpus were follow-up coverage of the same events, particularly around the pay package vote, delivery numbers, and robotaxi reveal.",
+      "actionability": "Ranges from background context articles about EV industry trends to immediately actionable hard data like quarterly earnings, delivery figures, and concrete price changes across markets.",
+      "financial_result_surprise": "Strong variation across the four quarterly reporting cycles: Q4 2023 missed on margins with a weak outlook, Q1 2024 deliveries missed badly, Q2 2024 deliveries beat modestly, and Q3 2024 earnings were a significant upside surprise. Most non-earnings articles score at the floor.",
+      "controversy": "Meaningful variation: the Musk compensation vote was extremely divisive with major institutions opposing and retail investors supporting; the robotaxi pivot divided analysts; political activity polarized stakeholders. Routine recalls and delivery reports generated no controversy."
+    },
+    "dropped": {
+      "competitive_impact": "While BYD competition and EU tariffs appear frequently, the competitive signal is better captured by materiality and scope together. Most articles either have no competitive angle at all or a moderate one, leaving insufficient granularity across the middle range to justify a standalone dimension.",
+      "expected_duration": "Too correlated with temporal_horizon for this corpus. Stories with long-term structural impact also tend to persist in news cycles, and short-term stories fade quickly. The two dimensions would produce near-identical scores for most TSLA articles."
+    },
+    "added": {}
+  }
+}

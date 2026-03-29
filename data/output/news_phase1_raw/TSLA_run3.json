@@ -1,0 +1,131 @@
+{
+  "ticker": "TSLA",
+  "categories": [
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports, delivery and production figures, revenue, margins, EPS, guidance revisions, and any article reporting specific financial results versus expectations."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market roundups, sector rotation, macro data, index movements, and general EV industry demand trends that mention TSLA as part of a wider narrative."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst Consensus Signals",
+      "description": "Analyst upgrades, downgrades, price target changes, buy/sell ratings, and institutional positioning or recommendation changes on TSLA."
+    },
+    {
+      "id": "autonomous_driving_robotaxi",
+      "label": "Autonomous Driving & Robotaxi",
+      "description": "Full Self-Driving software updates, robotaxi unveiling and strategy, Cybercab development, NHTSA investigations into Autopilot and FSD, and regulatory approvals for autonomous features."
+    },
+    {
+      "id": "musk_compensation_governance",
+      "label": "Musk Compensation & Governance",
+      "description": "The $56 billion pay package litigation and shareholder vote, reincorporation from Delaware to Texas, board independence questions, and Musk's demands for greater voting control."
+    },
+    {
+      "id": "pricing_demand_competition",
+      "label": "Pricing, Demand & Competition",
+      "description": "Global price cuts and increases, demand dynamics, BYD and other EV competitor sales, China market share battles, and the broader EV price war affecting Tesla's positioning."
+    },
+    {
+      "id": "recalls_safety_regulatory",
+      "label": "Recalls, Safety & Regulatory",
+      "description": "Vehicle recalls across all models, NHTSA investigations, Cybertruck safety concerns, steering and brake probes, and environmental or hazardous waste compliance actions."
+    },
+    {
+      "id": "workforce_operations",
+      "label": "Workforce & Operations",
+      "description": "Mass layoffs, executive departures, factory shutdowns (Berlin arson, Red Sea disruption), gigacasting strategy changes, supercharger team cuts, and supply chain restructuring."
+    },
+    {
+      "id": "musk_political_legal_personal",
+      "label": "Musk Political, Legal & Personal",
+      "description": "Musk's political endorsements and campaign activity, SEC enforcement actions, Nordic labor disputes, lawsuits involving Musk personally, X platform controversies, and personal conduct stories that create headline risk for TSLA."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=trivial mention or tangential reference with no direct impact on Tesla's revenue, margins, or addressable market, 10=event directly and substantially alters Tesla's revenue trajectory, profit margins, or total addressable market"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome or content was fully anticipated, in line with consensus, or a rehash of known information, 10=outcome or revelation was completely unexpected and contradicts prevailing market expectations"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=impact limited to the next few trading days with no lasting consequence, 10=structural shift that will reshape Tesla's business trajectory for years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral or balanced tone conveying factual information without emotional charge, 10=extremely strong positive or negative tone signaling euphoria or alarm"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure opinion, speculation, or commentary with no verifiable data points, 10=dense with specific hard numbers such as revenue figures, unit counts, margins, or regulatory findings"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could reasonably be interpreted as positive or negative for the stock, 10=unambiguously and clearly positive or negative with no room for mixed interpretation"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no effect on Tesla's competitive position relative to rivals, 10=fundamentally reshapes Tesla's competitive standing in key markets"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory, legal, or government enforcement angle, 10=major regulatory action, investigation, or policy change with direct consequences for Tesla's operations or products"
+    },
+    {
+      "id": "management_signal",
+      "scale": "1=no leadership, strategic, or organizational dimension, 10=major strategic pivot, C-suite change, or leadership decision that redefines company direction"
+    },
+    {
+      "id": "expected_duration",
+      "scale": "1=transient story that resolves within a single news cycle, 10=persistent narrative that remains relevant and generates follow-up coverage for weeks or months"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the prevailing investor thesis and existing narratives about Tesla, 10=fundamentally challenges or reverses the dominant investment narrative"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash or follow-up of previously reported information with no new substance, 10=first report of genuinely new information not previously available to investors"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or results exactly match prior guidance and analyst consensus, 10=reported figures dramatically exceed or miss prior guidance and analyst expectations as described in the article"
+    },
+    {
+      "id": "controversy",
+      "scale": "1=consensus view with no meaningful disagreement among investors or stakeholders, 10=deeply polarizing event that divides investors, analysts, or public opinion on Tesla's direction"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Ranges from tangential Musk personal anecdotes and generic EV industry roundups to events that directly reshape Tesla's revenue outlook such as canceling the affordable car, major earnings beats or misses, and global pricing strategy changes.",
+      "surprise": "Clear variation from fully expected scheduled events with in-line results to genuine shocks: Q3 2024 earnings significantly beat expectations, the affordable car cancellation blindsided investors, and the robotaxi reveal disappointed despite high anticipation.",
+      "temporal_horizon": "Spans from single-day price adjustment announcements and one-off recall software fixes to multi-year structural shifts like the pivot from affordable cars to robotaxis, the Berlin gigafactory arson disruption, and the ongoing Musk compensation saga.",
+      "sentiment_strength": "Ranges from dry factual delivery reports and neutral regulatory filings to articles conveying strong alarm over FSD safety fatalities or euphoria over the Q3 2024 earnings surprise and 30% growth forecast.",
+      "information_density": "Wide spectrum from speculative opinion columns about Musk's political activities to earnings releases packed with EPS, margins, delivery counts, and forward guidance numbers.",
+      "directional_clarity": "Some articles are clearly directional such as earnings beats or misses, while others like EU tariffs on Chinese EVs are genuinely ambiguous for Tesla since they both protect and penalize Tesla depending on production geography.",
+      "competitive_impact": "Ranges from articles with no competitive angle to BYD overtaking Tesla as the top global EV seller, EU tariff structures reshaping competitive dynamics, and Chinese rivals posting record sales while Tesla's China numbers decline.",
+      "regulatory_risk": "Wide variation from zero regulatory content in pricing or personnel articles to major NHTSA Autopilot investigations following fatalities, SEC enforcement actions against Musk, and EU tariff determinations affecting Tesla's import costs.",
+      "management_signal": "Ranges from routine operational updates to Musk demanding 25% voting control before advancing AI, senior VP departures after 18 years, the entire supercharger team being fired, and the strategic pivot from affordable car to robotaxi.",
+      "expected_duration": "Single-cycle stories like individual price adjustments contrast sharply with the months-long Musk pay package saga, the ongoing Nordic labor dispute, and the multi-quarter autonomous driving regulatory investigation.",
+      "narrative_shift": "Most delivery reports and routine news reinforce existing narratives, but the affordable car cancellation in favor of robotaxis, the Q3 2024 earnings turnaround after quarters of deterioration, and Musk's political entanglement each challenged the prevailing investment thesis.",
+      "repeatedness": "Corpus contains substantial repetition with multiple outlets reporting identical delivery numbers or recall details, contrasted with genuine scoops like the Reuters exclusive on affordable car cancellation or first reports of executive departures.",
+      "financial_result_surprise": "Highly relevant for TSLA: Q3 2024 earnings significantly beat expectations with analysts expressing genuine surprise, while Q1 2024 deliveries missed badly; Q2 deliveries beat low expectations modestly; Q4 2023 earnings missed on margins despite delivery beat.",
+      "controversy": "Ranges from consensus-view delivery reports to deeply divisive events: the $56 billion pay package split major institutional investors against retail shareholders, Musk's political endorsements divided the investor base, and FSD safety debates polarize analysts."
+    },
+    "dropped": {
+      "scope": "The overwhelming majority of articles in this corpus are company-specific or narrowly EV-sector-focused. The few genuinely macro articles are easily identifiable as market roundups. There is insufficient variation across the middle range to make this dimension informative for scoring TSLA news.",
+      "actionability": "Given Tesla's status as one of the most heavily traded stocks globally, nearly all substantive news about the company is immediately actionable for investors. The dimension would cluster most meaningful articles in the 7-10 range, providing little discriminating power across the corpus."
+    },
+    "added": {}
+  }
+}
