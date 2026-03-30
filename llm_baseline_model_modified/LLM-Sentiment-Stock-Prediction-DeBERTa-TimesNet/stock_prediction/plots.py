@@ -4,7 +4,7 @@ from loguru import logger
 from tqdm import tqdm
 import typer
 
-from stock_prediction.config import PROCESSED_DATA_DIR, PROJ_ROOT
+from stock_prediction.config import PROCESSED_DATA_DIR, PROJ_ROOT, TICKERS
 
 app = typer.Typer()
 
@@ -38,33 +38,20 @@ class FinancialNewsAnalyzer:
         else:
             raise ValueError("Either data_path or df must be provided")
 
-        # Define feature groups
+        # Define feature groups — transformer models only (no classical svm/lr/rf)
         self.sentiment_features = ["total_news_count",
                                    "finbert_majority_vote",
                                    "finbert_count_negative",
                                    "finbert_count_neutral",
                                    "finbert_count_positive",
-                                   "finbert"
                                    "roberta_majority_vote",
                                    "roberta_count_negative",
                                    "roberta_count_neutral",
                                    "roberta_count_positive",
-                                   "deberta_majority_vote", 
+                                   "deberta_majority_vote",
                                    "deberta_count_negative",
                                    "deberta_count_neutral",
                                    "deberta_count_positive",
-                                   "svm_majority_vote",
-                                   "svm_count_negative",
-                                   "svm_count_neutral",
-                                   "svm_count_positive",
-                                   "rf_majority_vote",
-                                   "rf_count_negative",
-                                   "rf_count_neutral",
-                                   "rf_count_positive",
-                                   "lr_majority_vote",
-                                   "lr_count_negative",
-                                   "lr_count_neutral",
-                                   "lr_count_positive",
                                    "finbert_label_positive_sum",
                                    "finbert_label_negative_sum",
                                    "finbert_label_neutral_sum",
@@ -126,6 +113,7 @@ class FinancialNewsAnalyzer:
 
         plt.tight_layout()
         plt.savefig(PROJ_ROOT / f"reports/figures/sentiment_vs_output/{self.stock_symbol}_output_distributions.png")
+        plt.close()
 
     def plot_sentiment_distributions(self, figsize=(20, 15)):
         """Plot distributions of sentiment features"""
@@ -167,6 +155,7 @@ class FinancialNewsAnalyzer:
 
         plt.tight_layout()
         plt.savefig(PROJ_ROOT / f"reports/figures/sentiment_vs_output/{self.stock_symbol}_sentiment_distributions.png")
+        plt.close()
 
     def plot_correlation_matrix(self, figsize=(15, 12)):
         """Plot correlation matrix between sentiment features and outputs"""
@@ -184,8 +173,9 @@ class FinancialNewsAnalyzer:
                    square=True, linewidths=0.5, cbar_kws={"shrink": 0.8}, fmt='.2f')
         plt.title('Correlation Matrix: Sentiment Features vs Output Variables')
         plt.tight_layout()
-        
+
         plt.savefig(PROJ_ROOT / f"reports/figures/sentiment_vs_output/{self.stock_symbol}_correlation_matrix.png")
+        plt.close()
 
         # Print strongest correlations with outputs
         print("\nStrongest correlations with output variables:")
@@ -233,7 +223,7 @@ class FinancialNewsAnalyzer:
                 ax.tick_params(axis='both', labelsize=6)
 
         plt.tight_layout()
-        
+        plt.close()
 
     def plot_binary_target_analysis(self, figsize=(15, 10)):
         """Analyze sentiment features by binary target groups"""
@@ -241,19 +231,17 @@ class FinancialNewsAnalyzer:
             print("Binary_Price column not found")
             return
 
-        # Select numeric sentiment features
-        numeric_cols = self.df.columns
-        sentiment_cols = [col for col in self.sentiment_features if col in numeric_cols]
+        # Select label probability sum columns for analysis
         cols = ["finbert_label_positive_sum",
-                                   "finbert_label_negative_sum",
-                                   "finbert_label_neutral_sum",
-                                   "roberta_label_positive_sum",
-                                   "roberta_label_negative_sum",
-                                   "roberta_label_neutral_sum",
-                                   "deberta_label_negative_sum",
-                                   "deberta_label_positive_sum",
-                                   "deberta_label_neutral_sum"]
-        sentiment_cols = [col for col in sentiment_cols if col in cols]
+                "finbert_label_negative_sum",
+                "finbert_label_neutral_sum",
+                "roberta_label_positive_sum",
+                "roberta_label_negative_sum",
+                "roberta_label_neutral_sum",
+                "deberta_label_negative_sum",
+                "deberta_label_positive_sum",
+                "deberta_label_neutral_sum"]
+        sentiment_cols = [col for col in cols if col in self.df.columns]
 
         if not sentiment_cols:
             print("No numeric sentiment features found")
@@ -283,8 +271,9 @@ class FinancialNewsAnalyzer:
             axes[i].set_visible(False)
 
         plt.tight_layout()
-        
+
         plt.savefig(PROJ_ROOT / f"reports/figures/sentiment_vs_output/{self.stock_symbol}_binary_target_analysis.png")
+        plt.close()
 
     def plot_time_series_analysis(self, figsize=(15, 8)):
         """Plot time series of outputs and sentiment if Date column exists"""
@@ -311,7 +300,7 @@ class FinancialNewsAnalyzer:
 
             axes[-1].set_xlabel('Date')
             plt.tight_layout()
-            
+            plt.close()
 
     def generate_summary_report(self):
         """Generate a comprehensive summary report"""
@@ -328,7 +317,7 @@ class FinancialNewsAnalyzer:
         print(f"\nOutput Variables Summary:")
         for output in self.output_features:
             if output in self.df.columns:
-                if output == 'TargetBinary':
+                if output == 'Binary_Price':
                     counts = self.df[output].value_counts()
                     print(f"- {output}: {counts.to_dict()}")
                 else:
@@ -369,13 +358,24 @@ class FinancialNewsAnalyzer:
 
 @app.command()
 def main(
-    input_path: Path = PROCESSED_DATA_DIR / "TSLA_preprocessed_dataset_with_features.csv"
+    ticker: str = typer.Option("all", help="Ticker to plot, or 'all' for all tickers"),
 ):
-    logger.info("Generating plot from data...")
-    df = pd.read_csv(input_path)
-    analyzer = FinancialNewsAnalyzer(df=df, stock_symbol="TSLA")
-    analyzer.run_complete_analysis()
-    logger.success("Plot generation complete.") 
+    tickers = TICKERS if ticker == "all" else [ticker]
+
+    # Ensure output directory exists
+    (PROJ_ROOT / "reports" / "figures" / "sentiment_vs_output").mkdir(parents=True, exist_ok=True)
+
+    for t in tickers:
+        input_path = PROCESSED_DATA_DIR / f"{t}_preprocessed_dataset_with_features.csv"
+        if not input_path.exists():
+            logger.warning(f"Dataset not found for {t}: {input_path}, skipping")
+            continue
+
+        logger.info(f"Generating plots for {t}...")
+        df = pd.read_csv(input_path)
+        analyzer = FinancialNewsAnalyzer(df=df, stock_symbol=t)
+        analyzer.run_complete_analysis()
+        logger.success(f"  {t} plot generation complete.")
 
 
 if __name__ == "__main__":

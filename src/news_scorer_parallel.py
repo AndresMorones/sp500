@@ -22,8 +22,8 @@ from news_scorer import (
 )
 
 # --- Config ---
-TARGET_TICKERS = ["MSFT", "TSLA", "NVDA"]
-MAX_PARALLEL = 3  # number of tickers to process simultaneously
+TARGET_TICKERS = ["GOOGL"]
+MAX_PARALLEL = len(TARGET_TICKERS)  # all tickers in parallel
 
 
 def run_ticker_phase1(ticker, articles):

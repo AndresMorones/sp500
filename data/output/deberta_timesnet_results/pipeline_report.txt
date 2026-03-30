@@ -1,0 +1,106 @@
+================================================================================
+DEBERTA-TIMESNET BASELINE: FULL PIPELINE RESULTS
+================================================================================
+
+1. SENTIMENT ANALYSIS (3 Transformers x 7 Tickers)
+------------------------------------------------------------
+  AAPL: 799 articles, all-agree: 381/799 (48%)
+     finbert: Neg:261, Neu:329, Pos:209
+     roberta: Neg:113, Neu:408, Pos:278
+     deberta: Neg:216, Neu:424, Pos:159
+  AMZN: 911 articles, all-agree: 372/911 (41%)
+     finbert: Neg:124, Neu:555, Pos:232
+     roberta: Neg:78, Neu:351, Pos:482
+     deberta: Neg:109, Neu:611, Pos:191
+  GOOGL: 385 articles, all-agree: 208/385 (54%)
+     finbert: Neg:125, Neu:125, Pos:135
+     roberta: Neg:62, Neu:238, Pos:85
+     deberta: Neg:109, Neu:180, Pos:96
+  META: 389 articles, all-agree: 232/389 (60%)
+     finbert: Neg:134, Neu:175, Pos:80
+     roberta: Neg:63, Neu:269, Pos:57
+     deberta: Neg:109, Neu:229, Pos:51
+  MSFT: 534 articles, all-agree: 288/534 (54%)
+     finbert: Neg:130, Neu:184, Pos:220
+     roberta: Neg:61, Neu:325, Pos:148
+     deberta: Neg:102, Neu:273, Pos:159
+  NVDA: 592 articles, all-agree: 287/592 (48%)
+     finbert: Neg:108, Neu:212, Pos:272
+     roberta: Neg:34, Neu:232, Pos:326
+     deberta: Neg:101, Neu:287, Pos:204
+  TSLA: 793 articles, all-agree: 386/793 (49%)
+     finbert: Neg:327, Neu:220, Pos:246
+     roberta: Neg:179, Neu:456, Pos:158
+     deberta: Neg:315, Neu:318, Pos:160
+
+2. MERGED DATASETS (Price + Sentiment)
+------------------------------------------------------------
+  AAPL: 241 days, 193 with news (80%), Close [165.0 - 236.5]
+  AMZN: 241 days, 212 with news (88%), Close [142.6 - 200.0]
+  GOOGL: 241 days, 148 with news (61%), Close [129.3 - 191.2]
+  META: 241 days, 164 with news (68%), Close [317.5 - 595.9]
+  MSFT: 241 days, 174 with news (72%), Close [365.9 - 467.6]
+  NVDA: 241 days, 162 with news (67%), Close [45.5 - 143.7]
+  TSLA: 241 days, 188 with news (78%), Close [142.1 - 269.2]
+
+3. SENTIMENT-TARGET CORRELATIONS
+------------------------------------------------------------
+  AAPL Delta_Price top-3: finbert_count_neutral=0.280, roberta_label_positive_sum=0.274, roberta_count_positive=0.264
+  AAPL Binary_Price top-3: deberta_label_positive_sum=0.152, deberta_majority_vote=0.149, deberta_count_positive=0.145
+  AMZN Delta_Price top-3: deberta_max=0.155, finbert_majority_vote=0.146, finbert_max=0.126
+  AMZN Binary_Price top-3: roberta_label_negative_sum=0.134, roberta_count_negative=0.106, roberta_max=0.104
+  GOOGL Delta_Price top-3: deberta_count_neutral=0.109, deberta_label_neutral_sum=0.102, roberta_count_positive=0.094
+  GOOGL Binary_Price top-3: roberta_count_neutral=0.080, finbert_min=0.069, roberta_label_neutral_sum=0.067
+  META Delta_Price top-3: roberta_count_neutral=0.135, roberta_label_neutral_sum=0.124, roberta_max=0.108
+  META Binary_Price top-3: roberta_count_positive=0.080, roberta_label_positive_sum=0.058, finbert_count_positive=0.055
+  MSFT Delta_Price top-3: finbert_max=0.117, roberta_max=0.107, roberta_count_positive=0.100
+  MSFT Binary_Price top-3: roberta_count_neutral=0.085, finbert_count_neutral=0.076, finbert_label_neutral_sum=0.073
+  NVDA Delta_Price top-3: roberta_count_positive=0.119, roberta_count_neutral=0.117, roberta_label_positive_sum=0.079
+  NVDA Binary_Price top-3: roberta_majority_vote=0.112, deberta_majority_vote=0.103, finbert_majority_vote=0.069
+  TSLA Delta_Price top-3: deberta_count_positive=0.147, deberta_label_positive_sum=0.141, roberta_count_positive=0.131
+  TSLA Binary_Price top-3: roberta_count_negative=0.113, deberta_count_negative=0.103, finbert_count_positive=0.103
+
+4. FINAL DATASET SCHEMA (example: AAPL)
+------------------------------------------------------------
+  Date: object, non-null: 241/241
+  Open: float64, non-null: 241/241
+  High: float64, non-null: 241/241
+  Low: float64, non-null: 241/241
+  Close: float64, non-null: 241/241
+  Volume: int64, non-null: 241/241
+  date_only: object, non-null: 241/241
+  total_news_count: float64, non-null: 241/241
+  finbert_majority_vote: float64, non-null: 241/241
+  finbert_min: float64, non-null: 241/241
+  finbert_max: float64, non-null: 241/241
+  finbert_count_positive: float64, non-null: 241/241
+  finbert_count_negative: float64, non-null: 241/241
+  finbert_count_neutral: float64, non-null: 241/241
+  roberta_majority_vote: float64, non-null: 241/241
+  roberta_min: float64, non-null: 241/241
+  roberta_max: float64, non-null: 241/241
+  roberta_count_positive: float64, non-null: 241/241
+  roberta_count_negative: float64, non-null: 241/241
+  roberta_count_neutral: float64, non-null: 241/241
+  deberta_majority_vote: float64, non-null: 241/241
+  deberta_min: float64, non-null: 241/241
+  deberta_max: float64, non-null: 241/241
+  deberta_count_positive: float64, non-null: 241/241
+  deberta_count_negative: float64, non-null: 241/241
+  deberta_count_neutral: float64, non-null: 241/241
+  finbert_confidence_sum: float64, non-null: 241/241
+  finbert_label_positive_sum: float64, non-null: 241/241
+  finbert_label_negative_sum: float64, non-null: 241/241
+  finbert_label_neutral_sum: float64, non-null: 241/241
+  roberta_confidence_sum: float64, non-null: 241/241
+  roberta_label_negative_sum: float64, non-null: 241/241
+  roberta_label_neutral_sum: float64, non-null: 241/241
+  roberta_label_positive_sum: float64, non-null: 241/241
+  deberta_confidence_sum: float64, non-null: 241/241
+  deberta_label_negative_sum: float64, non-null: 241/241
+  deberta_label_neutral_sum: float64, non-null: 241/241
+  deberta_label_positive_sum: float64, non-null: 241/241
+  Float_Price: float64, non-null: 240/241
+  Binary_Price: int64, non-null: 241/241
+  Factor_Price: float64, non-null: 240/241
+  Delta_Price: float64, non-null: 240/241

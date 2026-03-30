@@ -23,7 +23,7 @@ def main():
         'initial_investment': []
     })
 
-    for ticker in ['AMZN', 'AAPL', 'TSLA', 'NFLX', 'MSFT']:
+    for ticker in ['AAPL', 'AMZN', 'GOOGL', 'META', 'MSFT', 'NVDA', 'TSLA']:
         for model in ['finbert', 'roberta', 'deberta', 'lr', 'rf', 'svm']:
             print(f"Analyzing trading performance for {ticker} with {model} model")
             
@@ -118,7 +118,7 @@ def main():
             print(f"\n{model.upper()} Model - By Ticker:")
             print("-" * 40)
             
-            for ticker in ['AMZN', 'AAPL', 'TSLA', 'NFLX', 'MSFT']:
+            for ticker in ['AAPL', 'AMZN', 'GOOGL', 'META', 'MSFT', 'NVDA', 'TSLA']:
                 ticker_profits = individual_results[model].get(f'{ticker}_profit_percentage', [])
                 ticker_final_balance = individual_results[model].get(f'{ticker}_final_balance', [])
                 ticker_trades = individual_results[model].get(f'{ticker}_total_trades', [])

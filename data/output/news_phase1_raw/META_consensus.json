@@ -1,0 +1,132 @@
+{
+  "ticker": "META",
+  "categories": [
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports, revenue/EPS figures, profit margins, guidance, dividends, capex forecasts, stock buybacks, and any article reporting specific financial results versus expectations."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market roundups, sector rotation, macro data mentions, index movements, and multi-stock previews where META is mentioned alongside peers rather than as the primary subject."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst & Consensus Signals",
+      "description": "Analyst upgrades, downgrades, price target changes, buy/sell ratings, and institutional positioning commentary on META specifically."
+    },
+    {
+      "id": "ai_strategy_infrastructure",
+      "label": "AI Strategy & Infrastructure",
+      "description": "Development and release of AI models (Llama, Movie Gen, Meta AI assistant), AI infrastructure investments, custom chips, data center buildouts, energy deals, open-source AI strategy, and AI-powered product features."
+    },
+    {
+      "id": "regulatory_antitrust_compliance",
+      "label": "Regulatory, Antitrust & Compliance",
+      "description": "EU DMA/DSA proceedings, antitrust fines, FTC actions, competition probes, data privacy rulings, GDPR enforcement, government investigations, and regulatory actions targeting Meta's business practices across jurisdictions."
+    },
+    {
+      "id": "child_safety_content_moderation",
+      "label": "Child Safety & Content Moderation",
+      "description": "Lawsuits and legislation targeting youth social media use, teen account protections, sextortion enforcement, content moderation policies, Senate hearings on child exploitation, and platform safety features for minors."
+    },
+    {
+      "id": "hardware_metaverse_ar_vr",
+      "label": "Hardware, AR/VR & Metaverse",
+      "description": "Quest headsets, Orion AR glasses, Reality Labs initiatives, EssilorLuxottica smart eyewear partnership, mixed reality ecosystem, and hardware manufacturing strategy."
+    },
+    {
+      "id": "platform_product_updates",
+      "label": "Platform & Product Updates",
+      "description": "Feature launches across Facebook, Instagram, WhatsApp, Threads, and Messenger including creator tools, business integrations, advertising capabilities, music deals, service outages, and product updates."
+    },
+    {
+      "id": "geopolitical_government_relations",
+      "label": "Geopolitical & Government Relations",
+      "description": "Country-specific bans and access restrictions (Turkey, Russia, Brazil), government content removal requests, election integrity measures, foreign interference takedowns, political content decisions, and international policy disputes."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=routine operational update, minor product tweak, or corporate filing with no revenue/margin implications, 10=event directly and substantially impacts revenue streams, cost structure, or total addressable market"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome fully expected or information already widely known, 10=completely unexpected revelation that contradicts prior consensus or assumptions"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=transient event affecting only the next few days, 10=structural shift with implications lasting years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral or balanced tone with no clear positive/negative lean, 10=extremely strong positive or negative tone throughout the article"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure opinion, speculation, or vague commentary with no specific data, 10=rich in hard data, specific figures, named sources, and quantified outcomes"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could reasonably be interpreted as positive or negative, 10=unambiguously good or bad for the company with no reasonable counter-interpretation"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only this company specifically, 5=sector-wide implications, 10=broad macro or market-wide event"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory, legal, or compliance dimension, 10=major legal ruling, regulatory fine, or compliance mandate with direct financial or operational consequences"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no effect on competitive positioning, 10=major shift in competitive dynamics through partnerships, market entry, or rival disruption"
+    },
+    {
+      "id": "management_signal",
+      "scale": "1=no leadership involvement or strategic implication, 10=major CEO/executive-level strategic announcement, organizational restructuring, or leadership change signaling new direction"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the prevailing investment thesis and existing narrative about the company, 10=fundamentally challenges or redirects the market's understanding of the company's trajectory"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash or follow-up of previously reported information with no new facts, 10=first report of genuinely new information not previously in the public domain"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or results exactly match expectations, 10=reported figures dramatically exceed or miss prior guidance and analyst expectations as described in the article"
+    },
+    {
+      "id": "expected_duration",
+      "scale": "1=transient story that resolves or fades within a day, 10=persistent story that remains relevant and develops over weeks or months"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Consensus 3/3. Ranges from Form 4 filings and minor feature announcements to $1.4B settlements and quarterly earnings with major capex guidance \u2014 wide variation across the corpus.",
+      "surprise": "Consensus 3/3. Spans from scheduled product launches and routine regulatory actions to the first-ever dividend declaration, 16% share price plunge on unexpected capex guidance, and $1.4B Texas settlement \u2014 strong variation in how unexpected outcomes were.",
+      "temporal_horizon": "Consensus 3/3. Ranges from one-day service outages to structural shifts like the EU DMA compliance model, open-source AI strategy, and Orion AR glasses prototype revealing a decade-long hardware strategy.",
+      "sentiment_strength": "Consensus 3/3. Varies from neutral corporate blog posts and Form 4 filings to strongly negative articles about child exploitation hearings and strongly positive articles about tripled earnings and dividend initiation.",
+      "information_density": "Consensus 3/3. Ranges from one-line headline fragments and opinion pieces to detailed earnings transcripts with specific revenue, EPS, margin figures, and analyst price targets.",
+      "directional_clarity": "Consensus 3/3. Some articles are clearly positive (earnings beat, dividend) or negative (antitrust fines, settlement), while others like AI spending increases are genuinely ambiguous across time horizons.",
+      "scope": "Consensus 3/3. Ranges from META-only events like Threads feature updates to sector-wide Big Tech regulatory crackdowns and broad macro articles about market selloffs.",
+      "regulatory_risk": "Consensus 3/3. Highly variable \u2014 from zero regulatory content in product announcements to major EU DMA charges, $1.4B Texas settlement, FTC privacy actions, and multiple country-level investigations.",
+      "competitive_impact": "Consensus 3/3. Ranges from no competitive angle in routine updates to major competitive moves like open-sourcing Llama 3, EssilorLuxottica partnership, and Movie Gen rivaling OpenAI's Sora.",
+      "management_signal": "Consensus 2/3 (kept runs 1, 3; run 2 dropped in favor of custom strategic_signal). Ranges from no leadership angle in routine news to Zuckerberg's Senate apology, AI team reorganization, open-source AI vision letters, and Reality Labs restructuring.",
+      "narrative_shift": "Consensus 3/3. Most articles reinforce existing narratives, but some shift the thesis \u2014 first dividend signals capital return era, Q1 capex guidance sparks AI spending fears, Orion prototype reframes hardware ambitions.",
+      "repeatedness": "Consensus 3/3. Clear variation between first-break stories (dividend announcement, Orion reveal, Texas settlement) and repeated multi-outlet coverage of the same events or follow-up articles days later.",
+      "financial_result_surprise": "Consensus 3/3. Most articles contain no financial results, but earnings articles show clear variation \u2014 Q4 2023 EPS tripled expectations while Q1 2024 guidance disappointed and shares plunged 16%.",
+      "expected_duration": "Consensus 2/3 (kept runs 1, 3; run 2 dropped as redundant with temporal_horizon). Retained because temporal_horizon captures how far forward the impact reaches while expected_duration captures how long the news story itself persists in coverage \u2014 a regulatory ruling may have a years-long horizon but fade from headlines in days."
+    },
+    "dropped": {
+      "actionability": "Dropped by all 3 runs. Clusters at extremes \u2014 earnings and analyst actions are immediately actionable while regulatory and product articles are not \u2014 largely duplicates materiality without adding discriminating power.",
+      "controversy": "Dropped by all 3 runs. Most META articles reflect consensus views rather than divisive investor debates. The few controversial items overlap heavily with directional_clarity and would score uniformly low for investor-relevant controversy.",
+      "strategic_signal": "Custom dimension from run 2 only (1/1). The underlying concept overlaps substantially with management_signal which was kept by 2/3 runs. Not robust enough for consensus."
+    },
+    "added": {}
+  }
+}

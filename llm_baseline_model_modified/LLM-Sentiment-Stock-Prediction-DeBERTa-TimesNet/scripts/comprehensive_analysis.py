@@ -18,8 +18,8 @@ from typing import Dict, List, Tuple, Optional
 warnings.filterwarnings('ignore')
 
 # Define the constants
-TICKERS = ['AAPL', 'AMZN', 'MSFT', 'NFLX', 'TSLA']
-SENTIMENT_MODELS = ['deberta', 'finbert', 'lr', 'rf', 'roberta', 'svm']
+TICKERS = ['AAPL', 'AMZN', 'GOOGL', 'META', 'MSFT', 'NVDA', 'TSLA']
+SENTIMENT_MODELS = ['deberta', 'finbert', 'roberta']
 OUTPUT_TYPES = ['Binary_Price', 'Delta_Price', 'Factor_Price', 'Float_Price']
 MODEL_TYPES = ['LSTM', 'PatchTST', 'TimesNet', 'tPatchGNN']
 SEEDS = ['16', '32', '64', '128', '256', '512', '1024', '2048', '4096', '8192']

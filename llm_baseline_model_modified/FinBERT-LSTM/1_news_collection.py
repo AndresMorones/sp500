@@ -1,62 +1,36 @@
-from pynytimes import NYTAPI
-import datetime
+"""
+Step 1: Load news data from raw CSV and prepare for sentiment analysis.
+
+Original: Fetched 10 articles/day from NYT API in wide format.
+Adapted: Loads from data/raw/news.csv (long format, ticker-specific),
+         concatenates headline + summary for FinBERT input.
+"""
 import pandas as pd
-import numpy as np
+from config import NEWS_RAW, NEWS_DATA_CSV, TICKERS
 
 
-def get_news(year, month, day):
-    """
-    get top 10 most relevent finance news headings on each day from NY times
-    """
-    nyt = NYTAPI("5UI21WrJdSgZtHZpljOncwS0qMuJuOcs", parse_dates=True)
-    list = []
-    articles = nyt.article_search(
-            results = 10,
-            dates = {
-                "begin": datetime.datetime(year, month, day),
-                "end": datetime.datetime(year, month, day)
-            },
-            options = {
-                "sort": "relevance",
-                "news_desk": [
-                    "Business", "Business Day", "Entrepreneurs", "Financial", "Technology"
-                ],
-                "section_name" : [
-                    "Business", "Business Day", "Technology"
-                ]
-            }
-        )
-    for i in range(len(articles)):
-        list.append(articles[i]['abstract'].replace(',', ""))
-    return list
+def load_and_prepare_news():
+    df = pd.read_csv(NEWS_RAW)
 
-df = pd.DataFrame()
+    # Extract date from datetime column (YYYY-MM-DD HH:MM:SS -> YYYY-MM-DD)
+    df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
+
+    # Filter to our tickers only
+    df = df[df["ticker"].isin(TICKERS)].copy()
+
+    # Concatenate headline + summary for richer FinBERT input
+    # Original used NYT abstracts; this gives equivalent context
+    df["summary"] = df["summary"].fillna("")
+    df["text"] = df["headline"] + ". " + df["summary"]
+
+    # Keep only what downstream scripts need
+    df = df[["date", "ticker", "text"]].reset_index(drop=True)
+
+    df.to_csv(NEWS_DATA_CSV, index=False)
+    print(f"News data saved: {len(df)} articles across {df['ticker'].nunique()} tickers")
+    print(f"Date range: {df['date'].min()} to {df['date'].max()}")
+    print(f"Articles per ticker:\n{df['ticker'].value_counts().to_string()}")
 
 
-
-def generate_news_file():
-    """
-    store news headings everyday of Q3 2022 in csv
-    """
-    start = '2020-10-01'
-    end = '2022-09-30'
-    mydates = pd.date_range(start, end)
-    dates = []
-    for i in range(len(mydates)):
-        dates.append(mydates[i].strftime("%Y-%m-%d"))
-    matrix = np.zeros((len(dates) + 1, 11), dtype=object)  
-    matrix[0, 0] = "Date"
-
-    for i in range(10):
-        matrix[0, i + 1] = f"News {i + 1}"
-    for i in range(len(dates)):
-        matrix[i + 1, 0] = dates[i]
-        y, m, d = dates[i].split("-")
-        news_list = get_news(int(y), int(m), int(d))
-        for j in range(len(news_list)):
-            matrix[i + 1, j + 1] = news_list[j]
-    df = pd.DataFrame(matrix)
-    df.to_csv("news.csv", index = False)
-
-
-generate_news_file()
+if __name__ == "__main__":
+    load_and_prepare_news()

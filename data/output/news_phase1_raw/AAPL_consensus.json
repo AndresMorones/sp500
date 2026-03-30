@@ -1,0 +1,131 @@
+{
+  "ticker": "AAPL",
+  "categories": [
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports, revenue and EPS figures, profit margins, guidance revisions, share buyback authorizations, dividend changes, and any article reporting specific financial results versus expectations."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market roundups, Magnificent Seven narratives, tech sector rotations, macro-driven selloffs or rallies, and general market-wide news that mentions AAPL as part of a wider basket."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst & Consensus Signals",
+      "description": "Analyst upgrades, downgrades, price target changes, buy/sell/hold ratings, institutional positioning calls, and conviction list additions or removals from brokerages covering AAPL."
+    },
+    {
+      "id": "product_launches_hardware",
+      "label": "Product Launches & Hardware",
+      "description": "iPhone, iPad, Mac, Apple Watch, AirPods, and Vision Pro announcements, launches, spec reveals, teardowns, new chip introductions, associated software OS releases, and early demand or sales data for new devices."
+    },
+    {
+      "id": "ai_strategy_innovation",
+      "label": "AI Strategy & Innovation",
+      "description": "Apple Intelligence development and rollout, OpenAI and Google Gemini partnerships, WWDC AI announcements, on-device AI chip development, competitive positioning in the generative AI race, and major strategic pivots including the Apple Car cancellation and redirection to AI."
+    },
+    {
+      "id": "china_market_competition",
+      "label": "China Market & Competitive Dynamics",
+      "description": "iPhone sales trends in China, Huawei market share gains and smartphone competition, Tim Cook visits to Beijing, competitive threats from domestic brands, Samsung or other rivals overtaking Apple in global or regional rankings, and regulatory dynamics specific to China."
+    },
+    {
+      "id": "regulatory_antitrust_legal",
+      "label": "Regulatory, Antitrust & Legal",
+      "description": "EU Digital Markets Act enforcement and fines, DOJ antitrust lawsuit, Epic Games disputes, Masimo patent litigation, Apple Watch import bans, App Store fee litigation, India antitrust probes, Japan app store regulation, and antitrust investigations in other jurisdictions."
+    },
+    {
+      "id": "supply_chain_manufacturing",
+      "label": "Supply Chain & Manufacturing",
+      "description": "India and Vietnam manufacturing expansion, Foxconn and Tata facility operations and quarterly results, supply disruptions from fires or weather, production volume targets, supplier labor practices, and geographic diversification of assembly operations away from China."
+    },
+    {
+      "id": "corporate_strategy_operations",
+      "label": "Corporate Strategy & Operations",
+      "description": "Major strategic pivots, workforce layoffs and restructuring, acquisitions, labor union activity, leadership departures, environmental or CSR initiatives, services and ecosystem strategy shifts, and content or partnership deals."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=trivial noise with no plausible impact on revenue, margins, or addressable market, 10=direct and large-scale impact on a major revenue segment, cost structure, or total addressable market"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome or content fully expected and already priced into consensus expectations, 10=outcome or revealed information completely unexpected by the market and analyst community"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=affects the company's outlook for days to weeks only, 10=structural shift that reshapes the company's trajectory for years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral or matter-of-fact tone with no positive or negative valence, 10=extremely strong positive or negative sentiment conveyed through language and framing"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure opinion, speculation, or rehashed narrative with no concrete data, 10=rich in hard data including specific financial figures, unit volumes, market share percentages, or verifiable metrics"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could reasonably be interpreted as positive or negative for the stock, 10=unambiguously and clearly positive or negative with no room for alternative interpretation"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only this company with no read-through to peers, 5=sector-wide implications, 10=macro or market-wide event affecting all equities"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no effect on competitive positioning or market share dynamics, 10=major shift in competitive landscape that directly threatens or strengthens market position against key rivals"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory, legal, or governmental dimension, 10=major regulatory action with potential to force structural business model changes or impose large financial penalties"
+    },
+    {
+      "id": "management_signal",
+      "scale": "1=no leadership, strategic, or organizational dimension, 10=major strategic pivot, C-suite action, or organizational restructuring that signals a fundamental change in company direction"
+    },
+    {
+      "id": "expected_duration",
+      "scale": "1=transient story that resolves or becomes irrelevant within a day or two, 10=persistent story that remains in investor focus for weeks or months and generates follow-up coverage"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the prevailing investor thesis and existing consensus narrative, 10=fundamentally challenges or changes the dominant investment thesis for the company"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash, follow-up, or incremental update on a well-known and previously reported story, 10=first report of genuinely new information not previously available to the market"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or results exactly in line with prior guidance and analyst expectations, 10=reported figures dramatically exceed or miss prior guidance and analyst consensus as described in the article"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Consensus across all 3 runs. Ranges from trivial product color additions and Apple Arcade game launches to DOJ antitrust lawsuits threatening the core business model and $110 billion buyback announcements directly affecting shareholder value. Wide variation across the corpus makes this highly discriminating.",
+      "surprise": "Consensus across all 3 runs. Scheduled product launches with expected specs score low, while the Apple Car cancellation with pivot to AI, DOJ antitrust lawsuit filing timing, OpenAI partnership announcement, and 40% iPhone shipment surge in China after months of decline represent high surprise outcomes that moved the stock.",
+      "temporal_horizon": "Consensus across all 3 runs. Ranges from transient iOS bugs and one-day service outages to multi-year structural shifts like the DOJ antitrust litigation, EU DMA compliance requirements, India manufacturing build-out, and the strategic AI pivot reshaping the company's trajectory.",
+      "sentiment_strength": "Consensus across all 3 runs. Many articles are neutral product spec sheets or factual regulatory updates, while China sales plunge reports, the AI-driven record stock rally after WWDC, DOJ monopoly accusations, and analyst declarations of a growth renaissance carry extreme sentiment.",
+      "information_density": "Consensus across all 3 runs. Ranges from vague opinion pieces about foldable iPhone timelines and AI potential to earnings reports with specific EPS, revenue, and segment breakdowns, and IDC/Counterpoint data with precise shipment percentages and market share figures.",
+      "directional_clarity": "Consensus across all 3 runs. iPhone 16 demand generated contradictory signals across the corpus with simultaneous data showing China gains and weakness, versus unambiguously directional events like the Barclays downgrade, Apple Watch import ban, record $110 billion buyback authorization, and 20% iPhone 16 sales surge.",
+      "scope": "Consensus across all 3 runs. Apple-specific patent disputes and product color announcements affect only AAPL, while EU DMA enforcement affects all designated gatekeepers, Magnificent Seven narratives move the entire tech sector, and global recession-fear selloffs are macro-wide events.",
+      "competitive_impact": "Consensus across all 3 runs. Ranges from routine product updates with no competitive read-through to Huawei doubling shipments and overtaking Apple in China, Samsung reclaiming global smartphone leadership, Harmony OS threatening the Android-iOS duopoly, and EU forcing ecosystem openness.",
+      "regulatory_risk": "Consensus across all 3 runs. The corpus is dominated by regulatory news \u2014 DOJ antitrust suit, EU DMA charges, EU \u20ac500M+ fines, India antitrust findings, Japan app store law, Apple Watch import bans, multiple patent disputes \u2014 while many product and earnings articles have zero regulatory dimension, creating wide variation.",
+      "management_signal": "Consensus across all 3 runs. Ranges from no leadership angle in routine software updates to the Apple Car cancellation with workforce redirection to AI, 600+ employee layoffs after project cancellations, Tim Cook's repeated China/SE Asia visits signaling geographic priorities, and the departure of Apple's head of iPhone and Watch design.",
+      "expected_duration": "Consensus across all 3 runs. One-day service outages and iOS bug reports fade immediately, while the DOJ antitrust lawsuit, EU DMA compliance saga, Epic Games dispute, and India manufacturing expansion generated months of continuous follow-up coverage across the corpus.",
+      "narrative_shift": "Consensus across all 3 runs. Routine quarterly product refreshes reinforce the existing thesis, while the Apple Intelligence announcement at WWDC fundamentally reframed the investment narrative from hardware stagnation to AI-driven upgrade cycle, and the Apple Car cancellation reshaped views on capital allocation strategy.",
+      "repeatedness": "Consensus across all 3 runs. The corpus contains extensive duplication where the same iPhone 16 launch, DOJ lawsuit, or EU ruling is covered by dozens of outlets with decreasing novelty and no new information, contrasted with genuine first reports like the Bloomberg scoop on Apple Car cancellation or the DarwinAI acquisition.",
+      "financial_result_surprise": "Consensus across all 3 runs. Most non-earnings articles contain no financial results at all, while earnings articles show clear variation from in-line results with lukewarm guidance to Q1 FY24 EPS beating estimates while China sales disappointed, and Q2 showing the steepest iPhone decline since the pandemic alongside the record $110B buyback that exceeded expectations."
+    },
+    "dropped": {
+      "controversy": "Dropped by all 3 runs. AAPL's investor base is overwhelmingly institutional with relatively aligned views. Regulatory and labor stories are more clearly negative than contested, product launches are generally consensus-positive, and even the AI strategy was quickly embraced. The dimension would cluster around low values for the vast majority of articles with insufficient variation to be informative.",
+      "actionability": "Dropped by 2 of 3 runs (Runs 1 and 3). Most AAPL news is immediately actionable given the stock's extreme liquidity and institutional coverage, causing the dimension to cluster around moderate-to-high values. Run 3 additionally noted it correlates heavily with the combination of directional_clarity and information_density, making it redundant in the scoring framework."
+    },
+    "added": {}
+  }
+}

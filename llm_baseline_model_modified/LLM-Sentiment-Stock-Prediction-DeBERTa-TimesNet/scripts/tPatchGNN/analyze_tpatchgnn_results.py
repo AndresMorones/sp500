@@ -16,7 +16,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Define the constants
-TICKERS = ['AAPL', 'AMZN', 'MSFT', 'NFLX', 'TSLA']
+TICKERS = ['AAPL', 'AMZN', 'GOOGL', 'META', 'MSFT', 'NVDA', 'TSLA']
 MODELS = ['deberta', 'finbert', 'lr', 'rf', 'roberta', 'svm']
 OUTPUT_TYPES = ['Binary_Price', 'Delta_Price', 'Factor_Price', 'Float_Price']
 TPATCHGNN_DIR = 'reports/output/tPatchGNN'

@@ -19,8 +19,8 @@ plt.style.use('seaborn-v0_8')
 sns.set_palette("husl")
 
 # Define the constants
-TICKERS = ['AAPL', 'AMZN', 'MSFT', 'NFLX', 'TSLA']
-SENTIMENT_MODELS = ['deberta', 'finbert', 'lr', 'rf', 'roberta', 'svm']
+TICKERS = ['AAPL', 'AMZN', 'GOOGL', 'META', 'MSFT', 'NVDA', 'TSLA']
+SENTIMENT_MODELS = ['deberta', 'finbert', 'roberta']
 OUTPUT_TYPES = ['Binary_Price', 'Delta_Price', 'Factor_Price', 'Float_Price']
 MODEL_TYPES = ['LSTM', 'PatchTST', 'TimesNet', 'tPatchGNN']
 

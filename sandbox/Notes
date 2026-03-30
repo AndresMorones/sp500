@@ -225,3 +225,91 @@ Phase 2: LLM structured output validates on 50-article sample
 Phase 3: Feature alignment with scores_output.csv
 Phase 4: R2_OOS, MAE, tail/core ratio vs baseline
 After each phase: update journal.md + open-questions.md
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========== comparison
+
+
+
+
+
+
+Detailed Scientific Comparison: Float_Price Prediction
+Experimental Setup
+Aspect	FinBERT-LSTM	DeBERTa-TimesNet LSTM
+Tickers	7 (AAPL, AMZN, GOOGL, META, MSFT, NVDA, TSLA)	5 (AAPL, AMZN, MSFT, NFLX, TSLA)
+Date range	2019-01 to 2025-03 (~6 years)	2022-03 to 2025-04 (~3 years)
+Train/test	85/15, no validation	80/20, + 10% validation from train
+Sequence length	10 days	30 days
+Sentiment	FinBERT only, single scalar	6 models, 7-9 parallel features per timestep
+Regularization	None (no dropout, no early stopping, LR=0.02)	Dropout 0.5, early stopping, grad clipping, LR scheduling
+Framework	TensorFlow/Keras	PyTorch
+Head-to-Head MAPE (4 overlapping tickers)
+Ticker	FinBERT-LSTM	DeBERTa-TimesNet (best)	Winner
+AAPL	1.72%	2.50%	FinBERT-LSTM
+AMZN	2.00%	2.99%	FinBERT-LSTM
+MSFT	1.51%	5.31%	FinBERT-LSTM
+TSLA	1.45%	4.62%	FinBERT-LSTM
+Avg	1.67%	3.86%	FinBERT-LSTM
+Why FinBERT-LSTM Wins on Numbers — 5 Confounds
+Time period: FinBERT-LSTM test period hits 2024-2025 bull market (smooth trending = easy to predict). DeBERTa-TimesNet covers the volatile 2022 bear market.
+Train proportion: 85% vs 72% effective training data.
+No validation discipline: No early stopping means potential overfitting to test-like patterns.
+Shorter lookback: 10-day window succeeds by trend extrapolation — simpler task.
+Single run: No confidence intervals. DeBERTa-TimesNet averages across seeds (more robust but may average in bad runs).
+Key Scientific Findings
+LSTM dominates Float_Price — transformers (TimesNet CORR=0.53, PatchTST CORR=0.23) are not competitive on price regression.
+Sentiment adds marginal value — FinBERT-LSTM is worse than plain LSTM on 3/7 tickers. DeBERTa-TimesNet shows near-identical CORR (~0.85-0.88) across all 6 sentiment models.
+Traditional ML sentiment (SVM, RF) matches transformer sentiment for price prediction — the signal, not the model, is the bottleneck.
+Neither reports a naive baseline — without "predict yesterday's close" comparison, we can't assess actual predictive value.
+Bias-variance tradeoff in sentiment models: DeBERTa = lowest MAE but lowest CORR; FinBERT = highest CORR but worst MAE.
+Stage 3 Targets
+Price MAPE: Beat 2.14% (FinBERT-LSTM avg) on ≥4/7 tickers
+Directional accuracy: Beat 60% (DeBERTa-TimesNet Binary_Price)
+Must also report: naive baseline comparison, confidence intervals, Sharpe ratio
+
+
+
+
+
+========== reoport====================
+
+No price predicitom with rich features or llm infered categories just binary direction on stock, there for as baseline for reviewing and comapring performance specificaly on price prediciton
+
+we review this 2 paper copy methodloy ran for our data find by updataing to most up to date architecture finbert model results remained the same, tried  Gemma-3n-E2B , Qwen2.5-1.5B, Llama-FinSent-S sentiment, withmkor granular architecutre, 7 scores for sentiment. mapped -1 to 1
+
+
+We porpose reviewing even on models trained on our period how would different methodlogy compare
+
+
+then we compared lstm to claude opus 4.6 same methodlogy
+more rich financial coimpany and Custom categories and raniking 0-10 improved by.
+
+
+
+Adressing key risk that results could be attributed that models were trained on data covering our news and prediciton period, and not generalization.
+We ran and compared methodlogy with knowledge cut off mid 2024
+
+THe compared ltsm to using directly price volume high low.
+vs our metric a 
+vs all metrics
+
+
+
+
+=========
+
+mode prompts to different folder

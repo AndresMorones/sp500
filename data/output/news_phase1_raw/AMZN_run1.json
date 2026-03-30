@@ -1,0 +1,131 @@
+{
+  "ticker": "AMZN",
+  "categories": [
+    {
+      "id": "aws_cloud_ai_infrastructure",
+      "label": "AWS Cloud & AI Infrastructure",
+      "description": "AWS cloud region launches, data center investments, custom chip announcements, AI/ML service releases (Bedrock, Amazon Q, Trainium), and major enterprise cloud partnerships."
+    },
+    {
+      "id": "retail_ecommerce_competition",
+      "label": "Retail & E-Commerce Competition",
+      "description": "Prime shopping events (Prime Day, Big Deal Days, Big Spring Sale), marketplace features, logistics innovations, fulfillment network changes, and competitive responses to Temu/Shein."
+    },
+    {
+      "id": "content_entertainment_sports",
+      "label": "Content, Entertainment & Sports",
+      "description": "Prime Video originals (Fallout, The Boys, Rings of Power), sports broadcasting deals (NFL Thursday Night Football, NBA, NWSL), streaming features, and entertainment partnerships."
+    },
+    {
+      "id": "regulatory_legal_antitrust",
+      "label": "Regulatory, Legal & Antitrust",
+      "description": "FTC and EU antitrust actions, iRobot acquisition scrutiny, Digital Services Act compliance, tax investigations, product safety rulings, patent disputes, and privacy fines."
+    },
+    {
+      "id": "labor_workforce_operations",
+      "label": "Labor, Workforce & Operations",
+      "description": "Union organizing and strikes, return-to-office mandates, layoffs across divisions (Twitch, Alexa, Audible), seasonal hiring, Flex driver classification disputes, and employee relations."
+    },
+    {
+      "id": "devices_hardware_emerging_tech",
+      "label": "Devices, Hardware & Emerging Tech",
+      "description": "Kindle lineup launches (including first color Kindle), Echo and Fire TV products, Ring and eero devices, drone delivery expansion, Zoox robotaxis, Project Kuiper satellites, and warehouse robotics."
+    },
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports (Q4 2023 through Q3 2024), revenue and EPS figures, segment performance (AWS, advertising, retail), profit margins, forward guidance, and shareholder letters."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market moves mentioning AMZN (Nasdaq corrections, recession fears, tech selloffs), Amazon joining the Dow Jones, crossing $2T market cap, Bezos share sales, and macro-driven trading."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst & Consensus Signals",
+      "description": "Analyst price target changes and rating reiterations from firms like Bank of America, UBS, Jefferies, and Wedbush, plus institutional positioning commentary."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=no direct impact on Amazon revenue, margins, or addressable market (e.g., lifestyle tips, product how-tos), 10=directly and substantially affects a major revenue stream, margin structure, or total addressable market (e.g., multi-billion-dollar infrastructure commitment, major regulatory ruling on core business)"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome or content fully expected and already priced into consensus expectations, 10=outcome or revealed information completely unexpected by market participants regardless of whether the event itself was scheduled"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=impact limited to the next few days with no structural consequence, 10=structural shift affecting Amazon's competitive position or business model for years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral informational tone with no positive or negative valence, 10=extremely strong positive or negative tone conveying major success or serious threat"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure opinion, speculation, or promotional content with no specific data points, 10=rich in hard data including specific financial figures, user metrics, deal terms, or quantified outcomes"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could reasonably be interpreted as positive or negative for the stock, 10=unambiguously good or bad for Amazon shareholders with no reasonable contrary interpretation"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only Amazon with no read-through to peers or sector, 10=macro or market-wide event where Amazon is one of many affected companies"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no meaningful effect on Amazon's competitive positioning, 10=major shift in competitive dynamics that materially strengthens or weakens Amazon relative to key rivals"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory, legal, or compliance angle, 10=major regulatory or legal event with potential to force structural business changes or impose significant financial penalties"
+    },
+    {
+      "id": "management_signal",
+      "scale": "1=no leadership, strategic, or governance angle, 10=major C-suite change, strategic pivot announcement, or board-level governance decision"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the prevailing investment thesis and existing market narrative about the company, 10=fundamentally challenges or changes the dominant narrative about Amazon's trajectory"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash or follow-up of a widely known and previously reported story with no new information, 10=first report of genuinely new information not previously available to the market"
+    },
+    {
+      "id": "controversy",
+      "scale": "1=consensus view with no meaningful disagreement among investors or stakeholders, 10=highly divisive topic where informed observers hold strongly opposing views on the implications"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or results exactly match prior guidance and analyst consensus, 10=reported figures dramatically exceed or miss prior guidance and analyst expectations as described in the article"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Ranges from pure promotional shopping tips and how-to guides (hundreds of articles) to multi-billion-dollar cloud infrastructure commitments and quarterly earnings revealing segment-level performance shifts.",
+      "surprise": "Scheduled earnings with unexpected beats or misses contrast sharply with routine product announcements; unscheduled events like nuclear power deals, AWS CEO departure, and 5-day RTO mandate add further variation.",
+      "temporal_horizon": "Ranges from one-day Prime Deal promotions and weekly entertainment premieres to decade-spanning cloud infrastructure investments and nuclear energy agreements reshaping Amazon's cost structure.",
+      "sentiment_strength": "Ranges from flatly neutral device how-to articles to strongly positive earnings beats and record Prime Day results, versus strongly negative coverage of strikes, antitrust lawsuits, and surveillance fines.",
+      "information_density": "Enormous variation between PR-style promotional content with no quantitative data and articles reporting specific revenue figures, investment amounts, user growth metrics, and deal terms.",
+      "directional_clarity": "Some events are unambiguously positive (EU tax case win, record sales events) or negative (regulatory fines, share price drops), while others are ambiguous (Alexa AI overhaul could signal innovation or a struggling product line).",
+      "scope": "Many articles are Amazon-only (new Kindle features, warehouse robotics), while others are sector-wide (NBA broadcasting reshuffles, Big Tech energy race) or macro (Nasdaq corrections, recession fears affecting all equities).",
+      "competitive_impact": "Ranges from articles with no competitive read-through (employee stories, community programs) to major competitive shifts like the low-cost China storefront challenging Temu/Shein, NBA broadcasting rights reshuffling, and AWS vs Azure rivalry in AI infrastructure.",
+      "regulatory_risk": "Sharp variation from zero regulatory content in product announcements to major events including FTC antitrust litigation, EU iRobot deal blocking, France's 32M euro surveillance fine, Italy tax seizures, and CPSC product safety rulings.",
+      "management_signal": "Most articles have no leadership angle, but notable exceptions include AWS CEO transition (Selipsky to Garman), Andy Jassy's shareholder letter with strategic signals, Andrew Ng joining the board, the 5-day RTO mandate, and advertising chief departure.",
+      "narrative_shift": "The vast majority of articles reinforce existing narratives (AWS growing, Prime popular, retail dominant), but a subset genuinely shifts the thesis: Amazon entering nuclear energy, crossing $2T valuation, Q2 revenue miss suggesting consumer weakness, and the Alexa subscription model pivot.",
+      "repeatedness": "Extreme variation: dozens of articles repeat the same Prime Day deals or iRobot EU decision across multiple outlets, while others are first reports of genuinely new developments like nuclear power agreements or AWS CEO changes.",
+      "controversy": "Ranges from completely uncontroversial (product guides, entertainment content) to highly divisive topics including the 5-day return-to-office mandate, union organizing battles, employee surveillance practices, and antitrust implications.",
+      "financial_result_surprise": "Most articles report no financial results at all (score 1), but quarterly earnings articles show clear variation: Q4 2023 and Q1 2024 showed strong beats driving share gains, while Q2 2024 showed mixed results with slowing online sales growth causing an 8% share decline."
+    },
+    "dropped": {
+      "expected_duration": "Overlaps substantially with temporal_horizon for this corpus; the distinction between how long an impact lasts versus how long a story remains in the news cycle does not produce meaningfully different rankings across AMZN articles.",
+      "actionability": "Low discriminating power for AMZN specifically: given the stock's deep liquidity and continuous analyst coverage, most material news is immediately actionable while most non-material news is uniformly not actionable, leaving little middle ground."
+    },
+    "added": {}
+  }
+}

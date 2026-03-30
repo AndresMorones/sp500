@@ -11,7 +11,7 @@ parser.add_argument("--model_name", type=str, default="lstm_model", help="Name o
 parser.add_argument("--model_path", type=str, default="models/lstm_model.pth", help="Path to the model file")
 
 # Data Paths
-parser.add_argument("--data_path", type=str, default="data/processed/AMZN_FINBERT_FLOAT.csv", help="Path to the data file")
+parser.add_argument("--data_path", type=str, default="data/processed/AAPL_preprocessed_dataset_with_features.csv", help="Path to the data file")
 parser.add_argument("--feature_columns", nargs='+', type=str, default=None, help="List of feature columns (space separated)")
 parser.add_argument("--target_column", type=str, default="Close", help="Name of the target column")
 parser.add_argument("--ticker", type=str, default="AAPL", help="Ticker")

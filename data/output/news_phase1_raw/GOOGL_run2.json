@@ -1,0 +1,127 @@
+{
+  "ticker": "GOOGL",
+  "categories": [
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports, revenue and EPS figures, profit margins, guidance, dividend announcements, and articles reporting specific financial results versus analyst expectations."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market roundups, Nasdaq/S&P 500 movements, macro data reactions, sector rotation, and articles where GOOGL is mentioned as part of a wider market or tech sector narrative."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst & Consensus Signals",
+      "description": "Analyst upgrades, downgrades, price target changes, buy/sell ratings, broker commentary, and institutional positioning or valuation milestones."
+    },
+    {
+      "id": "ai_cloud_strategy",
+      "label": "AI & Cloud Strategy",
+      "description": "Gemini model launches and updates, DeepMind research breakthroughs, AI chip development, cloud partnerships with enterprise clients, AI product features, and competitive positioning in the generative AI race."
+    },
+    {
+      "id": "antitrust_regulatory_legal",
+      "label": "Antitrust, Regulatory & Legal",
+      "description": "DOJ antitrust cases, EU fines and DMA investigations, UK competition probes, ad tech lawsuits, Play Store rulings, patent disputes, and global regulatory enforcement actions against Google."
+    },
+    {
+      "id": "data_center_infrastructure",
+      "label": "Data Center & Infrastructure Investment",
+      "description": "Global data center construction announcements, cloud region expansions, nuclear and clean energy procurement deals, submarine cable projects, and capital expenditure on physical infrastructure."
+    },
+    {
+      "id": "acquisitions_investments",
+      "label": "Acquisitions & Strategic Investments",
+      "description": "Potential and completed acquisitions, minority equity investments, licensing deals with AI startups, divestitures, and corporate development activity."
+    },
+    {
+      "id": "waymo_autonomous_vehicles",
+      "label": "Waymo & Autonomous Vehicles",
+      "description": "Waymo service expansions, robotaxi incidents, NHTSA investigations, vehicle recalls, regulatory approvals, and autonomous driving technology developments."
+    },
+    {
+      "id": "leadership_workforce_operations",
+      "label": "Leadership, Workforce & Operations",
+      "description": "C-suite appointments and departures, layoffs and restructuring, organizational changes, content moderation decisions, privacy settlements, and operational policy shifts."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=passing mention or tangential relevance to GOOGL fundamentals, 10=directly and substantially affects revenue, margins, or addressable market"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome fully expected or confirming prior consensus, 10=outcome completely unexpected with no prior indication"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=affects only the next few trading days, 10=structural shift with implications lasting years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral or balanced tone with no clear valence, 10=extremely strong positive or negative sentiment"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure speculation, opinion, or rumor with no hard data, 10=detailed quantitative data with specific figures, comparisons, and verifiable facts"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could be interpreted as positive or negative, 10=unambiguously good or bad for GOOGL shareholders"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only GOOGL specifically, 5=sector-wide implications for big tech, 10=macro or market-wide event"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no effect on competitive positioning, 10=fundamentally reshapes competitive landscape in a key business segment"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory or legal dimension, 10=existential regulatory threat such as forced breakup or market exit"
+    },
+    {
+      "id": "expected_duration",
+      "scale": "1=transient story fully resolved within a day, 10=persistent story generating follow-up coverage for weeks or months"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the prevailing investor thesis about GOOGL, 10=fundamentally challenges or reframes the investment thesis"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash or minor update of a previously reported story, 10=first report of entirely new information"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or results exactly in line with expectations, 10=reported figures dramatically exceed or miss prior guidance and analyst consensus"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Ranges from GOOGL being tangentially mentioned in a market roundup or foreign policy article to DOJ breakup proposals and $23 billion acquisition talks that directly affect enterprise value.",
+      "surprise": "Ranges from pre-announced earnings call dates and expected partnership renewals to the unexpected DOJ breakup proposal, the Gemini image generation bias controversy, and the sudden Wiz acquisition talks.",
+      "temporal_horizon": "Ranges from single-day market roundups and minor fines to multi-year structural events like the DOJ antitrust remedies, DMA compliance obligations, and the AI infrastructure buildout strategy.",
+      "sentiment_strength": "Ranges from flat, factual partnership announcements to strongly positive coverage of the Q1 2024 earnings beat and first-ever dividend, and strongly negative coverage of the monopoly ruling and potential forced breakup.",
+      "information_density": "Ranges from one-line trending alerts and unverified rumors to detailed earnings releases with specific revenue, EPS, margin figures, and segment breakdowns.",
+      "directional_clarity": "Ranges from ambiguous articles like AI cost concerns versus growth opportunity, to clearly positive events like EU court scrapping a $1.7 billion fine, to clearly negative events like the federal judge ruling Google holds an illegal monopoly.",
+      "scope": "Ranges from GOOGL-only events like CFO appointment and Waymo incidents to sector-wide articles about Magnificent Seven earnings and macro pieces on Fed policy and global tax deals.",
+      "competitive_impact": "Ranges from routine enterprise cloud deals with no competitive shift to Gemini launch directly challenging OpenAI, the Character.AI talent acquisition, and DOJ remedies that could reshape the search market.",
+      "regulatory_risk": "Massive variation from zero regulatory content in partnership announcements to the DOJ contemplating a full corporate breakup, EU confirming a $2.7 billion fine, and DMA non-compliance investigations across multiple jurisdictions.",
+      "expected_duration": "Ranges from one-day trending mentions and market roundups to the DOJ antitrust case generating continuous coverage across the entire corpus period, and the multi-year EU regulatory saga.",
+      "narrative_shift": "Ranges from articles reinforcing the dominant AI-leader and advertising-cash-cow narrative to the federal monopoly ruling and breakup proposals that fundamentally reframe GOOGL as a company facing structural regulatory risk.",
+      "repeatedness": "High variation due to many stories having multiple updates and duplicate wire coverage versus genuine first reports like the Wiz acquisition talks, Gemini launch, and CFO hiring from Eli Lilly.",
+      "financial_result_surprise": "Critical for distinguishing between earnings events: Q4 2023 disappointed on cloud growth causing a 7% drop, while Q1 2024 beat expectations with 61% EPS growth triggering first-ever dividend and $2 trillion valuation, and Q3 2024 beat on cloud strength."
+    },
+    "dropped": {
+      "management_signal": "Would score uniformly low for approximately 90% of articles since most coverage involves regulatory, product, or market events rather than leadership decisions. The few leadership articles are adequately captured by the leadership_workforce category and materiality dimension.",
+      "actionability": "For a mega-cap stock like GOOGL with deep liquidity, nearly all substantive news is immediately actionable. This dimension would cluster most articles in the 5-8 range with insufficient variation to be discriminating.",
+      "controversy": "Investor divisiveness is rare for GOOGL coverage in this corpus. Antitrust risk is already well captured by regulatory_risk, and most other stories generate consensus reactions rather than divided opinion."
+    },
+    "added": {}
+  }
+}

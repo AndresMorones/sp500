@@ -1,0 +1,131 @@
+{
+  "ticker": "META",
+  "categories": [
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports, revenue/EPS figures, profit margins, guidance, dividends, capex forecasts, and any article reporting specific financial results vs expectations."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market roundups, sector rotation, macro data mentions, index movements, and multi-stock earnings previews where META is mentioned alongside peers."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst & Consensus Signals",
+      "description": "Analyst upgrades/downgrades, price target changes, buy/sell ratings, and institutional positioning commentary on META."
+    },
+    {
+      "id": "ai_strategy_investment",
+      "label": "AI Strategy & Investment",
+      "description": "Development and deployment of AI models (Llama, Meta AI, Movie Gen), AI infrastructure buildout, custom chips, open-source AI strategy, AI partnerships, and generative AI product launches."
+    },
+    {
+      "id": "regulatory_antitrust_compliance",
+      "label": "Regulatory, Antitrust & Compliance",
+      "description": "EU Digital Markets Act and Digital Services Act proceedings, antitrust fines, FTC actions, data privacy rulings, GDPR enforcement, and government investigations into Meta's business practices."
+    },
+    {
+      "id": "child_safety_content_moderation",
+      "label": "Child Safety & Content Moderation",
+      "description": "Lawsuits and legislation targeting youth social media use, teen account protections, sextortion enforcement, content moderation staffing, Senate hearings on child exploitation, and platform safety features."
+    },
+    {
+      "id": "hardware_metaverse_ar_vr",
+      "label": "Hardware, AR/VR & Metaverse",
+      "description": "Quest headsets, Orion AR glasses, Reality Labs initiatives, EssilorLuxottica smart glasses partnership, mixed reality ecosystem, and VR/AR market developments."
+    },
+    {
+      "id": "platform_product_updates",
+      "label": "Platform & Product Updates",
+      "description": "New features for Facebook, Instagram, WhatsApp, Threads, and Messenger including creator tools, business integrations, advertising features, content deals, and service outages."
+    },
+    {
+      "id": "geopolitical_government_relations",
+      "label": "Geopolitical & Government Relations",
+      "description": "Country-level bans or blocks (Turkey, Russia, Brazil), government content removal requests, election integrity measures, foreign interference takedowns, and international policy disputes."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=routine operational update, minor product tweak, or corporate filing with no revenue/margin implications, 10=event directly and substantially impacts revenue streams, cost structure, or total addressable market"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome fully expected or information already widely known, 10=completely unexpected revelation that contradicts prior consensus or assumptions"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=transient event affecting only the next few days, 10=structural shift with implications lasting years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral or balanced tone with no clear positive/negative lean, 10=extremely strong positive or negative tone throughout the article"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure opinion, speculation, or vague commentary with no specific data, 10=rich in hard data, specific figures, named sources, and quantified outcomes"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could be interpreted as positive or negative, 10=unambiguously good or bad for the company with no reasonable counter-interpretation"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only this company specifically, 5=sector-wide implications, 10=broad macro or market-wide event"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory or legal angle whatsoever, 10=major legal ruling, regulatory fine, or compliance mandate with direct financial or operational consequences"
+    },
+    {
+      "id": "management_signal",
+      "scale": "1=no leadership involvement or strategic implication, 10=major CEO/executive-level strategic announcement or leadership change signaling new direction"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the prevailing investment thesis and existing narrative about the company, 10=fundamentally challenges or redirects the market's understanding of the company's trajectory"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash or follow-up of previously reported information with no new details, 10=first report of genuinely new information not previously in the public domain"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no effect on competitive positioning, 10=major shift in competitive dynamics through partnerships, market entry, or rival disruption"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or results exactly match expectations, 10=reported figures dramatically exceed or miss prior guidance and analyst expectations as described in the article"
+    },
+    {
+      "id": "expected_duration",
+      "scale": "1=transient story that resolves or fades within a day, 10=persistent story that remains relevant and develops over weeks or months"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Ranges from Form 4 filings and minor feature announcements (Instagram stickers, WhatsApp filters) to $1.4B settlements, EU antitrust charges, and quarterly earnings with major capex guidance \u2014 wide variation across the corpus.",
+      "surprise": "Spans from scheduled product launches and routine regulatory requests to unexpected events like the Q1 2024 16% share plunge on capex guidance, the first-ever dividend declaration, and the $1.4B Texas facial recognition settlement.",
+      "temporal_horizon": "Ranges from one-day service outages and single-day market roundups to structural shifts like the EU DMA compliance model, Orion AR glasses prototype revealing a decade-long hardware strategy, and open-source AI positioning.",
+      "sentiment_strength": "Varies from neutral corporate blog posts and Form 4 filings to strongly negative articles about child exploitation hearings and strongly positive articles about earnings beats and dividend initiation.",
+      "information_density": "Ranges from one-line headline fragments and opinion pieces to detailed earnings transcripts with specific revenue, EPS, margin figures, and analyst price targets with precise numbers.",
+      "directional_clarity": "Some articles are clearly positive (earnings beat, dividend initiation) or clearly negative (EU antitrust charges, $1.4B fine), while others are ambiguous (AI spending increase could be positive long-term but negative short-term).",
+      "scope": "Ranges from META-only events like Threads feature updates to sector-wide Big Tech regulatory crackdowns and broad macro articles about market selloffs and central bank decisions.",
+      "regulatory_risk": "Highly variable \u2014 from zero regulatory content in product announcements to major EU DMA charges, $1.4B Texas settlement, FTC privacy actions, and multiple country-level investigations.",
+      "management_signal": "Ranges from no leadership angle in routine news to Zuckerberg's Senate apology, strategic AI reorganization announcements, open-source AI vision letters, and Connect keynote product reveals.",
+      "narrative_shift": "Most articles reinforce existing narratives (AI investment, regulatory pressure), but some shift the thesis \u2014 first dividend signals capital return era, Q1 capex guidance sparks AI spending fears, Orion prototype reframes hardware ambitions.",
+      "repeatedness": "Clear variation between first-break stories (dividend announcement, Orion reveal, Texas settlement) and repeated coverage of the same events across multiple outlets or follow-up articles days later.",
+      "competitive_impact": "Ranges from no competitive angle in regulatory filings to major competitive moves like Llama 3 challenging OpenAI, EssilorLuxottica partnership deepening, Movie Gen rivaling OpenAI's Sora, and potential Apple AI integration.",
+      "financial_result_surprise": "Most articles contain no financial results at all, but earnings articles show clear variation \u2014 Q4 2023 EPS tripled expectations and shares surged 17%, while Q1 2024 guidance disappointed and shares plunged 16%.",
+      "expected_duration": "Ranges from service outages resolving in hours and single-day market roundups to ongoing regulatory sagas (EU DMA proceedings spanning months) and structural product strategies (AR glasses, open-source AI)."
+    },
+    "dropped": {
+      "controversy": "Most META articles in this corpus do not show meaningful investor divisiveness \u2014 events tend to be clearly positive or negative rather than divisive among investors. The few controversial items (content moderation decisions, Palestine content) overlap heavily with directional_clarity and would score uniformly low for investor-relevant controversy.",
+      "actionability": "Nearly all material news in this corpus is immediately actionable for investors (earnings, fines, product launches), while non-material news is uniformly low \u2014 this dimension largely duplicates materiality without adding discriminating power for META."
+    },
+    "added": {}
+  }
+}

@@ -22,8 +22,8 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Define the constants
-TICKERS = ['AAPL', 'AMZN', 'MSFT', 'NFLX', 'TSLA']
-SENTIMENT_MODELS = ['deberta', 'finbert', 'lr', 'rf', 'roberta', 'svm']
+TICKERS = ['AAPL', 'AMZN', 'GOOGL', 'META', 'MSFT', 'NVDA', 'TSLA']
+SENTIMENT_MODELS = ['deberta', 'finbert', 'roberta']
 OUTPUT_TYPES = ['Binary_Price', 'Delta_Price', 'Factor_Price', 'Float_Price']
 LSTM_VARIANTS = ['LSTM', 'LSTM_wo_count', 'LSTM_wo_count_sum', 'LSTM_wo_sum','LSTM_wo_majority']
 BASE_DIR = 'reports/output'
