@@ -1230,3 +1230,244 @@ Our pipeline sits at the intersection: rich LLM-structured features (like group 
 | More sophisticated sentiment models ≠ better price prediction | Paper 7, our Part 8.6 | The signal quality matters, not the NLP model sophistication |
 | Structured extraction > embeddings > sentiment for trading | Paper 6 (arXiv:2512.19484) | Our structured approach is on the right track |
 | 50-66% is the realistic range for direction prediction | All classification papers | Don't expect >70% directional accuracy |
+
+---
+
+## PART 11: Deep Dives — Event Category Discovery Architectures (2026-03-30)
+
+The two closest papers to our Phase 1 category discovery — StockMem and "Structuring News, Shaping Alpha" — are documented here in detail, including architectures, prompts (where available), and taxonomies. Neither has a public GitHub repository.
+
+### 11.1 StockMem (arXiv:2512.02720, Dec 2025)
+
+**Full title**: StockMem: A Framework for Stock Memory with LLM-based Event Detection and Analysis
+
+**Task**: Ternary classification (up/down/flat) for Chinese A-share stocks (semiconductor sector).
+
+**Core idea**: Use 6 specialized LLM roles in sequence to process news → detect events → match to taxonomy → extract incremental information → predict. Taxonomy is discovered iteratively from the corpus, not pre-defined.
+
+#### Architecture: 6 LLM Roles Pipeline
+
+```
+Raw News Article
+    │
+    ▼
+[Role 1: News Classifier] ──→ Is this a financial event? (yes/no filter)
+    │ (yes)
+    ▼
+[Role 2: Event Extractor] ──→ Extract: subject, event type, impact objects, time, key data
+    │
+    ▼
+[Role 3: Taxonomy Matcher] ──→ Match event type to the 57-type taxonomy
+    │                          (if no match → flag for taxonomy expansion)
+    ▼
+[Role 4: Impact Analyzer] ──→ Assess: which stocks affected? how? positive/negative?
+    │
+    ▼
+[Role 5: DeltaInfo Extractor] ──→ Compare to stored memory for SAME event type:
+    │                              "What is NEW vs what we already knew?"
+    │                              Only passes through genuinely new information
+    ▼
+[Role 6: Predictor] ──→ Combine DeltaInfo + historical price pattern → predict direction
+```
+
+**Key innovation — DeltaInfo (Incremental Information Extraction)**:
+For each new article, the system retrieves previous articles of the same event type from memory and asks the LLM: "Given what we already knew, what is the NEW information here?" This prevents double-counting — if 5 articles all report the same earnings beat, only the first gets full weight; subsequent articles are scored only on genuinely new details (revised guidance, analyst reactions, etc.).
+
+**This is directly relevant to our approach**: We process ~600 articles per stock. Many will cover the same event. Our current Phase 2 scores each article independently — we have no DeltaInfo equivalent. This is a gap we should consider addressing.
+
+#### Taxonomy Discovery Process (Iterative Induction)
+
+StockMem's 57 event types were NOT hand-curated. The process:
+
+1. **Seed**: Start with a small set of example event types from financial textbooks
+2. **LLM Induction**: Feed batches of news articles to DeepSeek-V3, ask it to categorize. When an article doesn't fit existing types, the LLM proposes a new type
+3. **Human Review**: Domain experts review proposed new types for redundancy and coherence
+4. **Consolidation**: Merge similar types, organize into hierarchical groups
+5. **Iterate**: Run more articles through the updated taxonomy, repeat steps 2-4
+6. **Freeze**: After convergence (no new types proposed for N batches), lock the taxonomy
+
+**Critical difference from our approach**: StockMem's taxonomy is universal (same 57 types for all stocks in the semiconductor sector). Ours is per-company (9 different categories for AAPL vs NVDA vs TSLA). StockMem needed human review in the loop; ours is fully automated.
+
+#### The Complete StockMem Taxonomy — 57 Event Types in 13 Groups
+
+This taxonomy was designed for Chinese A-share semiconductor/hardware stocks. Many categories are sector-specific.
+
+| # | Group | Event Types |
+|---|-------|-------------|
+| 1 | **Policies & Regulation** (5) | Policy Release, Development Planning, Government Support, Institutional Supervision, International Controls and Sanctions |
+| 2 | **Macroeconomic Finance** (3) | Fiscal Policy, Livelihood and Welfare, Taxation |
+| 3 | **Industry Standards** (3) | Standards, Specifications, Opinions and Commentary |
+| 4 | **Products & Market** (7) | Research and Development, New Product Launch, Product Mass Production, Product Application, Product Price Changes, Product Output Changes, Supply-Demand Dynamics |
+| 5 | **Technology Events** (6) | Technological Breakthrough, R&D Progress, Certification, Shipment, Ecosystem Collaboration, Enablement |
+| 6 | **Corporate Operations** (8) | Investment, Financing, Expenditure, Profitability, Order/Service Agreement Signing, Order/Service Agreement Changes, Contracts, Mergers and Acquisitions |
+| 7 | **Corporate Projects** (3) | Project Initiation, Project Implementation, Cross-sector Expansion |
+| 8 | **Corporate Equity** (4) | Shareholder Changes, Share Increase, Share Decrease, Ownership Disputes |
+| 9 | **Corporate Personnel** (3) | Executives, Personnel Changes, Violations and Misconduct |
+| 10 | **Stock Market Performance** (6) | Market Size, Sector Concept Performance, Individual Stock Performance, Capital Flows, Trading Activities, Institutional Views |
+| 11 | **Other Financial Market** (4) | Market Size, Market Performance, Capital Flows, Institutional Views |
+| 12 | **Cooperation & Strategy** (2) | Strategic Cooperation and Co-construction, Industry Alliances and Standards Organizations |
+| 13 | **Risks & Warnings** (3) | Business Clarification, Company-Specific Risks, Industry-Wide Risk Alerts |
+
+**Total**: 5+3+3+7+6+8+3+4+3+6+4+2+3 = **57 types**
+
+#### Comparison: StockMem Taxonomy vs Our Per-Ticker Discovery
+
+| Aspect | StockMem (57 universal) | Our Phase 1 (9 per-company) |
+|--------|------------------------|----------------------------|
+| Scope | All stocks in sector | Each stock gets its own |
+| Granularity | Fine-grained (57 types) | Coarser (9 categories) but with 12-15 numeric dimensions per article |
+| Sector bias | Heavy hardware/semiconductor | Adapts to each company's actual news |
+| Missing for US tech | FDA approvals, antitrust, earnings guidance, activist investors, platform policy | Discovered automatically if they appear in the corpus |
+| Update mechanism | Human review + freeze | Fully automated, re-run per corpus |
+| Downstream use | Event type → memory lookup → LLM prediction | Category + dimensions → quantitative model |
+
+**Key takeaway**: StockMem's universal taxonomy is more granular (57 vs 9 types) but less flexible. For US mega-cap tech, many of their categories (e.g., "Livelihood and Welfare," "Standards and Specifications") are irrelevant, while critical categories for our stocks (antitrust, platform policy, AI regulation) are missing. Our per-company discovery avoids this mismatch.
+
+#### StockMem — No GitHub Available
+
+No public repository. The paper describes the pipeline architecture and prompts at high level but does not provide exact prompt templates or model weights.
+
+---
+
+### 11.2 "Structuring News, Shaping Alpha" (NeurIPS 2025 GenAI Workshop)
+
+**Full title**: Structuring News, Shaping Alpha: Adaptive Event Classification with Reinforcement Learning
+
+**Task**: Quantile probability prediction (not regression). Predicts P(stock enters top/bottom quantile of returns).
+
+**Core idea**: Use PPO (Proximal Policy Optimization) to train a policy that decides how to classify news events into categories, where the reward signal comes from downstream prediction accuracy. Categories evolve during training — not fixed, not LLM-discovered from text alone.
+
+#### Architecture: PPO Contextual Bandit for Event Classification
+
+```
+News Article (headline + summary)
+    │
+    ▼
+┌─────────────────────────────────┐
+│  LLM Encoder (frozen)           │
+│  Produces embedding of article  │
+└─────────────┬───────────────────┘
+              │
+              ▼
+┌─────────────────────────────────┐
+│  PPO Policy Network             │  ← This is the RL agent
+│  Input: article embedding       │
+│  Output: probability over K     │
+│          event categories       │
+│  Action: assign category        │
+└─────────────┬───────────────────┘
+              │ category assignment
+              ▼
+┌─────────────────────────────────┐
+│  XGBoost Downstream Model       │
+│  Features: event category       │
+│    counts + price features      │
+│  Target: quantile probability   │
+└─────────────┬───────────────────┘
+              │ prediction
+              ▼
+┌─────────────────────────────────┐
+│  Reward Signal                  │
+│  r = -|predicted_quantile -     │
+│        actual_quantile|         │
+│  (negative prediction error)    │
+└─────────────────────────────────┘
+              │
+              ▼
+        PPO policy update
+        (categories refined)
+```
+
+**How categories evolve via RL**:
+1. **Initialization**: Start with K random or seed categories (K is a hyperparameter)
+2. **Classification**: For each article, the PPO policy assigns it to one of K categories based on the article's embedding
+3. **Aggregation**: Per-stock daily features = count of articles in each category + price features
+4. **Prediction**: XGBoost predicts quantile membership from these aggregated features
+5. **Reward**: The prediction error flows back as negative reward to the PPO policy
+6. **Update**: PPO adjusts the policy to classify articles into categories that maximize downstream prediction accuracy
+7. **Iterate**: Over training episodes, articles naturally cluster into categories that are most predictive of price moves
+
+**Key difference from our approach**: Categories are optimized for prediction accuracy (via RL reward), not for semantic coherence. A category might group "earnings beats" and "new product launches" if they have similar price impacts — even though they're semantically different. Our categories are semantically meaningful (discovered by LLM reading the actual news), which makes them interpretable but not necessarily prediction-optimal.
+
+#### Comparison: RL-Adaptive vs Our LLM-Discovered Categories
+
+| Aspect | Structuring News (RL) | Our Phase 1 (LLM) |
+|--------|----------------------|-------------------|
+| Discovery method | PPO optimizes for prediction signal | LLM reads corpus, induces from content |
+| Category meaning | Opaque (optimized for downstream) | Interpretable (business-meaningful) |
+| Adaptivity | Continuous (evolves during training) | One-shot (discovered once, applied to all) |
+| Downstream coupling | Tightly coupled (reward = prediction error) | Decoupled (categories fixed before model training) |
+| Number of categories | Hyperparameter K | 9 per company (LLM's choice) |
+| Risk | Categories may overfit to training period | Categories may not be prediction-optimal |
+
+**Key takeaway**: The RL approach is elegant but produces opaque categories. Ours produces interpretable ones. An interesting future direction would be to use our LLM-discovered categories as the seed for an RL refinement step — start interpretable, then optimize.
+
+#### "Structuring News, Shaping Alpha" — No GitHub Available
+
+No public repository. The NeurIPS GenAI Workshop paper describes the architecture but does not release code or trained models.
+
+---
+
+### 11.3 Dimension Coverage Analysis: Our 16 Static Dimensions vs StockMem's 57 Event Types
+
+Our 16 suggested dimensions (`SUGGESTED_DIMENSIONS` in `src/news_scorer.py`) are continuous 0-10 scales applied to every article. StockMem's 57 types are categorical labels. The question: does the information captured by one cover the other?
+
+#### What our dimensions CAN distinguish (maps to StockMem types)
+
+| Our Dimension | Scale | Which StockMem types it separates |
+|---|---|---|
+| **materiality** | 0=noise, 10=revenue/margins/TAM impact | "Opinions and Commentary" (low) vs "Profitability" or "M&A" (high) |
+| **surprise** | 0=expected, 10=unexpected | Routine earnings vs "Technological Breakthrough" |
+| **regulatory_risk** | 0=none, 10=major legal/regulatory | Covers all 5 "Policies & Regulation" types + "Institutional Supervision" |
+| **competitive_impact** | 0=none, 10=major competitive shift | "Supply-Demand Dynamics", "Product Price Changes", competitor launches |
+| **management_signal** | 0=none, 10=major leadership signal | "Executives", "Personnel Changes" (group 9) |
+| **scope** | 0=company only, 10=macro | "Company-Specific Risks" (low) vs "Fiscal Policy" (high) vs "Industry-Wide Alerts" (mid) |
+| **financial_result_surprise** | 0=no results, 10=dramatic beat/miss | "Profitability" (group 6) |
+| **actionability** | 0=background, 10=act immediately | "R&D Progress" (low) vs "Order Signing" (high) |
+| **information_density** | 0=opinion, 10=hard data | "Opinions and Commentary" (low) vs "Product Output Changes" (high) |
+| **temporal_horizon** | 0=days, 10=years | "Trading Activities" (short) vs "Development Planning" (long) |
+
+**Coverage estimate**: ~70% of StockMem's information is distinguishable through at least one of our dimensions.
+
+#### What our dimensions CANNOT distinguish — gaps
+
+These are granular categorical distinctions that continuous scales cannot naturally encode:
+
+| StockMem Types | What it distinguishes | Why our dimensions miss it |
+|---|---|---|
+| **Investment vs Financing vs Expenditure** (3 types, group 6) | Capital flowing in vs out vs being deployed | All three score similarly on materiality/surprise. No **capital allocation direction** dimension. |
+| **Share Increase vs Share Decrease** (2 types, group 8) | Buybacks vs dilution | Both score high on materiality. No **dilution/accretion** dimension. |
+| **Project Initiation vs Implementation vs Expansion** (3 types, group 7) | Stage of corporate initiative | `temporal_horizon` partially captures this, but no explicit **project stage** dimension. |
+| **Shipment vs Certification vs Enablement** (3 types, group 5) | Product lifecycle: approved → shipped → adopted | All score similarly on our dimensions. No **product lifecycle position** dimension. |
+| **Strategic Cooperation vs Industry Alliances** (2 types, group 12) | Bilateral deal vs multi-party standard-setting | Both score similarly on competitive_impact/scope. No **partnership structure** dimension. |
+| **Capital Flows vs Trading Activities** (2 types, group 10) | Institutional money movement vs volume patterns | `scope` says "market-wide" but doesn't separate **money flow from trading mechanics**. |
+| **Government Support vs International Sanctions** (2 types, group 1) | Positive vs restrictive government action | `regulatory_risk` treats both as regulatory. `directional_clarity` and `sentiment_strength` encode direction, but **regulatory_risk itself doesn't encode polarity**. |
+
+**Gap estimate**: ~30% of StockMem's categorical granularity is lost, concentrated in capital allocation direction, product lifecycle stage, and project stage distinctions.
+
+#### What our dimensions capture that StockMem DOESN'T have
+
+| Our Dimension | What it adds | StockMem equivalent |
+|---|---|---|
+| **repeatedness** | Is this the first report or a rehash? | StockMem handles via DeltaInfo (memory comparison), but has no per-article score |
+| **controversy** | Do investors disagree about interpretation? | No equivalent — completely absent from 57 types |
+| **narrative_shift** | Does this change the investment thesis? | No equivalent — StockMem classifies what happened, not whether it changes the story |
+| **directional_clarity** | How unambiguous is the signal? | No equivalent — event type implies clarity but doesn't score it |
+| **expected_duration** | How long will this story persist? | No equivalent — "M&A" could be a rumor (days) or completed deal (permanent) |
+| **sentiment_strength** | Intensity of tone | No equivalent — StockMem classifies events, doesn't measure emotional intensity |
+
+These 6 dimensions are **meta-properties orthogonal to "what happened"** — they measure "how much does it matter, to whom, and for how long."
+
+#### Synthesis
+
+The two approaches encode fundamentally different information:
+
+| Aspect | StockMem (57 categorical types) | Our 16 numeric dimensions |
+|---|---|---|
+| Encodes | **What** happened | **How much** it matters |
+| Structure | Discrete labels | Continuous 0-10 scales |
+| Granularity | Fine (57 types separate investment from financing from expenditure) | Coarse on event type, fine on impact properties |
+| Missing | Meta-properties (controversy, narrative shift, repeatedness, duration) | Categorical distinctions (capital direction, lifecycle stage, project stage) |
+| Best for | Counting event frequencies, memory lookup, pattern matching | Regression features, ranking by impact, cross-article comparison |
+
+**Our Phase 1 combines both**: 9 discovered categories (coarser than StockMem's 57 but company-specific) + 12-15 numeric dimensions (richer than anything in the literature). The categories handle the "what happened" that dimensions can't encode, and the dimensions handle the "how much does it matter" that categories can't encode.

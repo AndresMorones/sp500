@@ -1108,3 +1108,35 @@ The field converges from three directions (category discovery → classification
 **Decision**: Novelty confirmed with high confidence after two independent search rounds. Updated Part 9.3 and added Part 9.4 (Confirmation of Novelty) to stage3_methodology_review.md.
 
 **References**: arXiv:2512.02720, arXiv:2603.09085, NeurIPS 2025 GenAI Workshop (OpenReview), PETRA 2024
+
+## Entry 35 — Deep dive: StockMem and Structuring News architectures — 2026-03-30
+
+**Tried**: Detailed architectural analysis of the two closest papers to our Phase 1 category discovery approach — StockMem (arXiv:2512.02720) and "Structuring News, Shaping Alpha" (NeurIPS 2025 GenAI Workshop).
+
+**Result**:
+
+StockMem uses 6 specialized LLM roles in sequence (classifier → extractor → taxonomy matcher → impact analyzer → DeltaInfo extractor → predictor). Key innovation is DeltaInfo — incremental information extraction that compares each new article against stored memory of the same event type, passing through only genuinely new information. Taxonomy of 57 event types in 13 groups was discovered via iterative induction (LLM proposes new types when articles don't fit, human experts review). Designed for Chinese A-share semiconductor stocks — many categories irrelevant to US tech (e.g., "Livelihood and Welfare"), while critical US categories missing (antitrust, platform policy, AI regulation).
+
+"Structuring News, Shaping Alpha" uses PPO (Proximal Policy Optimization) as a contextual bandit to train a policy that assigns articles to categories optimized for downstream prediction accuracy via XGBoost. Categories are opaque (prediction-optimal, not semantically meaningful). Elegant but uninterpretable.
+
+Neither paper has a public GitHub repository.
+
+**Decision**: Documented in stage3_methodology_review.md Part 11. Two insights for our approach:
+1. **DeltaInfo gap**: We currently score each article independently. StockMem's incremental extraction prevents double-counting when multiple articles cover the same event. Worth considering for Phase 2.
+2. **RL refinement idea**: Our LLM-discovered categories are interpretable but not prediction-optimized. Could seed an RL refinement step (start interpretable, then optimize) — a hybrid of both approaches.
+
+**References**: arXiv:2512.02720 (StockMem), NeurIPS 2025 GenAI Workshop (Structuring News, Shaping Alpha)
+
+## Entry 36 — Dimension coverage analysis: our 16 static dimensions vs StockMem's 57 types — 2026-03-30
+
+**Tried**: Systematic comparison of our 16 `SUGGESTED_DIMENSIONS` (continuous 0-10 scales in `src/news_scorer.py`) against StockMem's 57 categorical event types to identify coverage gaps in both directions.
+
+**Result**: The two approaches encode fundamentally different information — "what happened" (StockMem categories) vs "how much it matters" (our dimensions).
+
+- **Our dimensions cover ~70% of StockMem's information**: materiality, surprise, regulatory_risk, competitive_impact, management_signal, scope, and financial_result_surprise can distinguish most of StockMem's 57 types.
+- **~30% gap**: Our dimensions cannot encode categorical distinctions like capital allocation direction (investing vs financing vs spending), product lifecycle stage (R&D → certified → shipped → adopted), project stage, or equity action type (buyback vs dilution). These require categorical labels, not continuous scales.
+- **We capture 6 meta-properties StockMem completely lacks**: repeatedness, controversy, narrative_shift, directional_clarity, expected_duration, sentiment_strength. These are orthogonal to event type — they measure impact properties no categorical system encodes.
+
+**Decision**: Our Phase 1 design (9 categories + 12-15 dimensions) is validated as the right architecture — categories handle "what happened" that dimensions can't encode, dimensions handle "how much it matters" that categories can't encode. No changes needed to SUGGESTED_DIMENSIONS. Documented in stage3_methodology_review.md Part 11.3.
+
+**References**: StockMem (arXiv:2512.02720) Appendix A taxonomy, our `src/news_scorer.py` lines 41-58
