@@ -156,7 +156,7 @@ def main():
         
         print(f"\nThis table shows the mean value of each metric for {prediction_type_names.get(pred_type, pred_type)}:")
         print(f"- Sentiment model: {sentiment_model} only")
-        print("- Stock symbols (AAPL, AMZN, MSFT, NFLX, TSLA)")
+        print("- Stock symbols (AAPL, AMZN, GOOGL, META, MSFT, NVDA, TSLA)")
         
         # Create and display DataFrame for this prediction type
         df = create_report_dataframe(metrics_by_arch, architectures)

@@ -1,56 +1,244 @@
-import pandas as pd 
+"""
+Step 4: Compute sentiment scores for news articles.
 
-def FinBERT_sentiment_score(heading):
-    """
-    compute sentiment score using pretrained FinBERT on -1 to 1 scale. -1 being negative and 1 being positive
-    """
-    from transformers import AutoTokenizer, AutoModelForSequenceClassification
-    from transformers import pipeline
-    tokenizer = AutoTokenizer.from_pretrained('ProsusAI/finbert')
-    finbert = AutoModelForSequenceClassification.from_pretrained('ProsusAI/finbert')
-    nlp = pipeline("sentiment-analysis", model=finbert, tokenizer=tokenizer)
-    result = nlp(heading)
-    if result[0]['label'] == "positive":
-        return result[0]['score']
-    elif result[0]['label'] == "neutral":
-        return 0
+Supports two inference modes (set via config.SENTIMENT_MODEL):
+  - "classifier": FinBERT/DeBERTa via pipeline("sentiment-analysis"), batch inference
+  - "generative": LLMs (Gemma, Qwen, Llama-FinSent) via prompt-based generate()
+
+All generative models use 7 granular sentiment labels mapped to [-1, 1].
+Output contract: sentiment.csv with columns [date, ticker, finbert_score].
+Column name "finbert_score" is legacy — kept for downstream compatibility with step 7.
+"""
+import os
+import json
+import time
+import pandas as pd
+from config import NEWS_DATA_CSV, SENTIMENT_CSV, SENTIMENT_MODEL, _MODEL_REGISTRY
+
+
+# ---------------------------------------------------------------------------
+# 7-class sentiment scale (used by all generative models)
+# ---------------------------------------------------------------------------
+_7CLASS_MAP = {
+    "strong positive": 1.0,
+    "moderately positive": 0.66,
+    "mildly positive": 0.33,
+    "neutral": 0.0,
+    "mildly negative": -0.33,
+    "moderately negative": -0.66,
+    "strong negative": -1.0,
+}
+
+_PROMPT_TEMPLATE = (
+    "What is the sentiment of this news? Please choose an answer from "
+    "{{strong negative/moderately negative/mildly negative/"
+    "neutral/mildly positive/moderately positive/strong positive}}\n"
+    "Input: {text}\n"
+    "Answer:"
+)
+
+# Models that need chat template wrapping (instruction-tuned, not fine-tuned on raw prompts)
+_CHAT_TEMPLATE_MODELS = {
+    "google/gemma-3n-E2B-it",
+    "Qwen/Qwen2.5-1.5B-Instruct",
+}
+
+
+# ---------------------------------------------------------------------------
+# Classifier path (FinBERT, DeBERTa — unchanged from original)
+# ---------------------------------------------------------------------------
+def load_classifier_pipeline():
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+    tokenizer = AutoTokenizer.from_pretrained(SENTIMENT_MODEL)
+    model = AutoModelForSequenceClassification.from_pretrained(SENTIMENT_MODEL)
+    nlp = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer,
+                   truncation=True, max_length=512)
+    return nlp
+
+
+def classifier_score_to_value(result):
+    """Map classifier output to [-1, 1]. Handles label casing differences across models."""
+    label = result["label"].lower()
+    score = result["score"]
+    if label == "positive":
+        return score
+    elif label == "neutral":
+        return 0.0
     else:
-        return (0 - result[0]['score'])
+        return -score
 
 
-def VADER_sentiment_score(heading):
-    """
-    compute sentiment score using pretrained VADER on -1 to 1 scale. -1 being negative and 1 being positive
-    """
-    import nltk
-    from nltk.sentiment.vader import SentimentIntensityAnalyzer
-    nltk.download('vader_lexicon')
-    from nltk.sentiment.vader import SentimentIntensityAnalyzer
-    analyzer = SentimentIntensityAnalyzer()
-    result = analyzer.polarity_scores(heading)
-    if result['pos'] == max(result['neg'], result['neu'], result['pos']):
-        return result['pos']
-    if result['neg'] == max(result['neg'], result['neu'], result['pos']):
-        return (0 - result['neg'])
+def run_classifier_inference(texts):
+    print(f"Loading classifier model: {SENTIMENT_MODEL}")
+    nlp = load_classifier_pipeline()
+    print(f"Running classifier inference on {len(texts)} articles (batch_size=32)...")
+    results = nlp(texts, batch_size=32)
+    return [classifier_score_to_value(r) for r in results]
+
+
+# ---------------------------------------------------------------------------
+# Generative path (Gemma, Qwen, Llama-FinSent)
+# ---------------------------------------------------------------------------
+def load_generative_model():
+    import torch
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+
+    print(f"Loading generative model: {SENTIMENT_MODEL}")
+    tokenizer = AutoTokenizer.from_pretrained(
+        SENTIMENT_MODEL, trust_remote_code=True
+    )
+    model = AutoModelForCausalLM.from_pretrained(
+        SENTIMENT_MODEL, dtype=torch.float32,
+        device_map="cpu", trust_remote_code=True
+    )
+    model.eval()
+
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    return model, tokenizer
+
+
+def build_prompt(text, tokenizer):
+    """Build prompt, wrapping in chat template for instruction-tuned models."""
+    raw_prompt = _PROMPT_TEMPLATE.format(text=text)
+
+    if SENTIMENT_MODEL in _CHAT_TEMPLATE_MODELS:
+        messages = [{"role": "user", "content": raw_prompt}]
+        return tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+    return raw_prompt
+
+
+def parse_generative_output(generated_text):
+    """Extract sentiment label from generated text, map to [-1, 1] via 7-class scale."""
+    text = generated_text.lower().strip()
+    # Match longest labels first ("strong positive" before "positive")
+    for label in sorted(_7CLASS_MAP.keys(), key=len, reverse=True):
+        if label in text:
+            return _7CLASS_MAP[label], label
+    return 0.0, None  # unparseable → neutral
+
+
+def run_generative_inference(texts):
+    """Score articles one-by-one with checkpointing for crash recovery."""
+    import torch
+
+    model, tokenizer = load_generative_model()
+
+    checkpoint_dir = os.path.dirname(SENTIMENT_CSV)
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    checkpoint_path = os.path.join(checkpoint_dir, "_sentiment_checkpoint.json")
+
+    # Load checkpoint if exists
+    scored = {}
+    if os.path.exists(checkpoint_path):
+        with open(checkpoint_path) as f:
+            scored = json.load(f)
+        print(f"Resumed from checkpoint: {len(scored)}/{len(texts)} already scored")
+
+    scores = [None] * len(texts)
+    total = len(texts)
+    start_time = time.time()
+    new_count = 0
+    parse_failures = 0
+
+    for i, text in enumerate(texts):
+        # Use checkpoint if available
+        if str(i) in scored:
+            scores[i] = scored[str(i)]
+            continue
+
+        prompt = build_prompt(text, tokenizer)
+        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
+        prompt_len = inputs["input_ids"].shape[1]
+
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=20,
+                do_sample=False,
+                pad_token_id=tokenizer.eos_token_id,
+            )
+
+        generated_ids = outputs[0][prompt_len:]
+        generated_text = tokenizer.decode(generated_ids, skip_special_tokens=True)
+
+        score, matched_label = parse_generative_output(generated_text)
+        if matched_label is None:
+            parse_failures += 1
+
+        scores[i] = score
+        scored[str(i)] = score
+        new_count += 1
+
+        # Checkpoint every 50 new articles
+        if new_count % 50 == 0:
+            with open(checkpoint_path, 'w') as f:
+                json.dump(scored, f)
+
+        # Progress every 100 articles
+        if new_count % 100 == 0 or new_count == 1:
+            elapsed = time.time() - start_time
+            rate = new_count / elapsed
+            remaining = total - len(scored)
+            eta_min = remaining / rate / 60 if rate > 0 else 0
+            print(f"  [{len(scored)}/{total}] {rate:.1f} art/sec, "
+                  f"ETA: {eta_min:.0f} min, parse failures: {parse_failures}")
+
+    # Final checkpoint save
+    with open(checkpoint_path, 'w') as f:
+        json.dump(scored, f)
+
+    print(f"Inference complete. Parse failures: {parse_failures}/{total} "
+          f"({parse_failures/total*100:.1f}%)")
+
+    # Clean up checkpoint on success
+    if parse_failures / total < 0.1:
+        os.remove(checkpoint_path)
+        print("Checkpoint cleaned up (run complete)")
+
+    return scores
+
+
+# ---------------------------------------------------------------------------
+# Main orchestrator
+# ---------------------------------------------------------------------------
+def compute_sentiment():
+    news_df = pd.read_csv(NEWS_DATA_CSV)
+    model_info = _MODEL_REGISTRY[SENTIMENT_MODEL]
+    model_type = model_info["type"]
+
+    print(f"Model: {SENTIMENT_MODEL}")
+    print(f"Type: {model_type}")
+
+    texts = news_df["text"].tolist()
+    print(f"Articles: {len(texts)}")
+
+    if model_type == "classifier":
+        scores = run_classifier_inference(texts)
+    elif model_type == "generative":
+        scores = run_generative_inference(texts)
     else:
-        return 0
+        raise ValueError(f"Unknown model type: {model_type}")
 
-news_df = pd.read_csv("news_data.csv")
+    news_df["finbert_score"] = scores
+
+    # Aggregate: mean sentiment per (ticker, date)
+    sentiment = (
+        news_df.groupby(["date", "ticker"])["finbert_score"]
+        .mean()
+        .reset_index()
+    )
+
+    os.makedirs(os.path.dirname(SENTIMENT_CSV), exist_ok=True)
+    sentiment.to_csv(SENTIMENT_CSV, index=False)
+    print(f"Sentiment saved: {len(sentiment)} (ticker, date) pairs")
+    print(f"Score stats: mean={sentiment['finbert_score'].mean():.4f}, "
+          f"std={sentiment['finbert_score'].std():.4f}")
+    print(f"Pairs per ticker:\n{sentiment['ticker'].value_counts().sort_index().to_string()}")
 
 
-
-BERT_sentiment = []
-
-
-for i in range(len(news_df)):
-    news_list = news_df.iloc[i, 1:].tolist()
-    news_list = [i for i in news_list if i != '0']
-    score_BERT = FinBERT_sentiment_score(news_list)
-    BERT_sentiment.append(score_BERT)
-
-
-# print(news_df.iloc[129])
-
-news_df['FinBERT score'] = BERT_sentiment
-
-news_df.to_csv("sentiment.csv")
+if __name__ == "__main__":
+    compute_sentiment()

@@ -101,6 +101,16 @@ Entry 16 showed day+1 continuation rates near 50% (coin-flip) for all metrics, b
 
 Note (2026-03-28): Entry 25 tested this. **Confirmed**: cum3d_excess Ridge achieves CW p=0.002 (highly significant) vs p=0.132 for day+1 Ridge. The 3-day horizon captures information incorporation that day+1 misses. However, Huber loss hurts cum3d (CLT makes 3-day returns less fat-tailed). Use MSE-based Ridge for cum3d, Huber for day+1. Both targets should be used — they capture different signals.
 
+### Q16: Should Stage 3 include a naive "predict yesterday's close" baseline?
+
+Both baseline frameworks (FinBERT-LSTM and DeBERTa-TimesNet) report MAPE without comparing to the trivial naive forecast. Low MAPE (1-5%) is achievable because stock prices are highly autocorrelated — tomorrow ≈ today. Without a naive baseline, we cannot distinguish genuine prediction from autocorrelation exploitation. Entry 31 identified this as a critical omission in both frameworks.
+
+Proposed: compute naive MAPE for all 7 tickers, report delta vs model MAPE. If model MAPE is not meaningfully below naive, the model adds no value regardless of absolute MAPE.
+
+### Q17: Should Stage 3 use LSTM or tree models (LightGBM) as primary downstream architecture?
+
+Entry 31 comparison shows LSTM dominates Float_Price across both frameworks (CORR 0.876 vs TimesNet 0.581, PatchTST 0.446). However, our features are already daily aggregates (not raw sequences), and LightGBM naturally handles mixed feature types and learns feature importance. Paper 3 (arXiv:2508.04975) found LLM features benefit LSTM/Transformer most, Ridge least. Need to test both with our structured features.
+
 ### Q12: Can the baseline be improved with longer test period or different features?
 
 Entry 21 baseline: Ridge R²_OOS=1.4%. Entry 24 tested 6 literature-validated improvements. LightGBM best R²_OOS (5.6% on cc_excess). Entry 25 added multi-target: cum3d Ridge R²_OOS=2.9% (CW p=0.002), gap Ridge R²_OOS=2.4% (CW p=0.054).

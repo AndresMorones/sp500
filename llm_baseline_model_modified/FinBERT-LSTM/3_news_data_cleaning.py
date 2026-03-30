@@ -1,13 +1,31 @@
-import pandas as pd 
-import numpy as np
+"""
+Step 3: Align news data with stock trading days.
 
-news_df = pd.read_csv("research/stock/news.csv")
-stock_df = pd.read_csv("research/stock/stock_price.csv")
+Original: Filtered wide-format news to dates present in stock_price.csv.
+Adapted: Per-ticker alignment — only keep news articles whose date matches
+         a trading day for that specific ticker (drops weekend/holiday news).
+"""
+import pandas as pd
+from config import NEWS_DATA_CSV, STOCK_PRICE_CSV
 
-for i in range(len(stock_df)):
-    date = stock_df['Date'][i][:10]
-    stock_df['Date'][i] = date
 
-news_df = news_df[news_df['Date'].isin(stock_df['Date'].tolist())]
+def clean_news_data():
+    news_df = pd.read_csv(NEWS_DATA_CSV)
+    stock_df = pd.read_csv(STOCK_PRICE_CSV)
 
-news_df.to_csv("news_data.csv", index=False)
+    # Build set of valid (ticker, date) pairs from stock data
+    stock_df["Date"] = stock_df["Date"].astype(str).str[:10]
+    valid_pairs = set(zip(stock_df["ticker"], stock_df["Date"]))
+
+    # Filter news to only trading days for the matching ticker
+    mask = news_df.apply(lambda r: (r["ticker"], r["date"]) in valid_pairs, axis=1)
+    news_clean = news_df[mask].reset_index(drop=True)
+
+    dropped = len(news_df) - len(news_clean)
+    news_clean.to_csv(NEWS_DATA_CSV, index=False)
+    print(f"News cleaned: {len(news_clean)} articles kept, {dropped} dropped (non-trading days)")
+    print(f"Articles per ticker:\n{news_clean['ticker'].value_counts().sort_index().to_string()}")
+
+
+if __name__ == "__main__":
+    clean_news_data()

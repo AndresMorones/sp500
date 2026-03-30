@@ -1,0 +1,127 @@
+{
+  "ticker": "AMZN",
+  "categories": [
+    {
+      "id": "aws_cloud_infrastructure",
+      "label": "AWS Cloud & Data Center Expansion",
+      "description": "AWS global infrastructure investments, new regions, data center buildouts, custom chips (Graviton, Trainium), enterprise cloud partnerships, and re:Invent announcements."
+    },
+    {
+      "id": "ai_technology_innovation",
+      "label": "AI & Generative AI Products",
+      "description": "Generative AI launches (Bedrock, Amazon Q, Rufus), Anthropic partnership and models, AI tools for sellers and advertisers, robotics and automation advances, and Alexa AI overhaul plans."
+    },
+    {
+      "id": "ecommerce_retail_marketplace",
+      "label": "E-Commerce & Retail Operations",
+      "description": "Prime Day and seasonal sales events, delivery and fulfillment innovation, international marketplace expansion, low-cost China storefront plans, grocery and pharmacy operations, and seller ecosystem tools."
+    },
+    {
+      "id": "content_media_sports_rights",
+      "label": "Content, Media & Sports Rights",
+      "description": "Prime Video originals (Fallout, The Boys, Rings of Power), sports broadcasting deals (NFL Thursday Night Football, NBA, NWSL), entertainment content slate, and streaming platform developments."
+    },
+    {
+      "id": "labor_workforce_restructuring",
+      "label": "Labor, Workforce & Leadership",
+      "description": "Return-to-office mandates, union organizing and strikes, layoffs across divisions (Twitch, Alexa, Audible), leadership transitions (AWS CEO change), holiday hiring, and workplace safety issues."
+    },
+    {
+      "id": "regulatory_legal_antitrust",
+      "label": "Regulatory, Legal & Antitrust",
+      "description": "FTC antitrust lawsuit, EU Digital Services Act compliance, iRobot acquisition process, international tax disputes and fines, product safety rulings, patent litigation, and competition authority probes."
+    },
+    {
+      "id": "earnings_financial_results",
+      "label": "Earnings & Financial Results",
+      "description": "Quarterly earnings reports (Q4 2023 through Q3 2024), revenue and profit figures versus expectations, segment performance (AWS, advertising, retail), management guidance, and shareholder letter highlights."
+    },
+    {
+      "id": "market_sector_sentiment",
+      "label": "Market & Sector Sentiment",
+      "description": "Broad market movements mentioning AMZN (Nasdaq corrections, recession fears, tech selloffs), macro events (Fed decisions, jobs data), sector-wide trends (Magnificent Seven, AI trade), and market milestones ($2T valuation, Dow Jones inclusion)."
+    },
+    {
+      "id": "analyst_consensus_signals",
+      "label": "Analyst & Consensus Signals",
+      "description": "Analyst upgrades, downgrades, and price target changes from firms like Bank of America, UBS, Jefferies, and Wedbush, plus institutional positioning and valuation commentary."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "materiality",
+      "scale": "1=no connection to Amazon's revenue, margins, or addressable market (e.g., lifestyle puff piece or tangential mention), 10=direct and large-scale impact on a major business segment's financials or strategic direction"
+    },
+    {
+      "id": "surprise",
+      "scale": "1=outcome or content fully expected and already priced into consensus expectations, 10=completely unexpected revelation or result that contradicts prevailing assumptions"
+    },
+    {
+      "id": "temporal_horizon",
+      "scale": "1=affects the company for days at most with no structural implications, 10=reshapes the company's competitive position or business model for years"
+    },
+    {
+      "id": "sentiment_strength",
+      "scale": "1=neutral or purely informational tone with no positive or negative valence, 10=extremely strong positive or negative tone conveying major consequence"
+    },
+    {
+      "id": "information_density",
+      "scale": "1=pure promotional copy, opinion, or speculation with no verifiable data, 10=rich in specific financial figures, contractual terms, or quantified outcomes"
+    },
+    {
+      "id": "directional_clarity",
+      "scale": "1=ambiguous implications that could be interpreted as positive or negative depending on framing, 10=unambiguously good or bad for the company with no reasonable alternative interpretation"
+    },
+    {
+      "id": "scope",
+      "scale": "1=affects only Amazon with no read-through to peers or sectors, 10=macro or market-wide event where Amazon is one of many affected parties"
+    },
+    {
+      "id": "competitive_impact",
+      "scale": "1=no effect on Amazon's competitive position relative to rivals, 10=fundamentally alters competitive dynamics in a major market Amazon operates in"
+    },
+    {
+      "id": "regulatory_risk",
+      "scale": "1=no regulatory, legal, or governmental dimension whatsoever, 10=major regulatory action or legal ruling with potential to constrain or reshape business operations"
+    },
+    {
+      "id": "management_signal",
+      "scale": "1=no leadership, strategic, or organizational dimension, 10=major strategic pivot, leadership change, or organizational restructuring signaled by senior management"
+    },
+    {
+      "id": "narrative_shift",
+      "scale": "1=reinforces the existing consensus investment thesis about the company, 10=introduces a fundamentally new narrative or challenges a core assumption about the business"
+    },
+    {
+      "id": "repeatedness",
+      "scale": "1=rehash or follow-up of previously reported information with no new substance, 10=first report of genuinely new information not previously available"
+    },
+    {
+      "id": "financial_result_surprise",
+      "scale": "1=no financial results reported or results exactly match prior guidance and analyst expectations as described in the article, 10=reported figures dramatically exceed or miss prior guidance and analyst expectations as described in the article"
+    }
+  ],
+  "dimension_rationale": {
+    "kept": {
+      "materiality": "Ranges from how-to-reset-your-Kindle guides and promotional deal listicles with zero financial relevance, to multi-billion-dollar AWS infrastructure commitments and quarterly earnings revealing segment-level performance.",
+      "surprise": "Ranges from pre-announced Prime Day dates and scheduled earnings calls to unexpected events like the five-day RTO mandate, AWS CEO departure, iRobot deal collapse, and nuclear energy pivots.",
+      "temporal_horizon": "Ranges from 48-hour deal events (Prime Day, Big Spring Sale) to 15-year infrastructure investment commitments (Spain, Taiwan, Canada) and structural bets on nuclear energy and satellite broadband.",
+      "sentiment_strength": "Ranges from neutral product guides and device how-tos to strongly positive earnings beats with shares jumping 6-8%, and strongly negative articles about strikes, antitrust rulings, and mass layoffs.",
+      "information_density": "Enormous variation from pure marketing copy (dozens of Prime membership benefit articles, streaming how-to-watch guides) to earnings releases with specific revenue, EPS, and segment growth figures plus analyst commentary.",
+      "directional_clarity": "Ranges from ambiguous articles like Anthropic investment scrutiny (unclear if threat or validation) and Alexa AI revamp (opportunity or admission of failure?) to unambiguous earnings beats or clear regulatory fines.",
+      "scope": "Ranges from Amazon-only operational updates (new fulfillment center, device launch) to broad macro articles about Nasdaq corrections, Fed rate decisions, and recession fears where Amazon is one of many names mentioned.",
+      "competitive_impact": "Ranges from routine operational articles to competitively significant moves like the low-cost China storefront targeting Temu/Shein, NBA broadcasting rights deal displacing TNT, and nuclear energy agreements in the AI infrastructure race.",
+      "regulatory_risk": "Clear bimodal distribution: majority of articles have zero regulatory angle, but a substantial cluster involves FTC antitrust litigation, EU Digital Services Act enforcement, iRobot merger review, international tax seizures, France surveillance fines, and product safety rulings.",
+      "management_signal": "Ranges from no leadership dimension in product/deal articles to high-signal events like Andy Jassy's shareholder letter, the AWS CEO transition from Selipsky to Garman, the five-day RTO mandate, and Andrew Ng's board appointment.",
+      "narrative_shift": "Ranges from articles reinforcing established narratives (AWS growing, Prime ecosystem expanding) to novel narratives like Amazon pursuing nuclear energy for AI, considering Alexa subscription monetization, and entering auto sales with Hyundai.",
+      "repeatedness": "Extremely high variation in this corpus: dozens of near-identical Prime Day deal roundups, membership benefit guides, and streaming how-to-watch articles versus first-report breaking news like the RTO mandate, AWS CEO change, and iRobot deal collapse.",
+      "financial_result_surprise": "Applicable primarily to earnings cluster but critical there: Q4 2023 and Q1 2024 reported beats on both revenue and profit (shares surged), while Q2 2024 showed slowing online sales growth disappointing investors (shares fell 8%)."
+    },
+    "dropped": {
+      "actionability": "For this corpus, actionability is largely a composite of materiality, information density, and directional clarity rather than an independent signal. Articles that score high on those three dimensions are inherently the actionable ones, making this dimension redundant.",
+      "controversy": "Most of the corpus clusters at low controversy (AWS partnerships, product launches, deal promotions). The few divisive stories (RTO mandate, union battles) are better captured through the interaction of sentiment_strength and directional_clarity.",
+      "expected_duration": "Overlaps substantially with temporal_horizon for this corpus. Amazon's news splits cleanly between transient promotional content and structural business developments, and both dimensions would assign nearly identical scores across articles."
+    },
+    "added": {}
+  }
+}

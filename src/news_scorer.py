@@ -39,22 +39,22 @@ MARKET_CLOSE_HOUR = 16
 
 # --- Suggested dimensions for Phase 1 ---
 SUGGESTED_DIMENSIONS = [
-    ("materiality", "1=noise, 10=direct large impact on revenue/margins/TAM"),
-    ("surprise", "1=fully expected/scheduled/baked-in, 10=completely unexpected"),
-    ("temporal_horizon", "1=affects next few days only, 10=structural shift for years"),
-    ("sentiment_strength", "1=neutral tone, 10=extremely strong positive or negative"),
-    ("information_density", "1=pure opinion/speculation, 10=hard data with specific numbers"),
-    ("directional_clarity", "1=ambiguous/could go either way, 10=unambiguously good or bad"),
-    ("scope", "1=only this company, 5=sector-wide, 10=macro/market-wide"),
-    ("competitive_impact", "1=no competitive effect, 10=major competitive shift"),
-    ("regulatory_risk", "1=no regulatory angle, 10=major legal/regulatory event"),
-    ("management_signal", "1=no leadership angle, 10=major strategic/leadership signal"),
-    ("expected_duration", "1=transient story that resolves within a day, 10=persistent story remaining relevant for weeks or longer"),
-    ("narrative_shift", "1=reinforces existing narrative, 10=fundamentally changes thesis"),
-    ("repeatedness", "1=rehash/follow-up of known story, 10=first report of new info"),
-    ("actionability", "1=background context only, 10=investors can act immediately"),
-    ("controversy", "1=consensus view, 10=highly divisive among investors"),
-    ("financial_result_surprise", "1=no financial results reported or results exactly match expectations, 10=reported figures dramatically exceed or miss prior guidance and analyst expectations as described in the article"),
+    ("materiality", "0=noise, 10=direct large impact on revenue/margins/TAM"),
+    ("surprise", "0=fully expected outcome, 10=completely unexpected outcome"),
+    ("temporal_horizon", "0=affects next few days only, 10=structural shift for years"),
+    ("sentiment_strength", "0=neutral tone, 10=extremely strong positive or negative"),
+    ("information_density", "0=pure opinion/speculation, 10=hard data with specific numbers"),
+    ("directional_clarity", "0=ambiguous/could go either way, 10=unambiguously good or bad"),
+    ("scope", "0=only this company, 5=sector-wide, 10=macro/market-wide"),
+    ("competitive_impact", "0=no competitive effect, 10=major competitive shift"),
+    ("regulatory_risk", "0=no regulatory angle, 10=major legal/regulatory event"),
+    ("management_signal", "0=no leadership angle, 10=major strategic/leadership signal"),
+    ("expected_duration", "0=transient story that resolves within a day, 10=persistent story remaining relevant for weeks or longer"),
+    ("narrative_shift", "0=reinforces existing narrative, 10=fundamentally changes thesis"),
+    ("repeatedness", "0=rehash/follow-up of known story, 10=first report of new info"),
+    ("actionability", "0=background context only, 10=investors can act immediately"),
+    ("controversy", "0=consensus view, 10=highly divisive among investors"),
+    ("financial_result_surprise", "0=no financial results reported or results exactly match expectations, 10=reported figures dramatically exceed or miss prior guidance and analyst expectations as described in the article"),
 ]
 
 
@@ -309,8 +309,7 @@ These articles have low company-specific materiality but reflect the \
 environment the stock trades in.
 
 - **1 required: "analyst_consensus_signals"**: Analyst upgrades/downgrades, \
-price target changes, buy/sell ratings, institutional positioning. Examples: \
-"Microsoft: UBS remains Buy", "Goldman raises NVDA target to $150."
+price target changes, buy/sell ratings, institutional positioning.
 
 Each category needs: a snake_case id, a short label, and a one-sentence \
 description. Every article in the corpus should fit into at least one category.
@@ -330,22 +329,22 @@ against the actual articles you just read:
 Select all dimensions that show meaningful variation — there is no upper limit.
 
 SCALE DESCRIPTION RULES:
-- Define ONLY the 1 endpoint and the 10 endpoint using general EVENT TYPES \
+- Define ONLY the 0 endpoint and the 10 endpoint using general EVENT TYPES \
 (not specific articles or events from this corpus).
 - Do NOT pre-assign scores to specific articles, companies, or events. \
 Do NOT write things like "Altman firing = 10" or "earnings beat scores 7-8."
-- The middle range (2-9) is smooth interpolation — do not anchor it.
+- The middle range (1-9) is smooth interpolation — do not anchor it.
 - Keep descriptions general enough to apply consistently across all articles. \
 The scorer in Phase 2 will judge each article relative to others in the corpus.
 
 IMPORTANT on the "surprise" dimension: This measures how UNEXPECTED the \
 OUTCOME or CONTENT of the news was — NOT whether the event itself was \
-scheduled. A scheduled event with an unexpected outcome (e.g., earnings that \
-massively beat or miss) is HIGH surprise. A scheduled event that meets \
-expectations is LOW surprise. Rate the surprise of what was REVEALED, not \
-whether the event was on the calendar.
+scheduled. A scheduled event can still be high surprise if the outcome \
+described in the articles was unexpected. Rate the surprise of what was \
+REVEALED, not whether the event was on the calendar. Infer surprise \
+entirely from article language and context.
 
-Suggested dimension pool (all scored 1-10):
+Suggested dimension pool (all scored 0-10):
 
 | Dimension | Default scale |
 |-----------|---------------|
@@ -367,7 +366,7 @@ RESPOND WITH ONLY THIS JSON (no markdown fences, no commentary):
     ... (exactly 9, including earnings_financial_results, market_sector_sentiment, and analyst_consensus_signals)
   ],
   "dimensions": [
-    {{"id": "dimension_id", "scale": "1=low end description, 10=high end description"}},
+    {{"id": "dimension_id", "scale": "0=low end description, 10=high end description"}},
     ... (12-15 total)
   ],
   "dimension_rationale": {{
@@ -589,27 +588,28 @@ Read all articles for each entry. Many articles may cover the SAME event — \
 identify duplicates and treat them as one. Then produce a SINGLE combined \
 score reflecting the most important news in that set.
 
-Rate each dimension based on the NATURE and CONTENT of the news as it relates \
-to {ticker}'s business fundamentals and competitive position.
+SCORING RULES:
+- ALL scores are 0-10 integers. Use the FULL range — do not cluster around the middle.
+- Score based ONLY on the NATURE and CONTENT of the articles provided.
+- Do not speculate about stock price reactions or trading outcomes.
+- Infer everything from what the articles say — do not inject outside knowledge \
+about specific numbers or thresholds.
 
-REMINDER on "surprise": Rate how unexpected the OUTCOME/CONTENT was, not \
-whether the event was scheduled. Scheduled earnings with a 40% beat = high \
-surprise. Scheduled earnings meeting consensus = low surprise.
-
-CATEGORY RELEVANCE SCORING:
+CATEGORY RELEVANCE (each 0-10):
 For each entry, score how relevant each category is to that day's news \
-(0-10, where 0 = not relevant at all, 10 = entirely about this category). \
+(0 = not relevant at all, 10 = entirely about this category). \
 A day can score high on MULTIPLE categories if multiple distinct events occurred.
 
 CATEGORIES FOR {ticker}:
 {cats_text}
 
-DIMENSIONS (each 1-10):
+DIMENSIONS (each 0-10):
 {dims_text}
 
 ALSO PROVIDE:
-- direction: "positive", "negative", or "mixed"
-- distinct_events: how many genuinely different news events are in this set
+- direction: overall sentiment of the news (0 = strongly negative, \
+5 = neutral/mixed, 10 = strongly positive). Infer from article tone and content.
+- distinct_events: integer count of genuinely different news events in this entry
 - reasoning: ONE sentence explaining your most important scoring decisions
 
 {all_entries}
@@ -619,7 +619,7 @@ RESPOND WITH ONLY THIS JSON ARRAY (no markdown fences, no commentary):
   {{
     "date": "YYYY-MM-DD",
     "period": "gap or cc",
-    "direction": "positive/negative/mixed",
+    "direction": 5,
     "distinct_events": 1,
     {cat_json_example},
     {dim_json_example},
@@ -629,11 +629,10 @@ RESPOND WITH ONLY THIS JSON ARRAY (no markdown fences, no commentary):
 ]"""
 
 
-def validate_phase2_response(results, schema, entries):
+def validate_phase2_response(results, schema):
     """Validate Phase 2 response. Returns list of valid results."""
     cat_ids = [c["id"] for c in schema["categories"]]
     dim_ids = {d["id"] for d in schema["dimensions"]}
-    valid_directions = {"positive", "negative", "mixed"}
     validated = []
 
     for r in results:
@@ -641,8 +640,12 @@ def validate_phase2_response(results, schema, entries):
         if "date" not in r or "period" not in r:
             print(f"    WARNING: Missing date/period in response entry, skipping")
             continue
-        if r.get("direction") not in valid_directions:
-            r["direction"] = "mixed"  # default
+        # Clamp direction to 0-10
+        val = r.get("direction")
+        if val is None or not isinstance(val, (int, float)):
+            r["direction"] = 5  # default to neutral
+        else:
+            r["direction"] = max(0, min(10, int(val)))
         # Clamp category relevance scores to 0-10
         for cat_id in cat_ids:
             key = f"cat_{cat_id}"
@@ -651,13 +654,13 @@ def validate_phase2_response(results, schema, entries):
                 r[key] = 0  # default to not relevant
             else:
                 r[key] = max(0, min(10, int(val)))
-        # Clamp dimension scores to 1-10
+        # Clamp dimension scores to 0-10
         for dim_id in dim_ids:
             val = r.get(dim_id)
             if val is None or not isinstance(val, (int, float)):
                 r[dim_id] = 5  # default to middle
             else:
-                r[dim_id] = max(1, min(10, int(val)))
+                r[dim_id] = max(0, min(10, int(val)))
         validated.append(r)
 
     return validated
@@ -707,7 +710,7 @@ def run_phase2(ticker, schema, gap_entries, cc_entries, already_scored, schema_c
                 print(f"    WARNING: Expected list, got {type(results)}. Wrapping.")
                 results = [results]
 
-            validated = validate_phase2_response(results, schema, batch)
+            validated = validate_phase2_response(results, schema)
 
             # Tag with ticker and write immediately
             for r in validated:

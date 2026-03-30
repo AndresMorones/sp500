@@ -1,118 +1,91 @@
-# Stock Prediction Framework 📈
+# Stock Prediction Framework (Adapted for sp500 Project)
 
-A comprehensive framework for predicting stock prices by analyzing the effect of financial news on stock movements. This project integrates data collection, sentiment analysis, feature engineering, and machine learning modeling to study and forecast stock price trends, with a focus on leveraging news sentiment as a predictive signal.
+A comprehensive framework for predicting stock prices by analyzing the effect of financial news on stock movements. Uses state-of-the-art NLP models (FinBERT, RoBERTa, DeBERTa) for sentiment analysis and deep learning architectures (LSTM, TimesNet, PatchTST, tPatchGNN) for time-series forecasting.
 
-## Project Description 📝
+## Adaptation Notes
 
-This repository provides tools and pipelines for:
-- Collecting and processing financial news and stock market data
-- Performing sentiment analysis on news articles using state-of-the-art NLP models
-- Engineering features from both news and market data
-- Training and evaluating machine learning models (including deep learning models in PyTorch) for stock price prediction
-- Visualizing results and generating reports for analysis
+This is an adapted version of the original DeBERTa-TimesNet framework, modified to work with the sp500 project's consolidated data format:
 
-The framework is modular, allowing for easy extension and experimentation with different models, features, and data sources.
+- **7 tickers**: AAPL, AMZN, GOOGL, META, MSFT, NVDA, TSLA
+- **Data source**: Single consolidated CSVs (`data/raw/price.csv` and `data/raw/news.csv`)
+- **Sentiment models**: 3 transformer models only (FinBERT, RoBERTa, DeBERTa) — classical models (SVM, LR, RF) removed since no human-labeled benchmark dataset is available
+- **Price data**: Nov 2023 onwards (daily OHLCV)
+- **News data**: Oct 2024 onwards (headline + summary)
 
-## Project Data
-The dataset used including price & news data of **5 company stocks** (AMZN, AAPL, NFLX, TSLA, MSFT) is available [here](https://drive.google.com/drive/folders/1Wl9uZv_W3Acnn8GhfkAoISv9-AMZTJy2?usp=drive_link). Create a **/data** dataset and add the data downloaded from the Google Drive in **/data/raw**. The data is from 10 March 2022 to 2 April 2025. We used AlphaVantage to extract news data and Yahoo Finance for price data.
-
-## Project Structure 🗂️
+## Project Structure
 
 ```
-├── 📄 LICENSE            <- Open-source license if one is chosen
-├── 🛠️ Makefile           <- Makefile with convenience commands like `make data` or `make train`
-├── 📘 README.md          <- The top-level README for developers using this project.
-├── 📂 data
-│   ├── 🌐 external       <- Data from third party sources.
-│   ├── 🏗️ interim        <- Intermediate data that has been transformed.
-│   ├── 📦 processed      <- The final, canonical data sets for modeling.
-│   └── 🗃️ raw            <- The original, immutable data dump.
-│
-├── 📚 docs               <- A default mkdocs project; see www.mkdocs.org for details
-│
-├── 🤖 models             <- Trained and serialized models, model predictions, or model summaries
-│
-├── 📓 notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-│                         the creator's initials, and a short `-` delimited description, e.g.
-│                         `1.0-jqp-initial-data-exploration`.
-│
-├── ⚙️ pyproject.toml     <- Project configuration file with package metadata for 
-│                         stock_prediction and configuration for tools like black
-│
-├── 📑 references         <- Data dictionaries, manuals, and all other explanatory materials.
-│
-├── 📊 reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-│   └── 🖼️ figures        <- Generated graphics and figures to be used in reporting
-│
-├── 📦 requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-│                         generated with `pip freeze > requirements.txt`
-│
-├── 🧹 setup.cfg          <- Configuration file for flake8
-│
-└── 🐍 stock_prediction   <- Source code for use in this project.
-    │
-    ├── __init__.py             <- Makes stock_prediction a Python module
-    │
-    ├── config.py               <- Store useful variables and configuration
-    │
-    ├── dataset.py              <- Scripts to download or generate data
-    │
-    ├── features.py             <- Code to create features for modeling
-    │
-    ├── modeling                
-    │   ├── __init__.py 
-    │   ├── predict.py          <- Code to run model inference with trained models          
-    │   └── train.py            <- Code to train models
-    │
-    └── plots.py                <- Code to create visualizations
+├── layers/                  # Neural network layer definitions
+│   ├── Formers/            # Transformer components (attention, embedding, enc/dec)
+│   └── TimesNet/           # TimesNet convolution blocks
+├── sentiment_analysis/      # NLP sentiment pipeline
+│   ├── models/             # Base class + BERT wrapper
+│   ├── comparison/         # Financial and stock sentiment comparisons
+│   ├── trainers/           # Classical model trainer (unused in this adaptation)
+│   └── main.py             # Entry point: runs 3 transformers on per-ticker news
+├── stock_prediction/        # Time-series prediction pipeline
+│   ├── config.py           # Paths, tickers, model config
+│   ├── dataset.py          # Data loading & sentiment aggregation
+│   ├── dataset_pipeline.py # Sequence creation & normalization
+│   ├── features.py         # Target variable generation
+│   ├── plots.py            # EDA visualizations
+│   ├── trading_simulation.py # Backtesting engine
+│   └── modeling/           # LSTM, TimesNet, PatchTST, tPatchGNN (train + predict)
+├── utils/                   # Config dataclass, metrics, tools
+├── scripts/                 # Shell scripts for batch training & analysis
+├── Makefile                 # Convenience commands
+└── requirements.txt         # Dependencies
 ```
 
-## Getting started 🚀
+## Getting Started
 
-### Getting Started
-
-1. **Create a Python virtual environment** 🐍  
-  ```
-   make create_environment
-  ```
-
-2. **Install project requirements** 📦  
+1. **Install dependencies**
    ```
    make requirements
    ```
 
-3. **Run sentiment analysis preprocessing** 📰  
+2. **Run sentiment analysis** (processes all 7 tickers through FinBERT/RoBERTa/DeBERTa)
    ```
    make sentiment_analysis
    ```
 
-4. **Process and prepare the dataset** 🗃️  
+3. **Process datasets** (merge price + sentiment, generate target features)
    ```
    make data
    ```
 
-5. **Generating plots** 📊 
+4. **Generate EDA plots**
    ```
    make plots
    ```
 
-6. **Train or run models** 🧠  
-   Use the provided script in to train and make predictions for PatchTST, tPatchGNN, LSTM and TimesNet:
+5. **Train all model architectures** (LSTM, TimesNet, PatchTST, tPatchGNN)
    ```
    make run_all
    ```
 
+6. **Run trading simulation**
+   ```
+   make simulate
+   ```
 
-## Reference Paper 📄
+## Data Format
 
-This project is inspired by and builds upon the methodologies discussed in the following paper:
+**Input** (from `../../data/raw/`):
+- `price.csv`: `date, ticker, open, high, low, close, volume`
+- `news.csv`: `datetime, ticker, headline, summary`
 
-- **Title**: "Evaluating Large Language Models and Advanced Time-Series Architectures for Sentiment-Driven Stock Movement Prediction"  
-- **Authors**: Walid Siala, Ahmed Khanfir and Mike Papadakis  
-- **Published In**: On progress...  
-- **DOI**: On progress...
+**Processed** (in `data/processed/`):
+- `{TICKER}_preprocessed_dataset_with_features.csv`: Price + aggregated sentiment + target columns
 
-We recommend reading the paper for a deeper understanding of the theoretical foundations and techniques applied in this framework.
+**Targets**:
+- `Float_Price`: Next day's closing price
+- `Binary_Price`: 1 if next close > today's close
+- `Factor_Price`: next_close / today_close
+- `Delta_Price`: next_close - today_close
+
+## Reference
+
+Based on: "Evaluating Large Language Models and Advanced Time-Series Architectures for Sentiment-Driven Stock Movement Prediction" — Walid Siala, Ahmed Khanfir, Mike Papadakis (University of Luxembourg, 2025)
 
 --------
-

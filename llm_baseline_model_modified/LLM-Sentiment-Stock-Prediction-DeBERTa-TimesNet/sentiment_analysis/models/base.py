@@ -6,14 +6,20 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from models.bert_model import BertModel
 from abc import ABC, abstractmethod
-from venny4py.venny4py import *
 from loguru import logger
 
 class BaseSentimentComparison(ABC):
-    def __init__(self, path, ticker=None):
-        """Initialize the sentiment analysis models"""
+    def __init__(self, path, ticker=None, has_ground_truth=False):
+        """Initialize the sentiment analysis models.
+
+        Args:
+            path: path to CSV or None if data is passed directly.
+            ticker: stock ticker symbol.
+            has_ground_truth: whether the dataset contains an 'original_sentiment' column.
+        """
         self.path = path
         self.ticker = ticker
+        self.has_ground_truth = has_ground_truth
         self.models = {}
         self._load_models()
 
@@ -70,7 +76,7 @@ class BaseSentimentComparison(ABC):
         return mapped_scores
 
     def analyze_sentiments(self, df):
-        texts = df['title'].tolist()
+        texts = df['text'].tolist()
         for model_name, model in self.models.items():
             logger.info(f"Analyzing {model_name} sentiments...")
             predictions = [model.generate(text) for text in texts]
@@ -83,7 +89,9 @@ class BaseSentimentComparison(ABC):
         return df
 
     def calculate_agreement_matrix(self, df):
-        models = ['original_sentiment', 'finbert_sentiment', 'roberta_sentiment', 'deberta_sentiment']
+        models = ['finbert_sentiment', 'roberta_sentiment', 'deberta_sentiment']
+        if self.has_ground_truth and 'original_sentiment' in df.columns:
+            models = ['original_sentiment'] + models
         agreement_matrix = pd.DataFrame(index=models, columns=models)
         for i, model1 in enumerate(models):
             for j, model2 in enumerate(models):
@@ -94,6 +102,9 @@ class BaseSentimentComparison(ABC):
         return agreement_matrix.astype(float)
 
     def create_confusion_matrices(self, df):
+        if not self.has_ground_truth or 'original_sentiment' not in df.columns:
+            logger.info("Skipping confusion matrices (no ground-truth labels)")
+            return
         fig, axes = plt.subplots(2, 2, figsize=(15, 12))
         fig.suptitle('Confusion Matrices: Models vs Original Labels', fontsize=16, fontweight='bold')
         models = ['finbert_sentiment', 'roberta_sentiment', 'deberta_sentiment']
@@ -111,39 +122,56 @@ class BaseSentimentComparison(ABC):
             axes[row, col].set_ylabel('Actual')
         axes[1, 1].axis('off')
         plt.tight_layout()
-        plt.show()
         plt.savefig(f"reports/figures/sentiment_analysis/{self.ticker}_confusion_matrices.png")
+        plt.close()
 
     def create_agreement_heatmap(self, agreement_matrix):
         plt.figure(figsize=(10, 8))
         mask = np.triu(np.ones_like(agreement_matrix, dtype=bool), k=1)
+        labels = list(agreement_matrix.columns)
+        display_labels = []
+        for lbl in labels:
+            if lbl == 'original_sentiment':
+                display_labels.append('Original')
+            elif lbl == 'finbert_sentiment':
+                display_labels.append('FinBERT')
+            elif lbl == 'roberta_sentiment':
+                display_labels.append('RoBERTa')
+            elif lbl == 'deberta_sentiment':
+                display_labels.append('DeBERTa')
+            else:
+                display_labels.append(lbl)
         sns.heatmap(agreement_matrix, mask=mask, annot=True, fmt='.3f',
                    cmap='RdYlBu_r', center=0.5, square=True,
-                   xticklabels=['Original', 'FinBERT', 'RoBERTa', 'DeBERTa'],
-                   yticklabels=['Original', 'FinBERT', 'RoBERTa', 'DeBERTa'])
+                   xticklabels=display_labels,
+                   yticklabels=display_labels)
         plt.title('Model Agreement Matrix', fontsize=14, fontweight='bold')
         plt.tight_layout()
-        plt.show()
         plt.savefig(f"reports/figures/sentiment_analysis/{self.ticker}_agreement_heatmap.png")
+        plt.close()
 
     def create_venn_diagrams(self, df, prefix="venn_diagram"):
+        try:
+            from venny4py.venny4py import venny4py as venny_fn
+        except ImportError:
+            logger.warning("venny4py not installed, skipping Venn diagrams")
+            return
+
         sentiments = [
             (0, 'Negative'),
             (1, 'Neutral'),
             (2, 'Positive')
         ]
         for sent_val, sentiment in sentiments:
-            original_set = set(df[df['original_sentiment'] == sent_val].index)
-            finbert_set = set(df[df['finbert_sentiment'] == sent_val].index)
-            roberta_set = set(df[df['roberta_sentiment'] == sent_val].index)
-            deberta_set = set(df[df['deberta_sentiment'] == sent_val].index)
             sets = {
-                'Original': original_set,
-                'FinBERT': finbert_set,
-                'RoBERTa': roberta_set,
-                'DeBERTa': deberta_set
+                'FinBERT': set(df[df['finbert_sentiment'] == sent_val].index),
+                'RoBERTa': set(df[df['roberta_sentiment'] == sent_val].index),
+                'DeBERTa': set(df[df['deberta_sentiment'] == sent_val].index),
             }
-            venny4py(sets=sets)
+            if self.has_ground_truth and 'original_sentiment' in df.columns:
+                sets['Original'] = set(df[df['original_sentiment'] == sent_val].index)
+
+            venny_fn(sets=sets)
             plt.title(f'{sentiment} Predictions', fontsize=14, fontweight='bold')
             plt.tight_layout()
             plt.savefig(f"reports/figures/sentiment_analysis/{self.ticker}_{prefix}_{sentiment}.png")
@@ -167,19 +195,29 @@ class BaseSentimentComparison(ABC):
             axes[row, col].set_ylabel('Frequency')
             axes[row, col].legend()
             axes[row, col].grid(True, alpha=0.3)
+
+        # Fourth subplot: inter-model agreement summary
         axes[1, 1].clear()
-        for model in models:
-            df[f'{model}_agrees'] = (df['original_sentiment'] == df[f'{model}_sentiment']).astype(int)
-            agree_conf = df[df[f'{model}_agrees'] == 1][f'{model}_confidence'].mean()
-            disagree_conf = df[df[f'{model}_agrees'] == 0][f'{model}_confidence'].mean()
-            axes[1, 1].bar([f'{model.title()}\nAgree', f'{model.title()}\nDisagree'],
-                          [agree_conf, disagree_conf], alpha=0.7)
-        axes[1, 1].set_title('Average Confidence: Agreement vs Disagreement')
-        axes[1, 1].set_ylabel('Average Confidence')
-        axes[1, 1].tick_params(axis='x', rotation=45)
+        if self.has_ground_truth and 'original_sentiment' in df.columns:
+            for model in models:
+                df[f'{model}_agrees'] = (df['original_sentiment'] == df[f'{model}_sentiment']).astype(int)
+                agree_conf = df[df[f'{model}_agrees'] == 1][f'{model}_confidence'].mean()
+                disagree_conf = df[df[f'{model}_agrees'] == 0][f'{model}_confidence'].mean()
+                axes[1, 1].bar([f'{model.title()}\nAgree', f'{model.title()}\nDisagree'],
+                              [agree_conf, disagree_conf], alpha=0.7)
+            axes[1, 1].set_title('Average Confidence: Agreement vs Disagreement')
+            axes[1, 1].set_ylabel('Average Confidence')
+            axes[1, 1].tick_params(axis='x', rotation=45)
+        else:
+            # Show average confidence per model when no ground truth
+            avg_confs = [df[f'{m}_confidence'].mean() for m in models]
+            axes[1, 1].bar(model_names, avg_confs, alpha=0.7)
+            axes[1, 1].set_title('Average Confidence by Model')
+            axes[1, 1].set_ylabel('Average Confidence')
+
         plt.tight_layout()
-        plt.show()
         plt.savefig(f"reports/figures/sentiment_analysis/{self.ticker}_confidence_analysis.png")
+        plt.close()
 
     @abstractmethod
     def create_detailed_comparison_table(self, df):
@@ -189,7 +227,8 @@ class BaseSentimentComparison(ABC):
         if df is None:
             df = self.create_sample_data()
         logger.info(f"Dataset shape: {df.shape}")
-        logger.info(f"Original sentiment distribution:\n{df['original_sentiment'].value_counts().sort_index()}")
+        if self.has_ground_truth and 'original_sentiment' in df.columns:
+            logger.info(f"Original sentiment distribution:\n{df['original_sentiment'].value_counts().sort_index()}")
         df = self.analyze_sentiments(df)
         agreement_matrix = self.calculate_agreement_matrix(df)
         logger.info("\nCreating visualizations...")
@@ -198,4 +237,4 @@ class BaseSentimentComparison(ABC):
         self.create_venn_diagrams(df, prefix=venn_prefix)
         self.create_confidence_analysis(df)
         self.create_detailed_comparison_table(df)
-        return df, agreement_matrix 
+        return df, agreement_matrix

@@ -1,0 +1,13 @@
+[32m2026-03-29 16:31:32.756[0m | [1mINFO    [0m | [36mstock_prediction.config[0m:[36m<module>[0m:[36m15[0m - [1mPROJ_ROOT path is: C:\Users\Andre\sp500\sp500\llm_baseline_model_modified\LLM-Sentiment-Stock-Prediction-DeBERTa-TimesNet[0m
+[32m2026-03-29 16:32:11.947[0m | [1mINFO    [0m | [36m__main__[0m:[36m<module>[0m:[36m23[0m - [1mMSFT: 534 articles[0m
+[32m2026-03-29 16:39:50.890[0m | [1mINFO    [0m | [36m__main__[0m:[36m<module>[0m:[36m51[0m - [1m  MSFT/finbert: 459s[0m
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: dc0ff5e8-be46-49de-9867-b9b55522d10b)')' thrown while requesting HEAD https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest/resolve/main/config.json
+Retrying in 1s [Retry 1/5].
+Some weights of the model checkpoint at cardiffnlp/twitter-roberta-base-sentiment-latest were not used when initializing RobertaForSequenceClassification: ['roberta.pooler.dense.bias', 'roberta.pooler.dense.weight']
+- This IS expected if you are initializing RobertaForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing RobertaForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+[32m2026-03-29 16:47:58.635[0m | [1mINFO    [0m | [36m__main__[0m:[36m<module>[0m:[36m51[0m - [1m  MSFT/roberta: 488s[0m
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 5c66b475-18aa-4968-9826-62e67d09b408)')' thrown while requesting HEAD https://huggingface.co/nickmuchi/deberta-v3-base-finetuned-finance-text-classification/resolve/main/config.json
+Retrying in 1s [Retry 1/5].
+[32m2026-03-29 17:03:48.160[0m | [1mINFO    [0m | [36m__main__[0m:[36m<module>[0m:[36m51[0m - [1m  MSFT/deberta: 950s[0m
+[32m2026-03-29 17:03:48.364[0m | [32m[1mSUCCESS [0m | [36m__main__[0m:[36m<module>[0m:[36m57[0m - [32m[1mMSFT DONE -> C:\Users\Andre\sp500\sp500\llm_baseline_model_modified\LLM-Sentiment-Stock-Prediction-DeBERTa-TimesNet\data\interim\MSFT_sentiment_results.csv[0m
