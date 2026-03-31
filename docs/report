@@ -1,0 +1,22 @@
+========== reoport====================
+
+No price predicitom with rich features or llm infered categories just binary direction on stock, there for as baseline for reviewing and comapring performance specificaly on price prediciton.
+thir lstm did not beat naive
+
+we review this 2 paper copy methodloy ran for our data find by updataing to most up to date architecture finbert model results remained the same, tried  Gemma-3n-E2B , Qwen2.5-1.5B, Llama-FinSent-S sentiment, withmkor granular architecutre, 7 scores for sentiment. mapped -1 to 1
+
+
+We porpose reviewing even on models trained on our period how would different methodlogy compare
+
+
+then we compared lstm to claude opus 4.6 same methodlogy
+more rich financial coimpany and Custom categories and raniking 0-10 improved by.
+
+
+
+Adressing key risk that results could be attributed that models were trained on data covering our news and prediciton period, and not generalization.
+We ran and compared methodlogy with knowledge cut off mid 2024
+
+THe compared ltsm to using directly price volume high low.
+vs our metric a 
+vs all metrics

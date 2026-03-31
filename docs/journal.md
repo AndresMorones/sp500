@@ -1223,3 +1223,70 @@ Range prediction (CC target, 1σ coverage): Naive 76.6%, Ridge 91.5%, LightGBM 9
 **Decision**: Ridge + Metric A features is the recommended architecture for GOOGL prediction. The 30 LLM news category scores add genuine value over price-only models, confirming A7's structured extraction approach. For range prediction, the news-informed intervals are well-calibrated and substantially better than static volatility bands.
 
 **References**: `phase3/compare.py`, `phase3/results/phase3_summary.csv`, Entries 26, 29, 37
+
+## Entry 39 — Controlled LSTM feature experiment: none beat naive — 2026-03-31
+
+**Tried**: Designed and ran a controlled experiment to isolate which features actually matter for LSTM stock prediction. Both baseline pipelines (FinBERT-LSTM from arXiv:2211.07392 and DeBERTa-TimesNet from arXiv:2602.00086) used different architectures, hyperparameters, AND features — making it impossible to attribute differences. This experiment standardized everything except features.
+
+**Standardized parameters**: 2-layer LSTM (32→16), dropout 0.3, Adam lr=0.001, MSE loss, batch 32, max 50 epochs, early stopping patience=10, 10-day lookback, 72/8/20 train/val/test split, 5 seeds [16,32,42,64,128], MinMaxScaler fit on train only.
+
+**Phase 1 — Raw price prediction (6 feature configs × 2 targets × 7 tickers × 5 seeds = 420 runs)**:
+
+| Config | Features | Gap MAPE | CC MAPE |
+|--------|----------|:--------:|:-------:|
+| C | price + sentiment | **4.32%** | **4.12%** |
+| A | price only | 4.44% | 4.61% |
+| E | price + vol + news_count + sent | 4.59% | 4.51% |
+| D | price + vol + sentiment | 4.68% | 4.77% |
+| B | price + volume | 4.90% | 5.26% |
+| F | price + vol + 7 sent features + count | 5.29% | 4.79% |
+
+Finding: Config C (price + single sentiment scalar) wins. Volume hurts (p=0.012). More features = more noise. Config F (10 features, closest to DeBERTa-TimesNet) is worst.
+
+**Phase 2 — Naive baseline destroys everything**:
+
+Checked whether any model beats the naive baseline (predict yesterday's close):
+
+| | Naive | Best LSTM (Config C) | Old FinBERT-LSTM | Old DeBERTa-TimesNet |
+|---|:---:|:---:|:---:|:---:|
+| MAPE | **1.44%** | 4.12% | 2.14% | 5.45% |
+| vs naive | — | 2.9x worse | 1.5x worse | 3.8x worse |
+
+Correlation analysis proved the LSTM is just learning "predict ≈ yesterday's price" with noise on top. Pred~Yesterday correlation: 0.91-0.99. Pred~Actual correlation: 0.51-0.92. Direction accuracy: 46-69% (mean ~52%, barely above random).
+
+**Phase 3 — Switch to returns prediction**:
+
+Since raw price prediction is inherently a random walk, switched target to returns: (close_today - close_yesterday) / close_yesterday. Now naive = "predict 0% change."
+
+Config C return MAE (mean across 7 tickers): gap 0.92%, cc 1.53%.
+Naive return MAE: gap **0.63%**, cc **1.00%**.
+**Still 43-52% worse than naive.** The LSTM cannot learn any useful signal from past returns + sentiment.
+
+**Phase 4 — Does the sentiment model matter?**
+
+Ran Config C with 5 different sentiment models (all using pre-computed daily sentiment, identical LSTM):
+
+| Model | Gap MAE | CC MAE | Gap DirAcc | CC DirAcc |
+|-------|:-------:|:------:|:----------:|:---------:|
+| Gemma-3-1B | 0.90% | 1.55% | 53.1% | 50.9% |
+| Qwen2.5 | 0.90% | **1.52%** | 51.8% | 50.3% |
+| FinBERT | 0.92% | 1.53% | 52.5% | 51.7% |
+| DeBERTa | 0.93% | 1.53% | 53.6% | 49.8% |
+| Llama-FinSent | 0.94% | 1.62% | **55.2%** | 51.3% |
+
+All models cluster within 0.04% MAE (gap) and 0.10% (cc). The sentiment source is not the bottleneck — direction accuracy is ~50% regardless of model.
+
+**Phase 5 — Original papers never checked naive**:
+
+Verified the original FinBERT-LSTM paper's claim of ~1.4% MAPE on NDX index. Downloaded NDX daily data for their study period (Oct 2020 - Sep 2022):
+- NDX naive MAPE: **1.19%**
+- Paper's reported MAPE: **1.40%**
+- **Paper's model is 17% worse than naive on their own data.**
+
+Additionally, the original paper had a data leakage bug (MinMaxScaler fit on test set), ran a single seed with no validation set, and trained for 100 epochs with no early stopping — all of which artificially inflate reported performance. The DeBERTa-TimesNet paper also never compared against naive.
+
+**Result**: Every LSTM-based sentiment stock prediction approach tested — across 6 feature configurations, 5 sentiment models, 2 prediction targets, and both raw price and returns — fails to beat predicting "no change." The entire FinBERT-LSTM research line does not produce useful predictions.
+
+**Decision**: LSTM + sentiment features is a dead end for next-day stock prediction at this data scale (~240 trading days per ticker). The finding from Entry 38 holds: Ridge + Metric A structured news features is the only approach that beats naive on our data. The key difference is not the model architecture (LSTM vs Ridge) but the features: 30 LLM-extracted structured news dimensions capture fundamentally different information than a single sentiment scalar.
+
+**References**: `src/lstm_feature_experiment.py`, `src/lstm_sentiment_compare.py`, `data/output/lstm_feature_experiment/`, Entries 37, 38, A16, A17

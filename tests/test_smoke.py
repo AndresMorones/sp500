@@ -11,6 +11,7 @@ import sys
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC_DIR = os.path.join(BASE_DIR, "src")
+PHASE1_DIR = os.path.join(SRC_DIR, "phase1_metric_analysis")
 OUTPUT = os.path.join(BASE_DIR, "data", "output", "scores_output.csv")
 
 EXPECTED_TICKERS = {"AAPL", "AMZN", "GOOGL", "META", "MSFT", "NVDA", "TSLA"}
@@ -35,8 +36,8 @@ FLOAT_COLUMNS = [
 def run_pipeline():
     """Run score_pipeline.py and return exit code."""
     result = subprocess.run(
-        [sys.executable, os.path.join(SRC_DIR, "score_pipeline.py")],
-        capture_output=True, text=True, cwd=SRC_DIR,
+        [sys.executable, os.path.join(PHASE1_DIR, "score_pipeline.py")],
+        capture_output=True, text=True, cwd=PHASE1_DIR,
     )
     if result.returncode != 0:
         print("STDOUT:", result.stdout[-2000:] if len(result.stdout) > 2000 else result.stdout)

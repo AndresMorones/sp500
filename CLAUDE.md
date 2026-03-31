@@ -21,22 +21,47 @@ When ending a session: update journal.md with what was tried, update open-questi
 sp500/
 ├── data/
 │   ├── raw/          # Source CSVs (price.csv, news.csv, S&P 500, individual stock histories)
-│   └── output/       # Generated outputs (scores_output.csv, baseline_predictions.csv)
+│   └── output/       # Generated outputs (scores_output.csv, baseline_predictions.csv,
+│                     #   news_phase2_*.csv, *_lstm_results/, lstm_feature_experiment/)
 ├── docs/             # objective.md, journal.md, open-questions.md
-├── src/              # Production pipeline code
-│   ├── common.py            # Shared constants, math helpers, OLS, scoring functions, data loaders
-│   ├── score_pipeline.py    # Main scoring pipeline — produces scores_output.csv
-│   ├── score_analysis.py    # Metric evaluation (overlap, Cohen's d, Precision@K, forward returns)
-│   ├── rank_divergence.py   # Per-ticker rank comparison between metrics
-│   ├── beta_window_test.py  # Out-of-sample beta window and model comparison
-│   └── model_baseline.py    # Stage 2 baseline models (Ridge, LASSO, LightGBM)
+├── src/
+│   ├── common.py     # Shared constants, math helpers, OLS, scoring functions, data loaders
+│   │
+│   ├── phase1_metric_analysis/       # Phase 1: Metric analysis (A_cc, A_gap, CV, etc.)
+│   │   ├── score_pipeline.py         # Main scoring pipeline — produces scores_output.csv
+│   │   ├── score_analysis.py         # Metric evaluation (overlap, Cohen's d, Precision@K)
+│   │   ├── rank_divergence.py        # Per-ticker rank comparison between metrics
+│   │   ├── beta_window_test.py       # Out-of-sample beta window and model comparison
+│   │   ├── model_baseline.py         # Price-only baseline models (Ridge, LASSO, LightGBM)
+│   │   └── visualizations/           # Impact matrix HTML, scoring option comparisons
+│   │
+│   ├── phase2_news_scoring/          # Phase 2: News categorization & scoring
+│   │   ├── news_scorer.py            # Claude CLI orchestrator (Phase 1 discovery + Phase 2 scoring)
+│   │   ├── news_scorer_parallel.py   # Parallel Phase 1 category discovery
+│   │   └── news_scorer_phase2_parallel.py  # Parallel Phase 2 scoring per ticker
+│   │
+│   ├── phase3_prediction/            # Phase 3: Predictive models
+│   │   ├── config.py                 # Shared hyperparameters (LSTM, Ridge, LightGBM)
+│   │   ├── data_loader.py            # Feature engineering, sequence creation, train/val/test split
+│   │   ├── compare.py                # Cross-model comparison report
+│   │   ├── price_model/              # Track 1: OHLCV → return → price (7 tickers)
+│   │   ├── metric_a_model/           # Track 2: news categories → A score → price (GOOGL)
+│   │   └── results/                  # Output CSVs per model
+│   │
+│   └── llm_baseline_and_feature_comparison/  # LLM sentiment model & feature comparison
+│       ├── config.py                 # Model registry (FinBERT, DeBERTa, Gemma, Qwen, Llama)
+│       ├── 4_news_sentiment_analysis.py  # Sentiment inference (classifier + generative)
+│       ├── 5_MLP_model.py            # MLP baseline (price-only)
+│       ├── 6_LSTM_model.py           # LSTM baseline (price-only)
+│       ├── 7_lstm_model_bert.py      # Hybrid LSTM+sentiment (Config C equivalent)
+│       ├── run_all_models.py         # Master orchestrator for all sentiment models
+│       ├── compare_all_models.py     # Cross-model comparison + charts
+│       ├── analysis.py               # Per-ticker metrics + visualization
+│       ├── lstm_feature_experiment.py # 6 feature configs × 2 targets × 5 seeds × 7 tickers
+│       └── lstm_sentiment_compare.py  # Config C across 5 sentiment models
+│
 ├── tests/
 │   └── test_smoke.py        # Pipeline invariant checks (run with pytest or standalone)
-├── sandbox/          # Exploration tools — not production
-│   ├── combined_news_impact_matrix.html
-│   ├── combined_news_impact_matrix.py
-│   ├── compare_scoring_options.py
-│   └── Notes
 ├── requirements.txt  # All dependencies — update whenever a new import is added
 ├── .gitignore
 └── CLAUDE.md
@@ -49,7 +74,7 @@ All non-stdlib imports must be listed in `requirements.txt`, grouped by the scri
 ## Running the pipeline
 
 ```bash
-python src/score_pipeline.py
+python src/phase1_metric_analysis/score_pipeline.py
 ```
 Outputs `data/output/scores_output.csv`. Uses rolling 120-day single beta estimation per ticker. Two return types per day: gap (prev close -> open) and close-to-close (prev close -> close).
 
@@ -78,13 +103,13 @@ Run this checklist after any change to scoring logic or data processing:
 
 ```bash
 # 1. Run pipeline — expect 0 NaN, ~1500+ rows, all 7 tickers
-python src/score_pipeline.py
+python src/phase1_metric_analysis/score_pipeline.py
 
 # 2. Run metric evaluation — check overlap matrices, precision@K
-python src/score_analysis.py
+python src/phase1_metric_analysis/score_analysis.py
 
 # 3. Run rank divergence — check for anomalies per ticker
-python src/rank_divergence.py
+python src/phase1_metric_analysis/rank_divergence.py
 ```
 
 **Expected invariants:**
@@ -104,7 +129,7 @@ Every experiment must follow this protocol:
 1. State the hypothesis as an open question in `docs/open-questions.md` (if not already there)
 2. Define the success criterion BEFORE running — what result would make you adopt vs reject the change?
    - Example: "If precision@10 > 80%, adopt" or "If MAE improves by >5%, switch"
-3. Write the experiment script in `src/` (not sandbox — experiments produce evidence, not toys)
+3. Write the experiment script in the appropriate `src/` subdirectory
 
 ### After running
 4. Record raw results in `docs/journal.md` using the entry format below
@@ -158,13 +183,13 @@ When evaluating whether a metric or formula change is an improvement, use multip
 
 | Evaluation | What it tests | Script |
 |------------|---------------|--------|
-| News presence (hit rate) | Does this metric's top-K contain more news days? | `score_analysis.py` |
-| Cohen's d | Does this metric separate news vs no-news days by magnitude? | `score_analysis.py` |
-| Precision@K curve | How does hit rate degrade as K increases? | `score_analysis.py` |
-| Per-ticker consistency | Does it work equally well across all 7 tickers? (std of rates) | `score_analysis.py` |
-| Forward returns | Do extreme events continue or revert? (information vs noise) | `score_analysis.py` |
+| News presence (hit rate) | Does this metric's top-K contain more news days? | `phase1_metric_analysis/score_analysis.py` |
+| Cohen's d | Does this metric separate news vs no-news days by magnitude? | `phase1_metric_analysis/score_analysis.py` |
+| Precision@K curve | How does hit rate degrade as K increases? | `phase1_metric_analysis/score_analysis.py` |
+| Per-ticker consistency | Does it work equally well across all 7 tickers? (std of rates) | `phase1_metric_analysis/score_analysis.py` |
+| Forward returns | Do extreme events continue or revert? (information vs noise) | `phase1_metric_analysis/score_analysis.py` |
 | Rank stability (bootstrap) | If you drop 10% of data randomly, does the top-50 change? | not yet built |
 | Cross-temporal validation | Train on first half, score second half — does ranking hold? | not yet built |
 | Sentiment correlation | For news days, does score magnitude correlate with headline sentiment? | requires NLP (stage 2) |
 
-Build new evaluations as separate functions in `score_analysis.py`. Keep them modular — each should print its own section header and be independently runnable.
+Build new evaluations as separate functions in `src/phase1_metric_analysis/score_analysis.py`. Keep them modular — each should print its own section header and be independently runnable.
