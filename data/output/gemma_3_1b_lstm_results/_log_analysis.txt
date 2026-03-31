@@ -1,0 +1,45 @@
+======================================================================
+Model Comparison — Per-Ticker Results
+======================================================================
+
+MAE:
+Model    MLP  LSTM  FinBERT-LSTM
+Ticker                          
+AAPL    4.42  3.87          2.31
+AMZN    1.95  1.93          2.90
+GOOGL   1.33  3.11          1.60
+META   58.99 30.15         35.56
+MSFT    3.12  2.50          3.00
+NVDA    5.70  3.60          6.58
+TSLA   12.92  6.65          9.39
+
+MAPE_%:
+Model    MLP  LSTM  FinBERT-LSTM
+Ticker                          
+AAPL    1.92  1.68          1.00
+AMZN    1.04  1.04          1.54
+GOOGL   0.81  1.90          0.98
+META   10.21  5.21          6.15
+MSFT    0.74  0.59          0.71
+NVDA    4.29  2.72          4.89
+TSLA    5.23  2.69          3.80
+
+======================================================================
+Aggregate (mean across tickers)
+======================================================================
+               MAE  MAPE_%
+Model                     
+MLP          12.63    3.46
+LSTM          7.40    2.26
+FinBERT-LSTM  8.76    2.72
+
+Generating per-ticker plots in /Users/ivonne/AndresGithub/sp500/data/output/gemma_3_1b_lstm_results/plots/
+  /Users/ivonne/AndresGithub/sp500/data/output/gemma_3_1b_lstm_results/plots/AAPL_comparison.png
+  /Users/ivonne/AndresGithub/sp500/data/output/gemma_3_1b_lstm_results/plots/AMZN_comparison.png
+  /Users/ivonne/AndresGithub/sp500/data/output/gemma_3_1b_lstm_results/plots/GOOGL_comparison.png
+  /Users/ivonne/AndresGithub/sp500/data/output/gemma_3_1b_lstm_results/plots/META_comparison.png
+  /Users/ivonne/AndresGithub/sp500/data/output/gemma_3_1b_lstm_results/plots/MSFT_comparison.png
+  /Users/ivonne/AndresGithub/sp500/data/output/gemma_3_1b_lstm_results/plots/NVDA_comparison.png
+  /Users/ivonne/AndresGithub/sp500/data/output/gemma_3_1b_lstm_results/plots/TSLA_comparison.png
+
+Summary saved to /Users/ivonne/AndresGithub/sp500/data/output/gemma_3_1b_lstm_results/plots/model_comparison.csv

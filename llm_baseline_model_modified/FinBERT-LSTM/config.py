@@ -14,7 +14,9 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 RAW_DIR = os.path.join(PROJECT_ROOT, "data", "raw")
 
 # --- Sentiment model selection ---
-SENTIMENT_MODEL = "oopere/Llama-FinSent-S"
+# Override at runtime via env var (used by run_all_models.py):
+#   FINBERT_SENTIMENT_MODEL=ProsusAI/finbert python 4_news_sentiment_analysis.py
+SENTIMENT_MODEL = os.getenv("FINBERT_SENTIMENT_MODEL", "ProsusAI/finbert")
 
 # Model registry: type determines inference path, tag determines output folder
 _MODEL_REGISTRY = {
@@ -26,9 +28,9 @@ _MODEL_REGISTRY = {
         "type": "classifier",
         "tag": "deberta_v3_lstm_results",
     },
-    "google/gemma-3n-E2B-it": {
+    "google/gemma-3-1b-it": {
         "type": "generative",
-        "tag": "gemma_3n_lstm_results",
+        "tag": "gemma_3_1b_lstm_results",
     },
     "Qwen/Qwen2.5-1.5B-Instruct": {
         "type": "generative",
@@ -37,6 +39,10 @@ _MODEL_REGISTRY = {
     "oopere/Llama-FinSent-S": {
         "type": "generative",
         "tag": "llama_finsent_lstm_results",
+    },
+    "meta-llama/Llama-3.2-1B-Instruct": {
+        "type": "generative",
+        "tag": "llama32_1b_lstm_results",
     },
 }
 

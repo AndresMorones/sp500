@@ -1,0 +1,24 @@
+# Requirements for FinBERT-LSTM multi-model sentiment pipeline
+# New laptop setup: python3.11 -m venv .venv && source .venv/bin/activate && pip install -r requirements_llm.txt
+
+# --- PyTorch (Apple Silicon) ---
+# Install CPU+MPS build (no CUDA needed on Mac):
+torch>=2.1
+torchvision>=0.16
+
+# --- TensorFlow (Apple Silicon GPU via Metal) ---
+tensorflow>=2.15
+tensorflow-metal            # Enables Metal GPU for Keras LSTM training on M-series chips
+
+# --- HuggingFace / Transformers ---
+transformers>=4.40
+accelerate>=0.27            # Required for device_map= support
+sentencepiece               # Needed by some tokenizers (LLaMA, Gemma)
+protobuf>=3.20              # Required by sentencepiece
+
+# --- Data / ML utilities ---
+numpy>=1.24
+pandas>=2.0
+scikit-learn>=1.3
+matplotlib>=3.7
+scipy>=1.11

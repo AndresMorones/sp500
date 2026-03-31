@@ -2,130 +2,144 @@
   "ticker": "GOOGL",
   "categories": [
     {
+      "id": "materiality",
+      "label": "Materiality",
+      "description": "Earnings Beat/Miss, Product Recall, Major Contract Win/Loss, Bankruptcy Filing, Regulatory Penalty, M&A Completion. 0 = noise with no impact, 10 = direct large impact on revenue/margins/TAM."
+    },
+    {
+      "id": "surprise_unexpectedness",
+      "label": "Surprise & Unexpectedness",
+      "description": "Sudden CEO Departure, Unannounced Acquisition, Regulatory Shock, Unexpected Dividend Cut, Flash Pre-announcement. 0 = fully expected outcome, 10 = completely unexpected outcome."
+    },
+    {
+      "id": "sentiment_strength",
+      "label": "Sentiment Strength",
+      "description": "Earnings Blowout, Catastrophic Loss, Transformative Partnership, Fraud Revelation, Analyst Consensus Reversal. 0 = neutral tone, 10 = extremely strong positive or negative signal."
+    },
+    {
+      "id": "directional_clarity",
+      "label": "Directional Clarity",
+      "description": "Clear Guidance Raise/Cut, FDA Approval/Rejection, Definitive Merger Agreement, Regulatory Ruling, Contract Win/Loss. 0 = ambiguous/could go either way, 10 = unambiguously good or bad."
+    },
+    {
+      "id": "information_density",
+      "label": "Information Density",
+      "description": "Full Earnings Release, Detailed Guidance, SEC Filing with Data, Analyst Research Report, Verified Technical Data. 0 = pure opinion/speculation, 10 = hard data with specific numbers."
+    },
+    {
+      "id": "impact_timeline_duration",
+      "label": "Impact Timeline & Duration",
+      "description": "Score how long the price impact is likely to persist: 0-3 = fades within days (sentiment-only, speculative, one-time); 4-6 = resolves within weeks to months; 7-10 = permanently alters business trajectory (structural, confirmed, recurring)."
+    },
+    {
+      "id": "narrative_shift",
+      "label": "Narrative Shift",
+      "description": "CEO Scandal reversing trust, Earnings Miss breaking growth story, Turnaround Success, Business Model Pivot. 0 = reinforces existing narrative, 10 = fundamentally changes investment thesis."
+    },
+    {
+      "id": "scope_breadth",
+      "label": "Scope & Breadth",
+      "description": "Full Company Guidance, CEO Departure, Capital Structure Change, Single Product Issue, Regional Sales Miss. 0 = only this company/product, 5 = sector-wide, 10 = macro/market-wide."
+    },
+    {
+      "id": "competitive_impact",
+      "label": "Competitive Impact",
+      "description": "Competitor Bankruptcy, Patent Win/Loss, Market Share Data Release, Competitor Product Launch, Pricing War. 0 = no competitive effect, 10 = major competitive shift."
+    },
+    {
+      "id": "regulatory_risk",
+      "label": "Regulatory Risk",
+      "description": "Antitrust Investigation, FDA Rejection, SEC Investigation, Tax Ruling, License Revocation, Compliance Violation. 0 = no regulatory angle, 10 = major legal/regulatory event."
+    },
+    {
+      "id": "financial_result_surprise",
+      "label": "Financial Result Surprise",
+      "description": "EPS Beat/Miss vs Consensus, Revenue vs Guidance, Margin Surprise, Cash Flow Miss, Financial Restatement. 0 = no financial results or results exactly match expectations, 10 = figures dramatically exceed or miss prior guidance and analyst expectations."
+    },
+    {
       "id": "earnings_financial_results",
       "label": "Earnings & Financial Results",
-      "description": "Quarterly earnings reports, revenue and EPS figures, profit margins, dividend announcements, buyback programs, and guidance vs expectations."
+      "description": "Earnings Release, Revenue Guidance, Profit Warning, Annual Report, Quarterly Filing, Financial Restatement. Score how central this news is to the company's reported financial performance."
     },
     {
       "id": "market_sector_sentiment",
       "label": "Market & Sector Sentiment",
-      "description": "Broad market roundups, tech sector trends, macro news mentioning Alphabet, index moves, and cross-sector rotation narratives."
+      "description": "Sector Rotation, Industry-wide Regulation, Commodity Price Move, Macro Data Release, Fed Decision, Peer Earnings. Score how much this news reflects broad market or sector-level dynamics."
     },
     {
       "id": "analyst_consensus_signals",
       "label": "Analyst Consensus Signals",
-      "description": "Analyst upgrades, downgrades, price target changes, buy/sell ratings, and market capitalization milestone commentary."
+      "description": "Rating Upgrade/Downgrade, Price Target Revision, Analyst Initiation, Consensus Estimate Change, Analyst Day. Score how much this news reflects analyst community views on the stock."
     },
     {
-      "id": "antitrust_regulatory_legal",
-      "label": "Antitrust, Regulatory & Legal",
-      "description": "DOJ search monopoly case, EU fines and DMA investigations, UK CMA probes, Play Store rulings, ad tech trials, privacy lawsuits, and global regulatory enforcement actions."
+      "id": "catalyst_immediacy",
+      "label": "Catalyst Immediacy",
+      "description": "Trading Halt, Breaking Announcement, Flash Pre-announcement, Scheduled Earnings, Long-term Roadmap Reveal. 0 = background/long-term context only, 10 = immediate market-moving catalyst."
     },
     {
-      "id": "ai_product_innovation",
-      "label": "AI & Product Innovation",
-      "description": "Gemini model launches and controversies, AlphaFold breakthroughs, custom chip development (Trillium, Axion), AI search features, DeepMind research, and Pixel hardware releases."
+      "id": "systemic_contagion_risk",
+      "label": "Systemic & Contagion Risk",
+      "description": "Banking Sector Stress, Supply Chain Collapse, Industry-wide Regulatory Sweep, Peer Earnings Warning, Macro Shock. Score how much this news signals risk spreading beyond the single company."
     },
     {
-      "id": "cloud_enterprise_partnerships",
-      "label": "Cloud & Enterprise Partnerships",
-      "description": "Google Cloud deals with enterprise customers, multi-year strategic alliances, AI integration partnerships, and competitive positioning against AWS and Azure."
+      "id": "management_credibility",
+      "label": "Management & Credibility",
+      "description": "CEO/CFO Appointment or Resignation, Insider Trading, Executive Misconduct, Board Restructuring, Governance Change. Score how much this news affects trust in and stability of leadership."
     },
     {
-      "id": "infrastructure_energy_investment",
-      "label": "Infrastructure & Energy Investment",
-      "description": "Data center construction globally, nuclear and renewable energy procurement, clean energy agreements, and multi-billion dollar regional infrastructure commitments."
+      "id": "capital_allocation_signal",
+      "label": "Capital Allocation Signal",
+      "description": "Share Buyback Program, Dividend Initiation/Cut, Major CapEx Announcement, Debt Issuance, Equity Offering. Score how much this news reveals management's capital deployment priorities."
     },
     {
-      "id": "acquisitions_strategic_investments",
-      "label": "Acquisitions & Strategic Investments",
-      "description": "Major acquisition targets (Wiz, HubSpot), talent acquisitions (Character.AI), minority investments (Flipkart, Anthropic), and portfolio adjustments."
+      "id": "valuation_growth_outlook",
+      "label": "Valuation & Growth Outlook",
+      "description": "Long-term Growth Rate Revision, Margin Expansion/Compression, TAM Update, Business Model Change, Multiple Re-rating. Score how much this news changes the long-term growth or valuation narrative."
     },
     {
-      "id": "leadership_workforce_corporate",
-      "label": "Leadership, Workforce & Corporate",
-      "description": "C-suite changes, layoffs and restructuring, executive departures, corporate governance actions, and organizational realignments."
+      "id": "sentiment_direction",
+      "label": "Sentiment Direction",
+      "description": "Score the net directional tone of the news: 0 = entirely negative/bearish, 5 = neutral or balanced with no clear lean, 10 = entirely positive/bullish. Score the article's net tone \u2014 a mixed article with more negative weight scores 3, not 5."
+    },
+    {
+      "id": "gemini_ai_innovation",
+      "label": "Gemini & DeepMind AI Development",
+      "description": "Development and deployment of Google's proprietary AI models (Gemini launches, delays, bias fixes), DeepMind research breakthroughs (AlphaFold), custom AI chips (Trillium, Axion), and strategic AI talent/model acquisitions such as Character.AI and Anthropic investment."
+    },
+    {
+      "id": "search_ad_antitrust",
+      "label": "Search & Ad Tech Antitrust Litigation",
+      "description": "Multi-front legal battles over Google's dominance in search and digital advertising, including the DOJ monopoly ruling and breakup proposals, ad tech trials in the US and EU, Epic Games/Play Store verdicts, and EU Digital Markets Act investigations."
+    },
+    {
+      "id": "cloud_enterprise_growth",
+      "label": "Google Cloud Enterprise Expansion",
+      "description": "Google Cloud partnerships with enterprise clients (Vodafone, CMA CGM, Hitachi, Bayer, Motorola), Vertex AI platform deals with model providers like Mistral, and cloud revenue as a key growth and AI monetization driver."
+    },
+    {
+      "id": "datacenter_energy_infrastructure",
+      "label": "Data Center & Energy Infrastructure",
+      "description": "Multi-billion dollar global data center investments (Malaysia, UK, Thailand, South Carolina, Indiana), nuclear power agreements with Kairos for small modular reactors, renewable energy PPAs, and submarine cable deployments to support AI compute demand."
+    },
+    {
+      "id": "waymo_autonomous_mobility",
+      "label": "Waymo Autonomous Vehicle Operations",
+      "description": "Waymo robotaxi safety incidents and NHTSA probes, service expansion to new markets like Los Angeles, software recalls for automated driving systems, and California regulatory oversight of driverless deployment."
+    },
+    {
+      "id": "youtube_content_commerce",
+      "label": "YouTube Platform & Commerce",
+      "description": "YouTube advertising revenue trends and competitive pressures, e-commerce integrations such as the Shopee partnership in Southeast Asia, creator features like context notes, and channel enforcement actions including content policy decisions."
+    },
+    {
+      "id": "global_platform_governance",
+      "label": "Global Content & Platform Compliance",
+      "description": "Managing Google and YouTube content obligations across jurisdictions with conflicting demands, including Russia content fines and YouTube throttling, Hong Kong court-ordered video blocking, India app store disputes, and government pressure on content moderation."
+    },
+    {
+      "id": "user_data_privacy",
+      "label": "User Data & Privacy Practices",
+      "description": "Chrome third-party cookie deprecation plans and UK CMA oversight, privacy lawsuit settlements and browsing data destruction orders, EU and Irish data protection investigations into AI training data, and children's online safety compliance obligations."
     }
-  ],
-  "dimensions": [
-    {
-      "id": "materiality",
-      "scale": "1=trivial mention in a roundup or minor operational detail with no revenue/margin implications, 10=direct large-scale impact on core revenue streams, margins, or total addressable market"
-    },
-    {
-      "id": "surprise",
-      "scale": "1=outcome fully expected or in line with prior guidance and consensus, 10=outcome completely unexpected with no prior indication or dramatically divergent from expectations"
-    },
-    {
-      "id": "temporal_horizon",
-      "scale": "1=affects the next few trading days only with no lasting structural consequence, 10=structural shift that reshapes business model, competitive position, or regulatory environment for years"
-    },
-    {
-      "id": "sentiment_strength",
-      "scale": "1=neutral or purely informational tone with no positive or negative valence, 10=extremely strong positive or negative tone conveying major triumph or severe threat"
-    },
-    {
-      "id": "information_density",
-      "scale": "1=pure opinion, speculation, or vague commentary with no specific data, 10=hard quantitative data including specific financial figures, deal values, or measurable outcomes"
-    },
-    {
-      "id": "directional_clarity",
-      "scale": "1=ambiguous implications that could reasonably be interpreted as positive or negative, 10=unambiguously good or bad with clear directional impact on the company"
-    },
-    {
-      "id": "scope",
-      "scale": "1=affects only this company with no broader implications, 5=sector-wide implications for tech or digital advertising, 10=macro or market-wide event affecting all equities"
-    },
-    {
-      "id": "competitive_impact",
-      "scale": "1=no effect on competitive positioning relative to peers, 10=major shift in competitive landscape altering market share dynamics or strategic positioning"
-    },
-    {
-      "id": "regulatory_risk",
-      "scale": "1=no regulatory, legal, or government enforcement angle, 10=existential regulatory threat such as forced structural separation or business-line divestiture"
-    },
-    {
-      "id": "management_signal",
-      "scale": "1=no leadership, strategy, or organizational change angle, 10=major strategic pivot, key executive transition, or fundamental organizational restructuring"
-    },
-    {
-      "id": "expected_duration",
-      "scale": "1=transient story that resolves within a single news cycle, 10=persistent story remaining relevant for months with ongoing developments and follow-up coverage"
-    },
-    {
-      "id": "narrative_shift",
-      "scale": "1=reinforces the prevailing investment thesis and existing market narrative, 10=fundamentally challenges or reframes the core thesis around the company"
-    },
-    {
-      "id": "repeatedness",
-      "scale": "1=rehash or incremental update of a previously well-reported story with no new information, 10=first report of genuinely new information not previously in the public domain"
-    },
-    {
-      "id": "financial_result_surprise",
-      "scale": "1=no financial results reported or results exactly match prior guidance and consensus expectations, 10=reported figures dramatically exceed or miss analyst expectations as described in the article"
-    }
-  ],
-  "dimension_rationale": {
-    "kept": {
-      "materiality": "Ranges from trivial roundup mentions and minor regional partnerships to DOJ structural breakup proposals and quarterly earnings driving $2 trillion valuation milestones",
-      "surprise": "Ranges from scheduled earnings conference call announcements and expected regulatory filings to the unexpected Gemini image generation pause, the surprise first-ever dividend announcement, and the DOJ requesting full breakup remedies",
-      "temporal_horizon": "Ranges from daily market roundups and transient sector rotation stories to multi-year antitrust proceedings, structural AI strategy shifts, and decade-long infrastructure investment commitments",
-      "sentiment_strength": "Ranges from neutral partnership announcements and corporate governance filings to strongly positive earnings beats with first-ever dividends and strongly negative DOJ breakup threats and billion-euro fines",
-      "information_density": "Ranges from vague market commentary and opinion pieces about AI competition to precise earnings releases with specific EPS, revenue, margin figures, and deal values in the billions",
-      "directional_clarity": "Ranges from highly ambiguous antitrust outcomes where remedies are uncertain and timelines unknown to unambiguous earnings beats, clear fine amounts, and definitive court rulings",
-      "scope": "Ranges from GOOGL-only events like CFO hire and Gemini pause to sector-wide AI regulation discussions and macro market selloffs affecting all equities",
-      "competitive_impact": "Ranges from routine cloud partnerships with no competitive shift to Character.AI talent acquisition in the AI race, Gemini vs OpenAI positioning, and nuclear energy deals reshaping data center economics",
-      "regulatory_risk": "Dominant theme for GOOGL with massive variation from articles with zero regulatory angle to DOJ proposing structural breakup, EU upholding multi-billion euro fines, and simultaneous antitrust actions across US, EU, UK, India, and Canada",
-      "management_signal": "Ranges from articles with no leadership dimension to hiring a new CFO from Eli Lilly, CEO Pichai addressing Gemini bias as unacceptable, major layoffs across multiple divisions, and reorganizing the Gemini team under DeepMind",
-      "expected_duration": "Ranges from one-day market roundups and minor product tests to antitrust proceedings spanning years with multiple appeals, and structural AI investment narratives persisting across the entire corpus period",
-      "narrative_shift": "Ranges from routine reinforcement of the AI-growth-and-cloud thesis to narrative-altering events like the DOJ breakup proposal challenging the conglomerate model, Q4 cloud miss undermining the AI monetization thesis, and the first-ever dividend signaling a new capital return posture",
-      "repeatedness": "High variation driven by the corpus structure: many stories have multiple update articles and press release duplicates scoring low, while first reports of the Wiz acquisition talks, Character.AI licensing deal, and Gemini delay score high",
-      "financial_result_surprise": "Clear variation across four earnings cycles: Q4 2023 cloud revenue missed expectations driving a sharp selloff, Q1 2024 beat expectations with surprise first dividend, and Q3 2024 beat on cloud acceleration \u2014 while the majority of non-earnings articles score at the floor"
-    },
-    "dropped": {
-      "actionability": "Most GOOGL articles cluster into two groups \u2014 directly tradeable news like earnings and deal rumors vs background regulatory and partnership stories \u2014 without sufficient gradation in between to be informative as a scoring dimension",
-      "controversy": "GOOGL articles rarely show genuine investor division; antitrust risk and AI competition are broadly agreed-upon concerns where investors differ on magnitude rather than direction, producing little meaningful variation on a controversy scale"
-    },
-    "added": {}
-  }
+  ]
 }

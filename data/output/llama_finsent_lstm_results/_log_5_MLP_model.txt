@@ -1,0 +1,21 @@
+/Users/ivonne/AndresGithub/sp500/llm_baseline_model_modified/FinBERT-LSTM/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+WARNING:tensorflow:5 out of the last 5 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x12f4e0f70> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+WARNING:tensorflow:6 out of the last 6 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x12f6eeca0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+/Users/ivonne/AndresGithub/sp500/llm_baseline_model_modified/FinBERT-LSTM/5_MLP_model.py:120: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  avg_mae = combined.groupby("ticker").apply(
+/Users/ivonne/AndresGithub/sp500/llm_baseline_model_modified/FinBERT-LSTM/5_MLP_model.py:122: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  avg_mape = combined.groupby("ticker").apply(
+============================================================
+MLP Model — Per-Ticker Results
+============================================================
+AAPL: MAE=2.23, MAPE=0.0097 (0.97%), Acc=0.9903
+AMZN: MAE=1.99, MAPE=0.0107 (1.07%), Acc=0.9893
+GOOGL: MAE=2.31, MAPE=0.0140 (1.40%), Acc=0.9860
+META: MAE=46.18, MAPE=0.0799 (7.99%), Acc=0.9201
+MSFT: MAE=2.86, MAPE=0.0068 (0.68%), Acc=0.9932
+NVDA: MAE=5.49, MAPE=0.0414 (4.14%), Acc=0.9586
+TSLA: MAE=7.07, MAPE=0.0286 (2.86%), Acc=0.9714
+
+Aggregate: MAE=9.73, MAPE=0.0273 (2.73%)
+Results saved to /Users/ivonne/AndresGithub/sp500/data/output/llama_finsent_lstm_results/mlp_results.csv

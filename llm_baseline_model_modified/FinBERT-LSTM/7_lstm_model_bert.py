@@ -106,22 +106,37 @@ def run_ticker(ticker, stock_df, sentiment_df):
 
 
 def main():
+    import os
     stock_df = pd.read_csv(STOCK_PRICE_CSV)
     sentiment_df = pd.read_csv(SENTIMENT_CSV)
-    all_results = []
+
+    # Checkpoint: resume from existing output — skip already-completed tickers
+    completed = set()
+    saved_rows = []
+    if os.path.exists(BERT_LSTM_RESULTS_CSV):
+        existing = pd.read_csv(BERT_LSTM_RESULTS_CSV)
+        completed = set(existing["ticker"].unique())
+        saved_rows = [existing]
+        if completed >= set(TICKERS):
+            print("FinBERT-LSTM: all tickers already complete — skipping.")
+            return
+        print(f"FinBERT-LSTM: resuming, already done: {sorted(completed)}")
 
     print("=" * 60)
     print("FinBERT-LSTM Model — Per-Ticker Results")
     print("=" * 60)
 
     for ticker in TICKERS:
+        if ticker in completed:
+            print(f"{ticker}: skipped (checkpoint)")
+            continue
         results, mae, mape = run_ticker(ticker, stock_df, sentiment_df)
-        all_results.append(results)
+        saved_rows.append(results)
+        # Save immediately after each ticker — crash-safe
+        pd.concat(saved_rows, ignore_index=True).to_csv(BERT_LSTM_RESULTS_CSV, index=False)
         print(f"{ticker}: MAE={mae:.2f}, MAPE={mape:.4f} ({mape*100:.2f}%), Acc={1-mape:.4f}")
 
-    combined = pd.concat(all_results, ignore_index=True)
-    combined.to_csv(BERT_LSTM_RESULTS_CSV, index=False)
-
+    combined = pd.read_csv(BERT_LSTM_RESULTS_CSV)
     avg_mae = combined.groupby("ticker").apply(
         lambda g: mean_absolute_error(g["actual"], g["predicted"])).mean()
     avg_mape = combined.groupby("ticker").apply(

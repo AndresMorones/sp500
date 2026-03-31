@@ -39,8 +39,9 @@ _PROMPT_TEMPLATE = (
 
 # Models that need chat template wrapping (instruction-tuned, not fine-tuned on raw prompts)
 _CHAT_TEMPLATE_MODELS = {
-    "google/gemma-3n-E2B-it",
+    "google/gemma-3-1b-it",
     "Qwen/Qwen2.5-1.5B-Instruct",
+    "meta-llama/Llama-3.2-1B-Instruct",
 }
 
 
@@ -79,17 +80,32 @@ def run_classifier_inference(texts):
 # ---------------------------------------------------------------------------
 # Generative path (Gemma, Qwen, Llama-FinSent)
 # ---------------------------------------------------------------------------
+def _get_torch_device():
+    """Auto-detect best available device: MPS (Apple Silicon GPU) > CUDA > CPU."""
+    import torch
+    if torch.backends.mps.is_available():
+        print("Device: MPS (Apple Silicon GPU)")
+        return "mps", torch.float16
+    elif torch.cuda.is_available():
+        print("Device: CUDA GPU")
+        return "cuda", torch.float16
+    else:
+        print("Device: CPU (no GPU found)")
+        return "cpu", torch.float32
+
+
 def load_generative_model():
     import torch
     from transformers import AutoTokenizer, AutoModelForCausalLM
 
-    print(f"Loading generative model: {SENTIMENT_MODEL}")
+    device, dtype = _get_torch_device()
+    print(f"Loading generative model: {SENTIMENT_MODEL} [{dtype}]")
     tokenizer = AutoTokenizer.from_pretrained(
         SENTIMENT_MODEL, trust_remote_code=True
     )
     model = AutoModelForCausalLM.from_pretrained(
-        SENTIMENT_MODEL, dtype=torch.float32,
-        device_map="cpu", trust_remote_code=True
+        SENTIMENT_MODEL, dtype=dtype,
+        device_map=device, trust_remote_code=True
     )
     model.eval()
 
@@ -152,6 +168,7 @@ def run_generative_inference(texts):
 
         prompt = build_prompt(text, tokenizer)
         inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
+        inputs = {k: v.to(model.device) for k, v in inputs.items()}
         prompt_len = inputs["input_ids"].shape[1]
 
         with torch.no_grad():

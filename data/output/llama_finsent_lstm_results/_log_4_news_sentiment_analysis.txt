@@ -1,0 +1,59 @@
+/Users/ivonne/AndresGithub/sp500/llm_baseline_model_modified/FinBERT-LSTM/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+`torch_dtype` is deprecated! Use `dtype` instead!
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: de3b88d3-7dfc-4eec-a509-2f5db42983a6)')' thrown while requesting HEAD https://huggingface.co/oopere/Llama-FinSent-S/resolve/main/generation_config.json
+Retrying in 1s [Retry 1/5].
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+Model: oopere/Llama-FinSent-S
+Type: generative
+Articles: 4209
+Device: MPS (Apple Silicon GPU)
+Loading generative model: oopere/Llama-FinSent-S [torch.float16]
+Resumed from checkpoint: 900/4209 already scored
+  [901/4209] 0.3 art/sec, ETA: 176 min, parse failures: 0
+  [1000/4209] 2.2 art/sec, ETA: 25 min, parse failures: 0
+  [1100/4209] 2.3 art/sec, ETA: 23 min, parse failures: 0
+  [1200/4209] 2.3 art/sec, ETA: 22 min, parse failures: 0
+  [1300/4209] 2.3 art/sec, ETA: 21 min, parse failures: 0
+  [1400/4209] 2.3 art/sec, ETA: 20 min, parse failures: 0
+  [1500/4209] 2.3 art/sec, ETA: 20 min, parse failures: 0
+  [1600/4209] 2.3 art/sec, ETA: 19 min, parse failures: 0
+  [1700/4209] 2.3 art/sec, ETA: 18 min, parse failures: 0
+  [1800/4209] 2.3 art/sec, ETA: 17 min, parse failures: 0
+  [1900/4209] 2.3 art/sec, ETA: 17 min, parse failures: 0
+  [2000/4209] 2.3 art/sec, ETA: 16 min, parse failures: 0
+  [2100/4209] 2.3 art/sec, ETA: 15 min, parse failures: 0
+  [2200/4209] 2.3 art/sec, ETA: 14 min, parse failures: 0
+  [2300/4209] 2.3 art/sec, ETA: 14 min, parse failures: 0
+  [2400/4209] 2.3 art/sec, ETA: 13 min, parse failures: 0
+  [2500/4209] 2.3 art/sec, ETA: 12 min, parse failures: 0
+  [2600/4209] 2.3 art/sec, ETA: 11 min, parse failures: 0
+  [2700/4209] 2.3 art/sec, ETA: 11 min, parse failures: 0
+  [2800/4209] 2.3 art/sec, ETA: 10 min, parse failures: 0
+  [2900/4209] 2.3 art/sec, ETA: 9 min, parse failures: 0
+  [3000/4209] 2.3 art/sec, ETA: 9 min, parse failures: 0
+  [3100/4209] 2.4 art/sec, ETA: 8 min, parse failures: 0
+  [3200/4209] 2.4 art/sec, ETA: 7 min, parse failures: 0
+  [3300/4209] 2.4 art/sec, ETA: 6 min, parse failures: 0
+  [3400/4209] 2.4 art/sec, ETA: 6 min, parse failures: 0
+  [3500/4209] 2.4 art/sec, ETA: 5 min, parse failures: 0
+  [3600/4209] 2.4 art/sec, ETA: 4 min, parse failures: 0
+  [3700/4209] 2.4 art/sec, ETA: 4 min, parse failures: 0
+  [3800/4209] 2.4 art/sec, ETA: 3 min, parse failures: 0
+  [3900/4209] 2.4 art/sec, ETA: 2 min, parse failures: 0
+  [4000/4209] 2.4 art/sec, ETA: 1 min, parse failures: 0
+  [4100/4209] 2.4 art/sec, ETA: 1 min, parse failures: 0
+  [4200/4209] 2.4 art/sec, ETA: 0 min, parse failures: 0
+Inference complete. Parse failures: 0/4209 (0.0%)
+Checkpoint cleaned up (run complete)
+Sentiment saved: 1242 (ticker, date) pairs
+Score stats: mean=0.1754, std=0.4905
+Pairs per ticker:
+ticker
+AAPL     193
+AMZN     212
+GOOGL    148
+META     164
+MSFT     174
+NVDA     162
+TSLA     189

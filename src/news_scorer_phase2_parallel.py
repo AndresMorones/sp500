@@ -24,11 +24,13 @@ from news_scorer import (
     load_news, load_trading_dates, bucket_gap_cc,
     load_categories_cache, build_phase2_prompt, call_claude,
     parse_json_response, validate_phase2_response,
+    inject_required_categories,
     ALL_TICKERS, OUT_DIR, BATCH_SIZE, SLEEP_BETWEEN,
 )
 
 # --- Config ---
-MAX_PARALLEL = 7          # all tickers simultaneously
+TARGET_TICKERS_P2 = ["GOOGL"]  # Tickers to score; set to ALL_TICKERS for all 7
+MAX_PARALLEL = len(TARGET_TICKERS_P2)
 OUTPUT_FILE = os.path.join(OUT_DIR, "news_day_features.csv")
 
 
@@ -54,9 +56,7 @@ def write_ticker_rows(ticker, results, schema):
         return
 
     cat_cols = sorted(f"cat_{c['id']}" for c in schema["categories"])
-    dim_cols = sorted(d["id"] for d in schema["dimensions"])
-    fieldnames = (["date", "ticker", "period", "direction", "distinct_events"]
-                  + cat_cols + dim_cols + ["reasoning"])
+    fieldnames = ["date", "ticker", "period", "distinct_events"] + cat_cols + ["reasoning"]
 
     path = ticker_output_path(ticker)
     file_exists = os.path.exists(path)
@@ -70,14 +70,11 @@ def write_ticker_rows(ticker, results, schema):
                 "date": r.get("date", ""),
                 "ticker": ticker,
                 "period": r.get("period", ""),
-                "direction": r.get("direction", ""),
                 "distinct_events": r.get("distinct_events", 1),
                 "reasoning": r.get("reasoning", ""),
             }
             for col in cat_cols:
                 row[col] = r.get(col, 0)
-            for dim_id in dim_cols:
-                row[dim_id] = r.get(dim_id, "")
             writer.writerow(row)
 
 
@@ -149,19 +146,14 @@ def run_ticker_phase2(ticker, schema, gap_buckets, cc_buckets):
 
 def merge_ticker_files(schema_cache):
     """Merge all per-ticker CSVs into the combined output file."""
-    # Collect superset of all columns
+    # Collect superset of all category columns
     all_cat_cols = set()
-    all_dim_ids = set()
-    for ticker, schema in schema_cache.items():
+    for schema in schema_cache.values():
         for c in schema["categories"]:
             all_cat_cols.add(f"cat_{c['id']}")
-        for d in schema["dimensions"]:
-            all_dim_ids.add(d["id"])
     all_cat_cols = sorted(all_cat_cols)
-    all_dim_ids = sorted(all_dim_ids)
 
-    fieldnames = (["date", "ticker", "period", "direction", "distinct_events"]
-                  + all_cat_cols + all_dim_ids + ["reasoning"])
+    fieldnames = ["date", "ticker", "period", "distinct_events"] + all_cat_cols + ["reasoning"]
 
     all_rows = []
     for ticker in ALL_TICKERS:
@@ -179,13 +171,10 @@ def merge_ticker_files(schema_cache):
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         for row in all_rows:
-            # Fill missing columns with defaults
+            # Fill missing category columns with defaults
             for col in all_cat_cols:
                 if col not in row or row[col] == "":
                     row[col] = 0
-            for dim_id in all_dim_ids:
-                if dim_id not in row or row[dim_id] == "":
-                    row[dim_id] = ""
             writer.writerow(row)
 
     print(f"\nMerged {len(all_rows)} rows into {OUTPUT_FILE}")
@@ -193,9 +182,10 @@ def merge_ticker_files(schema_cache):
 
 
 def main():
+    tickers = TARGET_TICKERS_P2
     print("=" * 60)
     print("PARALLEL PHASE 2 SCORER")
-    print(f"Tickers: {ALL_TICKERS}")
+    print(f"Tickers: {tickers}")
     print(f"Max parallel: {MAX_PARALLEL}")
     print(f"Batch size: {BATCH_SIZE}")
     print("=" * 60)
@@ -214,22 +204,24 @@ def main():
     print(f"   Gap buckets: {gap_days} (ticker,date) pairs")
     print(f"   CC buckets:  {cc_days} (ticker,date) pairs")
 
-    # 2. Load Phase 1 schemas
+    # 2. Load Phase 1 schemas and inject the 20 hardcoded categories
     print("\n2. Loading Phase 1 schemas...")
     schema_cache = load_categories_cache()
-    missing = [t for t in ALL_TICKERS if t not in schema_cache]
+    missing = [t for t in tickers if t not in schema_cache]
     if missing:
         print(f"   ERROR: Missing Phase 1 schemas for: {missing}")
         print(f"   Run Phase 1 first for these tickers.")
         sys.exit(1)
-    for t in ALL_TICKERS:
+    # Inject hardcoded categories (handles schemas saved before this change)
+    for t in tickers:
+        schema_cache[t] = inject_required_categories(schema_cache[t])
+    for t in tickers:
         cats = len(schema_cache[t]["categories"])
-        dims = len(schema_cache[t]["dimensions"])
-        print(f"   {t}: {cats} categories, {dims} dimensions")
+        print(f"   {t}: {cats} total categories")
 
     # 3. Show resume state
     print("\n3. Resume state:")
-    for t in ALL_TICKERS:
+    for t in tickers:
         scored = load_ticker_scored(t)
         print(f"   {t}: {len(scored)} entries already scored")
 
@@ -243,7 +235,7 @@ def main():
             executor.submit(
                 run_ticker_phase2, t, schema_cache[t], gap_buckets, cc_buckets
             ): t
-            for t in ALL_TICKERS
+            for t in tickers
         }
         for future in as_completed(futures):
             ticker = futures[future]

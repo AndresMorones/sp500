@@ -1,0 +1,66 @@
+/Users/ivonne/AndresGithub/sp500/llm_baseline_model_modified/FinBERT-LSTM/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 45e66be4-bab0-4f8f-a51a-40daa390b35a)')' thrown while requesting HEAD https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/generation_config.json
+Retrying in 1s [Retry 1/5].
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+Model: Qwen/Qwen2.5-1.5B-Instruct
+Type: generative
+Articles: 4209
+Device: MPS (Apple Silicon GPU)
+Loading generative model: Qwen/Qwen2.5-1.5B-Instruct [torch.float16]
+  [1/4209] 0.4 art/sec, ETA: 165 min, parse failures: 0
+  [100/4209] 1.7 art/sec, ETA: 40 min, parse failures: 8
+  [200/4209] 1.8 art/sec, ETA: 38 min, parse failures: 21
+  [300/4209] 1.8 art/sec, ETA: 36 min, parse failures: 26
+  [400/4209] 1.8 art/sec, ETA: 36 min, parse failures: 40
+  [500/4209] 1.8 art/sec, ETA: 34 min, parse failures: 50
+  [600/4209] 1.8 art/sec, ETA: 33 min, parse failures: 63
+  [700/4209] 1.8 art/sec, ETA: 32 min, parse failures: 68
+  [800/4209] 1.8 art/sec, ETA: 31 min, parse failures: 74
+  [900/4209] 1.8 art/sec, ETA: 30 min, parse failures: 81
+  [1000/4209] 1.8 art/sec, ETA: 29 min, parse failures: 83
+  [1100/4209] 1.8 art/sec, ETA: 28 min, parse failures: 87
+  [1200/4209] 1.8 art/sec, ETA: 27 min, parse failures: 103
+  [1300/4209] 1.8 art/sec, ETA: 27 min, parse failures: 127
+  [1400/4209] 1.8 art/sec, ETA: 26 min, parse failures: 142
+  [1500/4209] 1.8 art/sec, ETA: 25 min, parse failures: 169
+  [1600/4209] 1.8 art/sec, ETA: 24 min, parse failures: 191
+  [1700/4209] 1.8 art/sec, ETA: 24 min, parse failures: 214
+  [1800/4209] 1.8 art/sec, ETA: 23 min, parse failures: 225
+  [1900/4209] 1.8 art/sec, ETA: 22 min, parse failures: 233
+  [2000/4209] 1.8 art/sec, ETA: 21 min, parse failures: 241
+  [2100/4209] 1.8 art/sec, ETA: 20 min, parse failures: 251
+  [2200/4209] 1.8 art/sec, ETA: 19 min, parse failures: 263
+  [2300/4209] 1.8 art/sec, ETA: 18 min, parse failures: 270
+  [2400/4209] 1.8 art/sec, ETA: 17 min, parse failures: 278
+  [2500/4209] 1.8 art/sec, ETA: 16 min, parse failures: 287
+  [2600/4209] 1.8 art/sec, ETA: 15 min, parse failures: 293
+  [2700/4209] 1.8 art/sec, ETA: 14 min, parse failures: 297
+  [2800/4209] 1.8 art/sec, ETA: 13 min, parse failures: 303
+  [2900/4209] 1.8 art/sec, ETA: 12 min, parse failures: 309
+  [3000/4209] 1.8 art/sec, ETA: 11 min, parse failures: 319
+  [3100/4209] 1.8 art/sec, ETA: 10 min, parse failures: 326
+  [3200/4209] 1.8 art/sec, ETA: 9 min, parse failures: 329
+  [3300/4209] 1.8 art/sec, ETA: 9 min, parse failures: 339
+  [3400/4209] 1.8 art/sec, ETA: 8 min, parse failures: 344
+  [3500/4209] 1.8 art/sec, ETA: 7 min, parse failures: 350
+  [3600/4209] 1.8 art/sec, ETA: 6 min, parse failures: 360
+  [3700/4209] 1.8 art/sec, ETA: 5 min, parse failures: 371
+  [3800/4209] 1.8 art/sec, ETA: 4 min, parse failures: 374
+  [3900/4209] 1.8 art/sec, ETA: 3 min, parse failures: 379
+  [4000/4209] 1.8 art/sec, ETA: 2 min, parse failures: 381
+  [4100/4209] 1.8 art/sec, ETA: 1 min, parse failures: 391
+  [4200/4209] 1.8 art/sec, ETA: 0 min, parse failures: 393
+Inference complete. Parse failures: 394/4209 (9.4%)
+Checkpoint cleaned up (run complete)
+Sentiment saved: 1242 (ticker, date) pairs
+Score stats: mean=-0.4310, std=0.4609
+Pairs per ticker:
+ticker
+AAPL     193
+AMZN     212
+GOOGL    148
+META     164
+MSFT     174
+NVDA     162
+TSLA     189

@@ -101,15 +101,7 @@ Entry 16 showed day+1 continuation rates near 50% (coin-flip) for all metrics, b
 
 Note (2026-03-28): Entry 25 tested this. **Confirmed**: cum3d_excess Ridge achieves CW p=0.002 (highly significant) vs p=0.132 for day+1 Ridge. The 3-day horizon captures information incorporation that day+1 misses. However, Huber loss hurts cum3d (CLT makes 3-day returns less fat-tailed). Use MSE-based Ridge for cum3d, Huber for day+1. Both targets should be used — they capture different signals.
 
-### Q16: Should Stage 3 include a naive "predict yesterday's close" baseline?
-
-Both baseline frameworks (FinBERT-LSTM and DeBERTa-TimesNet) report MAPE without comparing to the trivial naive forecast. Low MAPE (1-5%) is achievable because stock prices are highly autocorrelated — tomorrow ≈ today. Without a naive baseline, we cannot distinguish genuine prediction from autocorrelation exploitation. Entry 31 identified this as a critical omission in both frameworks.
-
-Proposed: compute naive MAPE for all 7 tickers, report delta vs model MAPE. If model MAPE is not meaningfully below naive, the model adds no value regardless of absolute MAPE.
-
-### Q17: Should Stage 3 use LSTM or tree models (LightGBM) as primary downstream architecture?
-
-Entry 31 comparison shows LSTM dominates Float_Price across both frameworks (CORR 0.876 vs TimesNet 0.581, PatchTST 0.446). However, our features are already daily aggregates (not raw sequences), and LightGBM naturally handles mixed feature types and learns feature importance. Paper 3 (arXiv:2508.04975) found LLM features benefit LSTM/Transformer most, Ridge least. Need to test both with our structured features.
+### Q12: Can the baseline be improved with longer test period or different features?
 
 ### Q12: Can the baseline be improved with longer test period or different features?
 
@@ -206,3 +198,21 @@ Why this is inherent: Extreme days are driven by news events (earnings, product 
 Evaluated A, D, E, Ev, Dv across six tests: news presence, precision@K, Cohen's d, per-ticker consistency, cumulative forward drift, and continuation rates at K=20/50/100. A wins on extreme-event precision (95% at gap K=10), per-ticker consistency (std 7.8%), and cumulative drift at K=100 (89.8 bps). D is redundant (rho=0.999). Ev has best Cohen's d but weakest drift. Keep zi, zo, zv as separate feature columns for the downstream model.
 
 Evidence: Entries 14-18. Resolved 2026-03-27.
+
+### A16: Should Stage 3 include a naive "predict yesterday's close" baseline?
+
+**Answer**: Yes, absolutely. The naive baseline is essential.
+
+Entry 38 Phase 3 results proved this: GOOGL naive MAPE is 0.632% (gap) and 0.998% (cc). Price LSTM achieved 2.638% and 2.541% — nearly 4x worse than naive. Without the naive baseline, LSTM's 2.5% MAPE looks reasonable in isolation but is actually terrible. Only Metric A Ridge (0.631% gap, 0.967% cc) meaningfully beat naive. Every paper reporting MAPE without a naive comparison is suspect.
+
+Evidence: Entry 38, `phase3/results/price_naive_results.csv`. Resolved 2026-03-30.
+
+### A17: Should Stage 3 use LSTM or tree models (LightGBM) as primary downstream architecture?
+
+**Answer**: Ridge. Neither LSTM nor LightGBM outperform Ridge at this data scale.
+
+Entry 38 tested all three on GOOGL with 47 test days. Ridge beat both LSTM and LightGBM on both tracks. Key reasons: (1) With ~170 training samples, complex models overfit. (2) Price LSTM/LightGBM severely overfit raw dollar prices (2.5-3.3% MAPE vs 0.63% naive). (3) Metric A LSTM performed well (0.71%) but Ridge was still better (0.63%). (4) LightGBM's tree structure has no "tomorrow ≈ today" inductive bias, making raw price prediction fundamentally unsuited.
+
+At larger data scales (>1000 samples), LSTM may outperform per Paper 3 (arXiv:2508.04975). But for our ~240 trading days per ticker, Ridge is the right choice.
+
+Evidence: Entry 38, `phase3/compare.py`. Resolved 2026-03-30.

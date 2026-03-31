@@ -241,6 +241,10 @@ for ticker, days in stocks.items():
             "volume": d["volume"],
             "beta_gap": beta_gap,
             "beta_cc": beta_cc,
+            "alpha_gap": alpha_gap,
+            "alpha_cc": alpha_cc,
+            "s0_gap": s0_gap,
+            "s0_cc": s0_cc,
             "zv": zv,
         }
 
@@ -263,7 +267,8 @@ for ticker, days in stocks.items():
 
 fieldnames = [
     "date", "ticker", "stock_gap", "stock_cc", "sp_gap", "sp_cc",
-    "volume", "beta_gap", "beta_cc", "zv",
+    "volume", "beta_gap", "beta_cc",
+    "alpha_gap", "alpha_cc", "s0_gap", "s0_cc", "zv",
 ]
 for name, _ in SCORE_FNS:
     fieldnames.extend([f"{name}_gap", f"{name}_cc"])
