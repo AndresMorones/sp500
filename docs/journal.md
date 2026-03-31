@@ -1140,3 +1140,86 @@ Neither paper has a public GitHub repository.
 **Decision**: Our Phase 1 design (9 categories + 12-15 dimensions) is validated as the right architecture — categories handle "what happened" that dimensions can't encode, dimensions handle "how much it matters" that categories can't encode. No changes needed to SUGGESTED_DIMENSIONS. Documented in stage3_methodology_review.md Part 11.3.
 
 **References**: StockMem (arXiv:2512.02720) Appendix A taxonomy, our `src/news_scorer.py` lines 41-58
+
+## Entry 37 — Multi-model sentiment comparison: 5 models on FinBERT-LSTM pipeline — 2026-03-30
+
+**Tried**: Ran the FinBERT-LSTM baseline pipeline (arXiv:2211.07392) with 5 different sentiment models to compare how sentiment source quality affects stock price prediction. Two categories tested: (1) sentiment-specific models (trained for financial sentiment) and (2) general-purpose LLMs (zero-shot sentiment via 7-class prompting). All models feed into the same LSTM+Sentiment architecture (3-layer LSTM, 10-day price window + 1 sentiment feature).
+
+**Model inventory:**
+
+| Model | HuggingFace ID | Type | Params | Knowledge Cutoff |
+|-------|---------------|------|--------|-----------------|
+| FinBERT | `ProsusAI/finbert` | Sentiment classifier | 110M | ~2018 |
+| DeBERTa-v3 | `mrm8488/deberta-v3-ft-financial-news-sentiment-analysis` | Sentiment classifier | 142M | ~2021 |
+| Llama-FinSent-S | `oopere/Llama-FinSent-S` | Sentiment generative (LoRA) | 914M | Dec 2023 |
+| Qwen2.5-1.5B | `Qwen/Qwen2.5-1.5B-Instruct` | General-purpose LLM | 1.54B | ~Early 2024 |
+| Gemma-3-1B | `google/gemma-3-1b-it` | General-purpose LLM | ~1B | Aug 2024 |
+
+**Result — MAPE (%) by ticker:**
+
+| Ticker | MLP | LSTM | +FinBERT | +DeBERTa-v3 | +Llama-FinSent | +Qwen2.5 | +Gemma-3 |
+|--------|-----|------|----------|-------------|----------------|----------|----------|
+| AAPL | 2.01 | 1.71 | 1.42 | **0.99** | 1.77 | 2.06 | 1.00 |
+| AMZN | 1.74 | **1.05** | 1.18 | 1.87 | 1.52 | 1.60 | 1.54 |
+| GOOGL | 1.12 | 0.94 | **0.74** | 0.78 | 0.90 | 1.77 | 0.98 |
+| META | 10.94 | 3.68 | 4.80 | **3.47** | 4.18 | 4.27 | 6.15 |
+| MSFT | **0.60** | 0.61 | 0.92 | 0.85 | 0.74 | 0.63 | 0.71 |
+| NVDA | 6.22 | 3.34 | **2.84** | 4.44 | 2.98 | 3.68 | 4.89 |
+| TSLA | 3.00 | 4.89 | 3.07 | 2.84 | 3.41 | **2.60** | 3.80 |
+| **MEAN** | 3.66 | 2.32 | **2.14** | 2.18 | 2.21 | 2.37 | 2.72 |
+
+**Result — MAE (USD) by ticker:**
+
+| Ticker | MLP | LSTM | +FinBERT | +DeBERTa-v3 | +Llama-FinSent | +Qwen2.5 | +Gemma-3 |
+|--------|-----|------|----------|-------------|----------------|----------|----------|
+| AAPL | 4.64 | 3.94 | 3.28 | **2.27** | 4.10 | 4.76 | 2.31 |
+| AMZN | 3.28 | **1.95** | 2.22 | 3.48 | 2.85 | 3.00 | 2.90 |
+| GOOGL | 1.85 | 1.55 | **1.21** | 1.29 | 1.46 | 2.90 | 1.60 |
+| META | 63.21 | 21.28 | 27.79 | **20.08** | 24.18 | 24.69 | 35.56 |
+| MSFT | **2.55** | 2.57 | 3.87 | 3.61 | 3.11 | 2.67 | 3.00 |
+| NVDA | 8.23 | 4.47 | **3.70** | 5.99 | 3.92 | 4.57 | 6.58 |
+| TSLA | 7.35 | 11.39 | 7.62 | 7.00 | 8.20 | **6.38** | 9.39 |
+| **MEAN** | 13.02 | 6.73 | 7.10 | **6.25** | 6.83 | 7.00 | 8.76 |
+
+**Key findings:**
+
+1. **Sentiment-specific models beat general-purpose LLMs.** All three sentiment-trained models (FinBERT 2.14%, DeBERTa-v3 2.18%, Llama-FinSent 2.21%) outperform the LSTM baseline (2.32%). Both general-purpose LLMs (Qwen 2.37%, Gemma 2.72%) either barely beat or underperform the baseline.
+2. **Small classifiers beat large LLMs.** FinBERT (110M) achieves the best MAPE (2.14%) — 14x fewer parameters than Qwen (1.54B, 2.37%).
+3. **Gemma-3-1B is the worst sentiment model (2.72%)** — worse than the no-sentiment LSTM baseline (2.32%). Its zero-shot financial sentiment adds noise.
+4. **DeBERTa-v3 wins on MAE ($6.25)** despite FinBERT winning on MAPE (2.14%). DeBERTa-v3 is stronger on high-price tickers (META, AAPL) where dollar-scale errors dominate.
+5. **No model wins on all tickers.** Best per-ticker winners are spread across 5 different models, confirming Entry 29's finding that sentiment value is ticker-dependent.
+
+**Decision**: FinBERT remains the primary baseline (best MAPE, smallest model, most established). The multi-model comparison strengthens the conclusion from Entry 29: sentiment quality matters more than model size, and purpose-built sentiment models outperform general-purpose LLMs at this task. Full model specs documented in `llm_baseline_model_modified/FinBERT-LSTM/MODEL_CARD.md`.
+
+**References**: `llm_baseline_model_modified/FinBERT-LSTM/compare_all_models.py`, `data/output/llm_model_comparison_summary.csv`, `data/output/llm_model_comparison_mape.png`, Entry 29
+
+## Entry 38 — Phase 3: Two-track GOOGL prediction models — 2026-03-30
+
+**Tried**: Built two prediction tracks for GOOGL, each with 4 models (Naive, Ridge, LightGBM, LSTM):
+- **Track 1 (Price)**: OHLCV features → predict next-day open (gap) and close (cc)
+- **Track 2 (Metric A)**: A_gap/A_cc scores + 30 LLM news category dimensions → predict return → convert to price, plus range prediction at 1/1.5/2σ
+
+Standardized LSTM: 2-layer (32→16), dropout 0.3, Adam lr=0.001, MSE, batch 32, 50 epochs, patience 10, 72/8/20 split, 5 seeds [16,32,42,64,128]. Per-ticker models. 47 GOOGL test days.
+
+**Result** (GOOGL MAPE):
+
+| Model | Price Gap | Price CC | MetricA Gap | MetricA CC |
+|-------|-----------|----------|-------------|------------|
+| Naive | 0.632% | 0.998% | 0.632% | 0.998% |
+| Ridge | 0.779% | 1.092% | 0.631% | 0.967% |
+| LightGBM | 3.289% | 3.368% | 0.631% | 0.975% |
+| LSTM (mean±std) | 2.638±0.33% | 2.541±0.30% | 0.710±0.06% | 0.969±0.02% |
+
+Range prediction (CC target, 1σ coverage): Naive 76.6%, Ridge 91.5%, LightGBM 91.5%, LSTM 87.2%.
+
+**Key findings**:
+1. **Metric A models beat Price models** on both targets. The abnormal return features encode more predictive signal than raw OHLCV for this dataset.
+2. **Ridge is the best model overall** — simplest, no overfitting risk on 47 test days. Answers Q17: tree/LSTM are not needed at this scale.
+3. **Price LSTM and LightGBM overfit badly** (2.5-3.3% vs 0.63% naive). With ~170 train samples and raw dollar prices, these models learn non-generalizing patterns. Answers Q16: naive baseline is essential — without it, Price LSTM's 2.6% MAPE looks reasonable in isolation.
+4. **Metric A LSTM performs well** (0.71% gap, 0.97% cc) — the news features help the LSTM avoid overfitting to price patterns.
+5. **Range calibration improves with news**: CC 1σ coverage jumps from 76.6% (naive/static vol) to 91.5% (Ridge/LightGBM with news features). The news dimensions widen the interval on news days, improving calibration.
+6. **News days vs no-news days**: CC 1σ coverage for Ridge is 94.1% on news days vs 84.6% on no-news days — the model correctly predicts wider ranges when news is present.
+
+**Decision**: Ridge + Metric A features is the recommended architecture for GOOGL prediction. The 30 LLM news category scores add genuine value over price-only models, confirming A7's structured extraction approach. For range prediction, the news-informed intervals are well-calibrated and substantially better than static volatility bands.
+
+**References**: `phase3/compare.py`, `phase3/results/phase3_summary.csv`, Entries 26, 29, 37

@@ -1,7 +1,8 @@
 """News scoring pipeline using Claude CLI.
 
-Phase 1: Discover 8 business-specific categories + 12-15 impact dimensions per stock.
-Phase 2: Score each (ticker, date, period) with combined day-level ratings.
+Phase 1: Discover 8 company-specific custom categories per stock (consensus of 3 runs).
+         20 universal categories are always injected by code — LLM cannot affect them.
+Phase 2: Score each (ticker, date, period) across all 28-30 categories (0-10 each).
 
 Uses `claude -p` CLI (Max subscription) — no API key needed.
 """
@@ -37,25 +38,205 @@ ALL_TICKERS = ["AAPL", "AMZN", "GOOGL", "META", "MSFT", "NVDA", "TSLA"]
 MARKET_OPEN_HOUR, MARKET_OPEN_MIN = 9, 30
 MARKET_CLOSE_HOUR = 16
 
-# --- Suggested dimensions for Phase 1 ---
-SUGGESTED_DIMENSIONS = [
-    ("materiality", "0=noise, 10=direct large impact on revenue/margins/TAM"),
-    ("surprise", "0=fully expected outcome, 10=completely unexpected outcome"),
-    ("temporal_horizon", "0=affects next few days only, 10=structural shift for years"),
-    ("sentiment_strength", "0=neutral tone, 10=extremely strong positive or negative"),
-    ("information_density", "0=pure opinion/speculation, 10=hard data with specific numbers"),
-    ("directional_clarity", "0=ambiguous/could go either way, 10=unambiguously good or bad"),
-    ("scope", "0=only this company, 5=sector-wide, 10=macro/market-wide"),
-    ("competitive_impact", "0=no competitive effect, 10=major competitive shift"),
-    ("regulatory_risk", "0=no regulatory angle, 10=major legal/regulatory event"),
-    ("management_signal", "0=no leadership angle, 10=major strategic/leadership signal"),
-    ("expected_duration", "0=transient story that resolves within a day, 10=persistent story remaining relevant for weeks or longer"),
-    ("narrative_shift", "0=reinforces existing narrative, 10=fundamentally changes thesis"),
-    ("repeatedness", "0=rehash/follow-up of known story, 10=first report of new info"),
-    ("actionability", "0=background context only, 10=investors can act immediately"),
-    ("controversy", "0=consensus view, 10=highly divisive among investors"),
-    ("financial_result_surprise", "0=no financial results reported or results exactly match expectations, 10=reported figures dramatically exceed or miss prior guidance and analyst expectations as described in the article"),
+# ---------------------------------------------------------------------------
+# 20 hardcoded categories (always present, code-injected — LLM cannot remove)
+# ---------------------------------------------------------------------------
+REQUIRED_CATEGORIES = [
+    {
+        "id": "materiality",
+        "label": "Materiality",
+        "description": (
+            "Earnings Beat/Miss, Product Recall, Major Contract Win/Loss, "
+            "Bankruptcy Filing, Regulatory Penalty, M&A Completion. "
+            "0 = noise with no impact, 10 = direct large impact on revenue/margins/TAM."
+        ),
+    },
+    {
+        "id": "surprise_unexpectedness",
+        "label": "Surprise & Unexpectedness",
+        "description": (
+            "Sudden CEO Departure, Unannounced Acquisition, Regulatory Shock, "
+            "Unexpected Dividend Cut, Flash Pre-announcement. "
+            "0 = fully expected outcome, 10 = completely unexpected outcome."
+        ),
+    },
+    {
+        "id": "sentiment_strength",
+        "label": "Sentiment Strength",
+        "description": (
+            "Earnings Blowout, Catastrophic Loss, Transformative Partnership, "
+            "Fraud Revelation, Analyst Consensus Reversal. "
+            "0 = neutral tone, 10 = extremely strong positive or negative signal."
+        ),
+    },
+    {
+        "id": "directional_clarity",
+        "label": "Directional Clarity",
+        "description": (
+            "Clear Guidance Raise/Cut, FDA Approval/Rejection, Definitive Merger "
+            "Agreement, Regulatory Ruling, Contract Win/Loss. "
+            "0 = ambiguous/could go either way, 10 = unambiguously good or bad."
+        ),
+    },
+    {
+        "id": "information_density",
+        "label": "Information Density",
+        "description": (
+            "Full Earnings Release, Detailed Guidance, SEC Filing with Data, "
+            "Analyst Research Report, Verified Technical Data. "
+            "0 = pure opinion/speculation, 10 = hard data with specific numbers."
+        ),
+    },
+    {
+        "id": "impact_timeline_duration",
+        "label": "Impact Timeline & Duration",
+        "description": (
+            "Score how long the price impact is likely to persist: "
+            "0-3 = fades within days (sentiment-only, speculative, one-time); "
+            "4-6 = resolves within weeks to months; "
+            "7-10 = permanently alters business trajectory (structural, confirmed, recurring)."
+        ),
+    },
+    {
+        "id": "narrative_shift",
+        "label": "Narrative Shift",
+        "description": (
+            "CEO Scandal reversing trust, Earnings Miss breaking growth story, "
+            "Turnaround Success, Business Model Pivot. "
+            "0 = reinforces existing narrative, 10 = fundamentally changes investment thesis."
+        ),
+    },
+    {
+        "id": "scope_breadth",
+        "label": "Scope & Breadth",
+        "description": (
+            "Full Company Guidance, CEO Departure, Capital Structure Change, "
+            "Single Product Issue, Regional Sales Miss. "
+            "0 = only this company/product, 5 = sector-wide, 10 = macro/market-wide."
+        ),
+    },
+    {
+        "id": "competitive_impact",
+        "label": "Competitive Impact",
+        "description": (
+            "Competitor Bankruptcy, Patent Win/Loss, Market Share Data Release, "
+            "Competitor Product Launch, Pricing War. "
+            "0 = no competitive effect, 10 = major competitive shift."
+        ),
+    },
+    {
+        "id": "regulatory_risk",
+        "label": "Regulatory Risk",
+        "description": (
+            "Antitrust Investigation, FDA Rejection, SEC Investigation, Tax Ruling, "
+            "License Revocation, Compliance Violation. "
+            "0 = no regulatory angle, 10 = major legal/regulatory event."
+        ),
+    },
+    {
+        "id": "financial_result_surprise",
+        "label": "Financial Result Surprise",
+        "description": (
+            "EPS Beat/Miss vs Consensus, Revenue vs Guidance, Margin Surprise, "
+            "Cash Flow Miss, Financial Restatement. "
+            "0 = no financial results or results exactly match expectations, "
+            "10 = figures dramatically exceed or miss prior guidance and analyst expectations."
+        ),
+    },
+    {
+        "id": "earnings_financial_results",
+        "label": "Earnings & Financial Results",
+        "description": (
+            "Earnings Release, Revenue Guidance, Profit Warning, Annual Report, "
+            "Quarterly Filing, Financial Restatement. "
+            "Score how central this news is to the company's reported financial performance."
+        ),
+    },
+    {
+        "id": "market_sector_sentiment",
+        "label": "Market & Sector Sentiment",
+        "description": (
+            "Sector Rotation, Industry-wide Regulation, Commodity Price Move, "
+            "Macro Data Release, Fed Decision, Peer Earnings. "
+            "Score how much this news reflects broad market or sector-level dynamics."
+        ),
+    },
+    {
+        "id": "analyst_consensus_signals",
+        "label": "Analyst Consensus Signals",
+        "description": (
+            "Rating Upgrade/Downgrade, Price Target Revision, Analyst Initiation, "
+            "Consensus Estimate Change, Analyst Day. "
+            "Score how much this news reflects analyst community views on the stock."
+        ),
+    },
+    {
+        "id": "catalyst_immediacy",
+        "label": "Catalyst Immediacy",
+        "description": (
+            "Trading Halt, Breaking Announcement, Flash Pre-announcement, "
+            "Scheduled Earnings, Long-term Roadmap Reveal. "
+            "0 = background/long-term context only, 10 = immediate market-moving catalyst."
+        ),
+    },
+    {
+        "id": "systemic_contagion_risk",
+        "label": "Systemic & Contagion Risk",
+        "description": (
+            "Banking Sector Stress, Supply Chain Collapse, Industry-wide Regulatory Sweep, "
+            "Peer Earnings Warning, Macro Shock. "
+            "Score how much this news signals risk spreading beyond the single company."
+        ),
+    },
+    {
+        "id": "management_credibility",
+        "label": "Management & Credibility",
+        "description": (
+            "CEO/CFO Appointment or Resignation, Insider Trading, Executive Misconduct, "
+            "Board Restructuring, Governance Change. "
+            "Score how much this news affects trust in and stability of leadership."
+        ),
+    },
+    {
+        "id": "capital_allocation_signal",
+        "label": "Capital Allocation Signal",
+        "description": (
+            "Share Buyback Program, Dividend Initiation/Cut, Major CapEx Announcement, "
+            "Debt Issuance, Equity Offering. "
+            "Score how much this news reveals management's capital deployment priorities."
+        ),
+    },
+    {
+        "id": "valuation_growth_outlook",
+        "label": "Valuation & Growth Outlook",
+        "description": (
+            "Long-term Growth Rate Revision, Margin Expansion/Compression, TAM Update, "
+            "Business Model Change, Multiple Re-rating. "
+            "Score how much this news changes the long-term growth or valuation narrative."
+        ),
+    },
+    {
+        "id": "sentiment_direction",
+        "label": "Sentiment Direction",
+        "description": (
+            "Score the net directional tone of the news: "
+            "0 = entirely negative/bearish, "
+            "5 = neutral or balanced with no clear lean, "
+            "10 = entirely positive/bullish. "
+            "Score the article's net tone — a mixed article with more negative weight scores 3, not 5."
+        ),
+    },
 ]
+
+REQUIRED_IDS = {c["id"] for c in REQUIRED_CATEGORIES}
+
+
+def inject_required_categories(schema):
+    """Prepend the 20 hardcoded categories to schema['categories'], deduplicating any LLM collision."""
+    custom = [c for c in schema.get("categories", []) if c["id"] not in REQUIRED_IDS]
+    schema = dict(schema)  # shallow copy to avoid mutating caller's dict
+    schema["categories"] = REQUIRED_CATEGORIES + custom
+    return schema
 
 
 # --- Claude CLI wrapper ---
@@ -66,7 +247,8 @@ def call_claude(prompt, timeout=300):
         try:
             # Pass prompt via stdin ("-") to avoid OS arg length limits
             # shell=True needed on Windows so subprocess finds .cmd files in PATH
-            cmd = f'claude -p - --output-format json --model {MODEL}'
+            claude_bin = os.environ.get("CLAUDE_BIN", "claude")
+            cmd = f'{claude_bin} -p - --output-format json --model {MODEL}'
             result = subprocess.run(
                 cmd, shell=True,
                 input=prompt,
@@ -255,11 +437,15 @@ def load_existing_output():
     return scored
 
 
-# --- Phase 1: Category & Dimension Discovery ---
+# --- Phase 1: Custom Category Discovery ---
 
 def build_phase1_prompt(ticker, articles):
     """Build the Phase 1 discovery prompt for a ticker."""
-    dim_table = "\n".join(f"| `{dim_id}` | {scale} |" for dim_id, scale in SUGGESTED_DIMENSIONS)
+    required_table = "\n".join(
+        f"  - {c['id']}: {c['description']}"
+        for c in REQUIRED_CATEGORIES
+    )
+    required_ids_list = ", ".join(c["id"] for c in REQUIRED_CATEGORIES)
 
     article_lines = []
     for i, art in enumerate(articles, 1):
@@ -271,109 +457,49 @@ def build_phase1_prompt(ticker, articles):
 
     return f"""You are a senior equity research analyst. You will receive ALL {len(articles)} news \
 articles about {ticker} from November 2023 to October 2024. Your task is to \
-analyze the news landscape for this stock and produce a structured scoring framework.
+identify 8 company-specific news categories that are UNIQUE to {ticker}'s business model.
 
 IMPORTANT RULES:
 - You have ZERO access to stock prices, returns, or trading data.
 - Base your analysis ONLY on the content and nature of the news events.
 - Do NOT speculate about what the stock price did in response.
-- Think about what types of events TEND to matter for this specific company, \
-based on its business model, competitive position, and investor base.
+- Think about what types of events are specific to {ticker}'s business model, \
+competitive position, and investor base.
 
-TASK 1 — DISCOVER 9 NEWS CATEGORIES
+HARDCODED CATEGORIES — DO NOT CREATE CATEGORIES WITH THESE IDs
+The following 20 categories are ALWAYS included separately and will be scored in Phase 2. \
+Your job is to find what is UNIQUE to {ticker} that these 20 universal signals do NOT cover:
 
-Identify exactly 9 categories from the articles you just read. These must \
-include a MIX of:
+{required_table}
 
-- **6 company-specific categories**: Themes specific to {ticker}'s business. \
-Do NOT create hyper-specific categories that only match a handful of \
-articles — merge related themes into broader buckets. But do NOT merge \
-genuinely distinct themes just because one has fewer articles. A category \
-covering 10 important articles is better than losing that signal by folding \
-it into a broader bucket.
+TASK — DISCOVER 8 COMPANY-SPECIFIC CATEGORIES
+
+Identify exactly 8 categories from the articles that capture {ticker}-specific \
+news themes NOT already covered by the 20 hardcoded categories above.
+
+Rules:
+- Every category must be specific to {ticker}'s business — not a rewording of \
+any of the 20 hardcoded ones above.
+- Do NOT create categories with these IDs (already hardcoded): {required_ids_list}
+- Do NOT create hyper-specific categories covering only 2–3 articles. \
+Merge related themes into broader buckets. But do NOT merge genuinely distinct \
+themes just because one has fewer articles. A category covering 10 important \
+articles is better than losing that signal by folding it into a broader bucket.
 
   GOOD: "gaming_entertainment_strategy" (covers console strategy, acquisitions, \
 game releases, subscription models)
   BAD: "activision_integration" (too narrow, only ~5 articles about one event)
 
-- **1 required: "earnings_financial_results"**: Quarterly earnings reports, \
-revenue and EPS figures, profit margins, guidance revisions, delivery or \
-production numbers, and any article reporting specific financial results \
-vs expectations. This category MUST exist even if only a few articles \
-cover earnings — these are among the most important events for any stock.
-
-- **1 required: "market_sector_sentiment"**: Broad market roundups, sector \
-trends, macro news that mentions {ticker}. Examples: "Tech Up on Renewed \
-Chip Optimism", "Magnificent Seven earnings preview", "Nasdaq correction." \
-These articles have low company-specific materiality but reflect the \
-environment the stock trades in.
-
-- **1 required: "analyst_consensus_signals"**: Analyst upgrades/downgrades, \
-price target changes, buy/sell ratings, institutional positioning.
-
-Each category needs: a snake_case id, a short label, and a one-sentence \
-description. Every article in the corpus should fit into at least one category.
-
-TASK 2 — SELECT 12-15 IMPACT DIMENSIONS
-
-Below is a pool of suggested dimensions. You must CRITICALLY EVALUATE each one \
-against the actual articles you just read:
-- KEEP dimensions where you found clear variation across articles (some articles \
-  would score 2, others 8-9 on this dimension).
-- DROP dimensions that would be uniformly low or uniformly high across most \
-  articles in this corpus (uninformative for {ticker}).
-- ADD custom dimensions if you spotted recurring patterns in the articles \
-  that none of the suggested dimensions capture. There is no limit on custom \
-  additions — add as many as the corpus warrants.
-
-Select all dimensions that show meaningful variation — there is no upper limit.
-
-SCALE DESCRIPTION RULES:
-- Define ONLY the 0 endpoint and the 10 endpoint using general EVENT TYPES \
-(not specific articles or events from this corpus).
-- Do NOT pre-assign scores to specific articles, companies, or events. \
-Do NOT write things like "Altman firing = 10" or "earnings beat scores 7-8."
-- The middle range (1-9) is smooth interpolation — do not anchor it.
-- Keep descriptions general enough to apply consistently across all articles. \
-The scorer in Phase 2 will judge each article relative to others in the corpus.
-
-IMPORTANT on the "surprise" dimension: This measures how UNEXPECTED the \
-OUTCOME or CONTENT of the news was — NOT whether the event itself was \
-scheduled. A scheduled event can still be high surprise if the outcome \
-described in the articles was unexpected. Rate the surprise of what was \
-REVEALED, not whether the event was on the calendar. Infer surprise \
-entirely from article language and context.
-
-Suggested dimension pool (all scored 0-10):
-
-| Dimension | Default scale |
-|-----------|---------------|
-{dim_table}
-
-TASK 3 — JUSTIFY YOUR DIMENSION CHOICES
-
-For every dimension you keep, drop, or add, provide a brief justification based \
-on what you observed in the articles. Only keep ones where you saw actual \
-variation. In your rationale, describe the TYPE of variation you observed (e.g., \
-"ranges from routine operational updates to major strategic pivots"), but do NOT \
-assign specific scores to specific events.
+Each category needs: a snake_case id, a short label, and a one-sentence description. \
+Every article in the corpus should fit into at least one of the 20 hardcoded + 8 custom categories.
 
 RESPOND WITH ONLY THIS JSON (no markdown fences, no commentary):
 {{
   "ticker": "{ticker}",
   "categories": [
     {{"id": "snake_case_id", "label": "Short Label", "description": "One sentence"}},
-    ... (exactly 9, including earnings_financial_results, market_sector_sentiment, and analyst_consensus_signals)
-  ],
-  "dimensions": [
-    {{"id": "dimension_id", "scale": "0=low end description, 10=high end description"}},
-    ... (12-15 total)
-  ],
-  "dimension_rationale": {{
-    "kept": {{"dimension_id": "Type of variation observed in the corpus", ...}},
-    "dropped": {{"dimension_id": "Why this dimension lacks variation for {ticker}", ...}},
-    "added": {{"dimension_id": "Pattern observed that needs this dimension"}}
-  }}
+    ... (exactly 8, none matching any of the 20 hardcoded IDs above)
+  ]
 }}
 
 ARTICLES FOR {ticker}:
@@ -382,9 +508,9 @@ ARTICLES FOR {ticker}:
 
 
 def run_phase1(ticker, articles):
-    """Run Phase 1 for a single ticker. Returns the parsed schema dict."""
+    """Run Phase 1 for a single ticker. Returns the parsed schema dict with all 28 categories."""
     print(f"\n{'='*60}")
-    print(f"Phase 1: Discovering categories & dimensions for {ticker}")
+    print(f"Phase 1: Discovering custom categories for {ticker}")
     print(f"  Sending {len(articles)} articles...")
     print(f"{'='*60}")
 
@@ -398,80 +524,65 @@ def run_phase1(ticker, articles):
         print(f"  First 500 chars of response:\n{response[:500]}")
         raise
 
-    # Validate
-    assert len(schema["categories"]) == 9, f"Expected 9 categories, got {len(schema['categories'])}"
-    n_dims = len(schema["dimensions"])
-    if n_dims < 10:
-        print(f"  WARNING: Only {n_dims} dimensions — unusually few")
+    # Inject the 20 hardcoded categories
+    schema = inject_required_categories(schema)
 
-    print(f"\n  Categories discovered:")
+    # Validate custom count
+    custom_count = sum(1 for c in schema["categories"] if c["id"] not in REQUIRED_IDS)
+    total_count = len(schema["categories"])
+    if custom_count < 6 or custom_count > 15:
+        print(f"  WARNING: Unusual custom category count: {custom_count} "
+              f"(expected 6–15). Total with hardcoded: {total_count}")
+    else:
+        print(f"  Categories: {custom_count} custom + 20 hardcoded = {total_count} total")
+
+    print(f"\n  Custom categories discovered:")
     for cat in schema["categories"]:
-        print(f"    - {cat['id']}: {cat['label']}")
-    print(f"\n  Dimensions selected ({n_dims}):")
-    for dim in schema["dimensions"]:
-        print(f"    - {dim['id']}: {dim['scale']}")
-    if "dimension_rationale" in schema:
-        dr = schema["dimension_rationale"]
-        if dr.get("dropped"):
-            print(f"\n  Dropped dimensions:")
-            for did, reason in dr["dropped"].items():
-                print(f"    - {did}: {reason}")
-        if dr.get("added"):
-            print(f"\n  Added custom dimensions:")
-            for did, reason in dr["added"].items():
-                print(f"    - {did}: {reason}")
+        if cat["id"] not in REQUIRED_IDS:
+            print(f"    - {cat['id']}: {cat['label']}")
 
     return schema
 
 
 def build_consensus_prompt(ticker, runs):
-    """Build prompt to merge multiple Phase 1 runs into consensus."""
+    """Build prompt to merge multiple Phase 1 runs into consensus (custom categories only)."""
+    required_ids_list = ", ".join(c["id"] for c in REQUIRED_CATEGORIES)
+
+    # Filter each run to only its custom categories (exclude hardcoded ones)
+    custom_runs = []
+    for run in runs:
+        custom_cats = [c for c in run.get("categories", []) if c["id"] not in REQUIRED_IDS]
+        custom_runs.append({"ticker": run.get("ticker", ticker), "categories": custom_cats})
+
     runs_text = ""
-    for i, run in enumerate(runs, 1):
+    for i, run in enumerate(custom_runs, 1):
         runs_text += f"\n--- RUN {i} ---\n{json.dumps(run, indent=2)}\n"
 
-    return f"""You are merging three independent analyses of {ticker}'s news corpus into \
-one consensus framework. Below are three separate category/dimension schemas \
-produced by different analysts reviewing the same {ticker} articles.
+    return f"""You are merging three independent analyses of {ticker}'s news corpus. \
+Each run identified company-specific news categories unique to {ticker}. \
+Your job is to produce ONE consensus list of custom categories.
 
-Your job is to produce ONE consensus schema by applying these rules:
-
-CATEGORIES (exactly 9):
+CATEGORIES — merge all unique custom themes:
 - Keep categories that appear in 2+ runs, even if the snake_case id differs \
 slightly (match by THEME, not exact name).
-- The required categories "earnings_financial_results", "market_sector_sentiment", \
-and "analyst_consensus_signals" must always be included.
-- If more than 9 survive consensus, keep the 9 most frequently appearing.
-- If fewer than 9 survive, include the best unique categories from any run.
+- Drop a category only if it appeared in exactly 1 run and covers a theme \
+already well-addressed by another surviving category.
+- If in doubt whether two categories are the same theme, keep both.
+- Target is 8 custom categories, but keep more if they appear consistently \
+across runs — there is NO upper limit.
 - Use the clearest label and description from whichever run expressed it best.
-
-DIMENSIONS (no upper limit):
-- Keep dimensions from the suggested pool that appear in 2+ runs.
-- Keep CUSTOM dimensions if the same underlying concept appears in 2+ runs \
-(even with different names).
-- Drop custom dimensions that appeared in only 1 run — they are not robust.
-- Keep all that survived consensus — do not artificially limit the count.
-
-SCALES:
-- Use the clearest, most general endpoint descriptions (1= and 10= only).
-- No hardcoded references to specific events, companies, or scores.
-
-RATIONALE:
-- Merge the strongest justifications from all runs.
-- For dropped dimensions, note if they were dropped by all 3 or just 2.
+- Do NOT include categories with these IDs — they are hardcoded separately: \
+{required_ids_list}
 
 {runs_text}
 
-RESPOND WITH ONLY THE CONSENSUS JSON (same format as each run, no markdown fences):
+RESPOND WITH ONLY THE CONSENSUS JSON (no markdown fences, no commentary):
 {{
   "ticker": "{ticker}",
-  "categories": [...],
-  "dimensions": [...],
-  "dimension_rationale": {{
-    "kept": {{...}},
-    "dropped": {{...}},
-    "added": {{...}}
-  }}
+  "categories": [
+    {{"id": "snake_case_id", "label": "Short Label", "description": "One sentence"}},
+    ...
+  ]
 }}"""
 
 
@@ -522,25 +633,30 @@ def run_phase1_consensus(ticker, articles):
             else:
                 raise
 
-    # Validate consensus
-    n_cats = len(consensus.get("categories", []))
-    n_dims = len(consensus.get("dimensions", []))
-    print(f"\n  Consensus result:")
-    print(f"    Categories: {n_cats}")
+    # Inject the 20 hardcoded categories into the consensus result
+    consensus = inject_required_categories(consensus)
+
+    # Validate & report
+    custom_count = sum(1 for c in consensus.get("categories", []) if c["id"] not in REQUIRED_IDS)
+    total_count = len(consensus.get("categories", []))
+    print(f"\n  Consensus result: {custom_count} custom + 20 hardcoded = {total_count} total")
+    print(f"  Custom categories:")
     for cat in consensus.get("categories", []):
-        print(f"      - {cat['id']}: {cat['label']}")
-    print(f"    Dimensions: {n_dims}")
-    for dim in consensus.get("dimensions", []):
-        print(f"      - {dim['id']}")
+        if cat["id"] not in REQUIRED_IDS:
+            print(f"    - {cat['id']}: {cat['label']}")
 
-    # Show what was consistent across runs
-    all_dim_ids = [set(d["id"] for d in run["dimensions"]) for run in existing_runs]
-    for dim in consensus.get("dimensions", []):
-        count = sum(1 for s in all_dim_ids if dim["id"] in s)
-        marker = "ALL" if count == PHASE1_RUNS else f"{count}/{PHASE1_RUNS}"
-        print(f"        [{marker}]")
+    # Show cross-run consistency for custom categories
+    all_custom_ids = [
+        set(c["id"] for c in run.get("categories", []) if c["id"] not in REQUIRED_IDS)
+        for run in existing_runs
+    ]
+    for cat in consensus.get("categories", []):
+        if cat["id"] not in REQUIRED_IDS:
+            count = sum(1 for s in all_custom_ids if cat["id"] in s)
+            marker = "ALL" if count == PHASE1_RUNS else f"{count}/{PHASE1_RUNS}"
+            print(f"        [{marker}] {cat['id']}")
 
-    # Save consensus
+    # Save consensus (full schema with 20 hardcoded + custom)
     consensus_file = os.path.join(PHASE1_RAW_DIR, f"{ticker}_consensus.json")
     with open(consensus_file, "w", encoding="utf-8") as f:
         json.dump(consensus, f, indent=2)
@@ -559,11 +675,6 @@ def build_phase2_prompt(ticker, schema, entries):
         f"  - {c['id']}: {c['label']} — {c['description']}"
         for c in schema["categories"]
     )
-    dims_text = "\n".join(
-        f"  - {d['id']}: {d['scale']}"
-        for d in schema["dimensions"]
-    )
-    dim_ids = [d["id"] for d in schema["dimensions"]]
 
     entries_text = []
     for date_str, period, articles in entries:
@@ -578,7 +689,6 @@ def build_phase2_prompt(ticker, schema, entries):
     all_entries = "\n\n".join(entries_text)
 
     cat_ids = [c["id"] for c in schema["categories"]]
-    dim_json_example = ", ".join(f'"{d}": 5' for d in dim_ids)
     cat_json_example = ", ".join(f'"cat_{c}": 0' for c in cat_ids)
 
     return f"""You are a senior equity research analyst for {ticker}. For each entry below, \
@@ -589,26 +699,20 @@ identify duplicates and treat them as one. Then produce a SINGLE combined \
 score reflecting the most important news in that set.
 
 SCORING RULES:
-- ALL scores are 0-10 integers. Use the FULL range — do not cluster around the middle.
+- ALL scores are 0–10 integers. Use the FULL range — do not cluster around the middle.
 - Score based ONLY on the NATURE and CONTENT of the articles provided.
 - Do not speculate about stock price reactions or trading outcomes.
-- Infer everything from what the articles say — do not inject outside knowledge \
-about specific numbers or thresholds.
+- Infer everything from what the articles say — do not inject outside knowledge.
 
-CATEGORY RELEVANCE (each 0-10):
-For each entry, score how relevant each category is to that day's news \
-(0 = not relevant at all, 10 = entirely about this category). \
+CATEGORY SCORES (each 0–10):
+Score how much each category applies to this day's news. \
+0 = not relevant at all, 10 = the news is entirely about this category. \
 A day can score high on MULTIPLE categories if multiple distinct events occurred.
 
 CATEGORIES FOR {ticker}:
 {cats_text}
 
-DIMENSIONS (each 0-10):
-{dims_text}
-
 ALSO PROVIDE:
-- direction: overall sentiment of the news (0 = strongly negative, \
-5 = neutral/mixed, 10 = strongly positive). Infer from article tone and content.
 - distinct_events: integer count of genuinely different news events in this entry
 - reasoning: ONE sentence explaining your most important scoring decisions
 
@@ -619,10 +723,8 @@ RESPOND WITH ONLY THIS JSON ARRAY (no markdown fences, no commentary):
   {{
     "date": "YYYY-MM-DD",
     "period": "gap or cc",
-    "direction": 5,
     "distinct_events": 1,
     {cat_json_example},
-    {dim_json_example},
     "reasoning": "One sentence"
   }},
   ...
@@ -632,7 +734,6 @@ RESPOND WITH ONLY THIS JSON ARRAY (no markdown fences, no commentary):
 def validate_phase2_response(results, schema):
     """Validate Phase 2 response. Returns list of valid results."""
     cat_ids = [c["id"] for c in schema["categories"]]
-    dim_ids = {d["id"] for d in schema["dimensions"]}
     validated = []
 
     for r in results:
@@ -640,13 +741,7 @@ def validate_phase2_response(results, schema):
         if "date" not in r or "period" not in r:
             print(f"    WARNING: Missing date/period in response entry, skipping")
             continue
-        # Clamp direction to 0-10
-        val = r.get("direction")
-        if val is None or not isinstance(val, (int, float)):
-            r["direction"] = 5  # default to neutral
-        else:
-            r["direction"] = max(0, min(10, int(val)))
-        # Clamp category relevance scores to 0-10
+        # Clamp all category scores to 0-10
         for cat_id in cat_ids:
             key = f"cat_{cat_id}"
             val = r.get(key)
@@ -654,13 +749,6 @@ def validate_phase2_response(results, schema):
                 r[key] = 0  # default to not relevant
             else:
                 r[key] = max(0, min(10, int(val)))
-        # Clamp dimension scores to 0-10
-        for dim_id in dim_ids:
-            val = r.get(dim_id)
-            if val is None or not isinstance(val, (int, float)):
-                r[dim_id] = 5  # default to middle
-            else:
-                r[dim_id] = max(0, min(10, int(val)))
         validated.append(r)
 
     return validated
@@ -743,19 +831,14 @@ def write_output(all_results, schema_cache):
     if not all_results:
         return
 
-    # Collect all category and dimension columns across all tickers
+    # Collect all category columns across all tickers (no separate dim columns)
     all_cat_cols = set()
-    all_dim_ids = set()
-    for ticker, schema in schema_cache.items():
+    for schema in schema_cache.values():
         for c in schema["categories"]:
             all_cat_cols.add(f"cat_{c['id']}")
-        for d in schema["dimensions"]:
-            all_dim_ids.add(d["id"])
     all_cat_cols = sorted(all_cat_cols)
-    all_dim_ids = sorted(all_dim_ids)
 
-    fieldnames = (["date", "ticker", "period", "direction", "distinct_events"]
-                  + all_cat_cols + all_dim_ids + ["reasoning"])
+    fieldnames = ["date", "ticker", "period", "distinct_events"] + all_cat_cols + ["reasoning"]
 
     with _write_lock:
         file_exists = os.path.exists(OUTPUT_FILE)
@@ -769,14 +852,11 @@ def write_output(all_results, schema_cache):
                     "date": r.get("date", ""),
                     "ticker": r.get("_ticker", ""),
                     "period": r.get("period", ""),
-                    "direction": r.get("direction", ""),
                     "distinct_events": r.get("distinct_events", 1),
                     "reasoning": r.get("reasoning", ""),
                 }
                 for col in all_cat_cols:
                     row[col] = r.get(col, 0)
-                for dim_id in all_dim_ids:
-                    row[dim_id] = r.get(dim_id, "")
                 writer.writerow(row)
 
     print(f"\n  Wrote {len(all_results)} rows to {OUTPUT_FILE}")

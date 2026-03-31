@@ -799,6 +799,76 @@ We get 0.74–1.42% for GOOGL and AAPL, 2.84% for NVDA, 3.07% for TSLA. Individu
 
 Beating it on AAPL, GOOGL, NVDA is most plausible (news-driven, our structured features should add signal). Beating it on MSFT and AMZN is harder (MSFT: smooth, news adds noise; AMZN: high volume, simple aggregation already noisy).
 
+### 7.2 Multi-Model Sentiment Comparison (2026-03-30)
+
+Extended the FinBERT-LSTM pipeline to compare 5 sentiment models on the same dataset and architecture. Two categories: sentiment-specific models (trained for financial sentiment) and general-purpose LLMs (zero-shot 7-class prompting mapped to [-1, 1]).
+
+#### Model inventory
+
+| Model | HuggingFace ID | Type | Params | Base Model | Knowledge Cutoff | Release |
+|-------|---------------|------|--------|------------|-----------------|---------|
+| FinBERT | `ProsusAI/finbert` | Sentiment classifier | 110M | BERT-base | ~2018 | Aug 2019 |
+| DeBERTa-v3 | `mrm8488/deberta-v3-ft-...` | Sentiment classifier | 142M | DeBERTa-v3-small | ~2021 | Jan 2024 |
+| Llama-FinSent-S | `oopere/Llama-FinSent-S` | Sentiment generative (LoRA) | 914M | Llama 3.2-1B (pruned 40%) | Dec 2023 | Feb 2025 |
+| Qwen2.5-1.5B | `Qwen/Qwen2.5-1.5B-Instruct` | General-purpose LLM | 1.54B | Qwen2.5-1.5B | ~Early 2024 | Sep 2024 |
+| Gemma-3-1B | `google/gemma-3-1b-it` | General-purpose LLM | ~1B | Gemma-3-1b-pt | Aug 2024 | Mar 2025 |
+
+Note: Classifier models (FinBERT, DeBERTa-v3) have no knowledge cutoff in the LLM sense — they are encoders trained on Financial PhraseBank (2014) to recognize sentiment language patterns. Llama-FinSent-S is not a general-purpose LLM — it is pruned and LoRA fine-tuned specifically for financial sentiment. Full model specs in `llm_baseline_model_modified/FinBERT-LSTM/MODEL_CARD.md`.
+
+#### Results — MAPE (%) by ticker
+
+| Ticker | MLP | LSTM | +FinBERT | +DeBERTa-v3 | +Llama-FinSent | +Qwen2.5 | +Gemma-3 |
+|--------|-----|------|----------|-------------|----------------|----------|----------|
+| AAPL | 2.01 | 1.71 | 1.42 | **0.99** | 1.77 | 2.06 | 1.00 |
+| AMZN | 1.74 | **1.05** | 1.18 | 1.87 | 1.52 | 1.60 | 1.54 |
+| GOOGL | 1.12 | 0.94 | **0.74** | 0.78 | 0.90 | 1.77 | 0.98 |
+| META | 10.94 | 3.68 | 4.80 | **3.47** | 4.18 | 4.27 | 6.15 |
+| MSFT | **0.60** | 0.61 | 0.92 | 0.85 | 0.74 | 0.63 | 0.71 |
+| NVDA | 6.22 | 3.34 | **2.84** | 4.44 | 2.98 | 3.68 | 4.89 |
+| TSLA | 3.00 | 4.89 | 3.07 | 2.84 | 3.41 | **2.60** | 3.80 |
+| **MEAN** | 3.66 | 2.32 | **2.14** | 2.18 | 2.21 | 2.37 | 2.72 |
+
+#### Results — MAE (USD) by ticker
+
+| Ticker | MLP | LSTM | +FinBERT | +DeBERTa-v3 | +Llama-FinSent | +Qwen2.5 | +Gemma-3 |
+|--------|-----|------|----------|-------------|----------------|----------|----------|
+| AAPL | 4.64 | 3.94 | 3.28 | **2.27** | 4.10 | 4.76 | 2.31 |
+| AMZN | 3.28 | **1.95** | 2.22 | 3.48 | 2.85 | 3.00 | 2.90 |
+| GOOGL | 1.85 | 1.55 | **1.21** | 1.29 | 1.46 | 2.90 | 1.60 |
+| META | 63.21 | 21.28 | 27.79 | **20.08** | 24.18 | 24.69 | 35.56 |
+| MSFT | **2.55** | 2.57 | 3.87 | 3.61 | 3.11 | 2.67 | 3.00 |
+| NVDA | 8.23 | 4.47 | **3.70** | 5.99 | 3.92 | 4.57 | 6.58 |
+| TSLA | 7.35 | 11.39 | 7.62 | 7.00 | 8.20 | **6.38** | 9.39 |
+| **MEAN** | 13.02 | 6.73 | 7.10 | **6.25** | 6.83 | 7.00 | 8.76 |
+
+Bold = best model per ticker.
+
+#### Key findings
+
+**1. Sentiment-specific models consistently beat general-purpose LLMs.**
+All three sentiment-trained models (FinBERT 2.14%, DeBERTa-v3 2.18%, Llama-FinSent 2.21%) outperform the LSTM baseline (2.32%). Both general-purpose LLMs (Qwen 2.37%, Gemma 2.72%) either barely beat or underperform the baseline. This confirms that domain-specific training matters more than model scale for sentiment extraction.
+
+**2. Small classifiers beat large LLMs.**
+FinBERT (110M params) achieves the best MAPE (2.14%) — 14x fewer parameters than Qwen (1.54B, 2.37%). Model size is not the binding constraint; training signal quality is.
+
+**3. Gemma-3-1B performs worst (2.72% MAPE) — below the no-sentiment LSTM baseline (2.32%).**
+Zero-shot financial sentiment from Gemma adds noise rather than signal. This is consistent with findings from the DeBERTa-TimesNet framework (Part 8) where traditional ML sentiment models (SVM, LR, RF) performed comparably to transformers — the sentiment signal quality, not model sophistication, is the binding constraint.
+
+**4. MAPE vs MAE rankings diverge.**
+FinBERT wins on MAPE (2.14%) but DeBERTa-v3 wins on MAE ($6.25 vs $7.10). DeBERTa-v3 is stronger on high-price tickers (META $20.08 vs $27.79, AAPL $2.27 vs $3.28) where dollar-scale errors dominate percentage metrics.
+
+**5. No model wins on all tickers.**
+Best per-ticker winners are spread across 5 different models. This strengthens Entry 29's finding that sentiment value is ticker-dependent and supports the need for per-ticker feature selection in Stage 3.
+
+#### Implications for Stage 3
+
+| Finding | Implication |
+|---------|-------------|
+| Purpose-built sentiment models > general-purpose LLMs | Our Stage 3 LLM scoring (Claude, 14 dimensions) should outperform simple scalar sentiment — but only if the dimensions are informative, not noisy |
+| 110M FinBERT beats 1.54B Qwen | Model scale is irrelevant for this task — what matters is training signal alignment with the downstream task |
+| No model wins all tickers | Per-ticker feature selection or regularization is essential — our 14 dimensions must be pruned per-ticker |
+| MAPE and MAE diverge | Report both metrics; MAPE is more meaningful for cross-ticker comparison, MAE for practical dollar-error estimation |
+
 ---
 
 ## PART 8: Empirical Baseline Comparison — FinBERT-LSTM vs DeBERTa-TimesNet Framework (2026-03-29)

@@ -1,0 +1,65 @@
+/Users/ivonne/AndresGithub/sp500/llm_baseline_model_modified/FinBERT-LSTM/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+'(ReadTimeoutError("HTTPSConnectionPool(host='huggingface.co', port=443): Read timed out. (read timeout=10)"), '(Request ID: 765c91a5-f7f2-4711-9153-ef77842513ca)')' thrown while requesting HEAD https://huggingface.co/google/gemma-3-1b-it/resolve/main/generation_config.json
+Retrying in 1s [Retry 1/5].
+The following generation flags are not valid and may be ignored: ['top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+Model: google/gemma-3-1b-it
+Type: generative
+Articles: 4209
+Device: MPS (Apple Silicon GPU)
+Loading generative model: google/gemma-3-1b-it [torch.float16]
+  [1/4209] 0.5 art/sec, ETA: 128 min, parse failures: 0
+  [100/4209] 4.3 art/sec, ETA: 16 min, parse failures: 14
+  [200/4209] 4.7 art/sec, ETA: 14 min, parse failures: 33
+  [300/4209] 4.7 art/sec, ETA: 14 min, parse failures: 56
+  [400/4209] 5.0 art/sec, ETA: 13 min, parse failures: 76
+  [500/4209] 4.9 art/sec, ETA: 13 min, parse failures: 97
+  [600/4209] 5.0 art/sec, ETA: 12 min, parse failures: 127
+  [700/4209] 5.1 art/sec, ETA: 11 min, parse failures: 150
+  [800/4209] 5.2 art/sec, ETA: 11 min, parse failures: 175
+  [900/4209] 5.3 art/sec, ETA: 10 min, parse failures: 192
+  [1000/4209] 5.3 art/sec, ETA: 10 min, parse failures: 216
+  [1100/4209] 5.3 art/sec, ETA: 10 min, parse failures: 249
+  [1200/4209] 5.3 art/sec, ETA: 9 min, parse failures: 261
+  [1300/4209] 5.3 art/sec, ETA: 9 min, parse failures: 268
+  [1400/4209] 5.4 art/sec, ETA: 9 min, parse failures: 285
+  [1500/4209] 5.4 art/sec, ETA: 8 min, parse failures: 301
+  [1600/4209] 5.4 art/sec, ETA: 8 min, parse failures: 316
+  [1700/4209] 5.4 art/sec, ETA: 8 min, parse failures: 333
+  [1800/4209] 5.4 art/sec, ETA: 7 min, parse failures: 342
+  [1900/4209] 5.4 art/sec, ETA: 7 min, parse failures: 372
+  [2000/4209] 5.4 art/sec, ETA: 7 min, parse failures: 396
+  [2100/4209] 5.4 art/sec, ETA: 7 min, parse failures: 417
+  [2200/4209] 5.4 art/sec, ETA: 6 min, parse failures: 448
+  [2300/4209] 5.4 art/sec, ETA: 6 min, parse failures: 469
+  [2400/4209] 5.4 art/sec, ETA: 6 min, parse failures: 503
+  [2500/4209] 5.3 art/sec, ETA: 5 min, parse failures: 527
+  [2600/4209] 5.3 art/sec, ETA: 5 min, parse failures: 547
+  [2700/4209] 5.3 art/sec, ETA: 5 min, parse failures: 582
+  [2800/4209] 5.3 art/sec, ETA: 4 min, parse failures: 608
+  [2900/4209] 5.3 art/sec, ETA: 4 min, parse failures: 640
+  [3000/4209] 5.3 art/sec, ETA: 4 min, parse failures: 656
+  [3100/4209] 5.3 art/sec, ETA: 3 min, parse failures: 682
+  [3200/4209] 5.3 art/sec, ETA: 3 min, parse failures: 707
+  [3300/4209] 5.4 art/sec, ETA: 3 min, parse failures: 737
+  [3400/4209] 5.4 art/sec, ETA: 3 min, parse failures: 769
+  [3500/4209] 5.4 art/sec, ETA: 2 min, parse failures: 800
+  [3600/4209] 5.4 art/sec, ETA: 2 min, parse failures: 835
+  [3700/4209] 5.4 art/sec, ETA: 2 min, parse failures: 867
+  [3800/4209] 5.4 art/sec, ETA: 1 min, parse failures: 897
+  [3900/4209] 5.4 art/sec, ETA: 1 min, parse failures: 928
+  [4000/4209] 5.4 art/sec, ETA: 1 min, parse failures: 957
+  [4100/4209] 5.4 art/sec, ETA: 0 min, parse failures: 981
+  [4200/4209] 5.4 art/sec, ETA: 0 min, parse failures: 1005
+Inference complete. Parse failures: 1006/4209 (23.9%)
+Sentiment saved: 1242 (ticker, date) pairs
+Score stats: mean=-0.1165, std=0.4743
+Pairs per ticker:
+ticker
+AAPL     193
+AMZN     212
+GOOGL    148
+META     164
+MSFT     174
+NVDA     162
+TSLA     189

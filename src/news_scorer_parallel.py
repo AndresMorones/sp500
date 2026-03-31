@@ -31,8 +31,7 @@ def run_ticker_phase1(ticker, articles):
     print(f"\n[{ticker}] Starting Phase 1 consensus...")
     try:
         consensus = run_phase1_consensus(ticker, articles)
-        print(f"\n[{ticker}] DONE — {len(consensus['categories'])} categories, "
-              f"{len(consensus['dimensions'])} dimensions")
+        print(f"\n[{ticker}] DONE — {len(consensus['categories'])} total categories")
         return ticker, consensus
     except Exception as e:
         print(f"\n[{ticker}] FAILED: {e}")
@@ -105,10 +104,8 @@ def main():
 
     for ticker, consensus in sorted(results.items()):
         cats = [c['id'] for c in consensus['categories']]
-        dims = [d['id'] for d in consensus['dimensions']]
         print(f"\n  {ticker}:")
         print(f"    Categories ({len(cats)}): {cats}")
-        print(f"    Dimensions ({len(dims)}): {dims}")
 
     print(f"\n{'='*60}")
 
