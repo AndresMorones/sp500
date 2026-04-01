@@ -38,25 +38,9 @@ Empirical test needed: once we have labeled news days, compare recall@20 (of the
 
 Note (2026-03-28): Entry 22's corrected cc Precision@K shows metrics do NOT converge by K≥50 — cc holds 75-81% even at K=500, well above the ~61% baseline rate. The earlier convergence finding (Entry 15) was an artifact of incomplete cc news matching. Cohen's d remains small for all metrics (max 0.180 for Ev). The formula still matters less than expected for gap, but cc now shows meaningful separation at all K values. Still worth testing p directly.
 
-### Q13: Should the prediction target be raw closing price or excess return?
+### Q13: MOVED TO ANSWERED → A13
 
-Every closest-match paper in the news+ML literature (arXiv:2505.05325, arXiv:2508.04975, arXiv:2407.16150) predicts **raw next-day closing price**, not excess return. Our excess return target comes from the event study literature (MacKinlay 1997, GKX 2020). These are different research traditions.
-
-Arguments for raw price: standard in news+ML literature, directly useful, avoids compounding errors from beta estimation.
-Arguments for excess return: removes market component, isolates stock-specific signal, grounded in our A-metric framework.
-
-Test: run the downstream model on both targets and compare MAPE/MAE. If excess return produces better predictions when reconstructed back to price, keep it. Otherwise switch.
-
-### Q14: What downstream model should consume the LLM-structured news features?
-
-Paper 3 (arXiv:2508.04975) found Transformer/LSTM benefit 10-26% MSE from LLM features, but Ridge benefits modestly. Paper 5 (arXiv:2602.00086) found TimesNet and PatchTST benefit most. This suggests non-linear temporal models extract more signal from rich news features than linear models.
-
-Options to test:
-1. LightGBM (tree-based, handles mixed features naturally — our current baseline)
-2. LSTM (validated at our exact scale by arXiv:2505.05325 — MAPE 2.72% on 4 tech stocks, 1 year)
-3. Transformer/TimesNet (if LSTM shows signal, test more complex architectures)
-
-Start with LightGBM (simplest), then LSTM, compare.
+### Q14: MOVED TO ANSWERED → A14
 
 ### Q15: How many of the 14 LLM dimensions actually help prediction?
 
@@ -69,6 +53,8 @@ Ablation needed:
 - Compare: does marginal improvement justify additional dimensions?
 
 Paper 2 (ICIAAI 2025 Tesla) found some news categories HURT prediction — more features is not always better.
+
+Note (2026-03-31): Entry 39 confirms the "more features = worse" finding for sentiment features specifically. Config F (10 features) was worst; Config C (1 sentiment scalar) was best. However, these were all sentiment-derived features through an LSTM — the ablation for LLM structured dimensions through Ridge (Entry 38's architecture) is still needed.
 
 ### Q8: Should the directional contradiction term be added?
 
@@ -190,6 +176,26 @@ Evidence (Entry 26):
 Why this is inherent: Extreme days are driven by news events (earnings, product launches, regulatory actions). Past prices contain no information about tomorrow's news. Regularization correctly learns to shrink toward the mean since predicting extremes from price alone would just add noise.
 
 **Implication for Model 2**: The value of news features is specifically in widening predictions on news days — reducing the tail/core MAE ratio from ~4.8x toward ~2.5x. Overall R²_OOS may improve modestly, but the tail improvement is what matters. Resolved 2026-03-28.
+
+### A13: Should the prediction target be raw closing price or excess return?
+
+**Answer**: Excess return (via Metric A), not raw price or raw return.
+
+Entry 39 tested raw price and raw return prediction with LSTM + sentiment. Both targets fail to beat naive. Raw price LSTM learns "predict ≈ yesterday" with noise. Raw return LSTM predicts worse than "predict 0% change." Neither captures useful signal.
+
+Entry 38 showed that Metric A (abnormal return z-score) fed to Ridge achieves 0.631% gap MAPE and 0.967% cc MAPE — beating naive (0.632% and 0.998%). The excess return target removes the market component, letting the model focus on stock-specific news signal. Raw price/return targets force the model to also predict market-level moves, which is pure noise at this scale.
+
+Evidence: Entries 38, 39. Resolved 2026-03-31.
+
+### A14: What downstream model should consume the LLM-structured news features?
+
+**Answer**: Ridge. LSTM is a dead end for sentiment-based prediction at this scale.
+
+Entry 39 ran a controlled experiment: 6 feature configs × 5 sentiment models × 2 targets × 5 seeds × 7 tickers. No LSTM configuration beat the naive baseline, regardless of features or sentiment model. Direction accuracy was ~50% (coin flip). The sentiment model choice (FinBERT vs DeBERTa vs Gemma vs Qwen vs Llama-FinSent) made <0.1% MAE difference.
+
+Entry 38 confirmed Ridge + Metric A features beats naive on GOOGL. The bottleneck is not the downstream architecture — it's the feature quality. A single sentiment scalar provides no useful signal. The 30 LLM-extracted structured dimensions (from news_scorer.py) provide genuine predictive value that even Ridge can exploit.
+
+Evidence: Entries 38, 39, `src/lstm_feature_experiment.py`, `src/lstm_sentiment_compare.py`. Resolved 2026-03-31.
 
 ### A7: Which scoring metric to use for news impact identification?
 
